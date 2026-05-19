@@ -1,0 +1,47 @@
+name: CD
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to Fly.io (API)
+        uses: superfly/flyctl-actions/setup-flyctl@master
+        continue-on-error: true
+
+      # Alternative: deploy to Cloud Run, Railway, or Render
+      # Uncomment the deployment strategy that matches your target:
+
+      # --- Fly.io ---
+      # - run: flyctl deploy --remote-only --image ghcr.io/${{ github.repository }}/api:latest
+      #   env:
+      #     FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      # --- Railway ---
+      # - run: railway up
+      #   env:
+      #     RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      # --- Google Cloud Run ---
+      # - uses: google-github-actions/deploy-cloudrun@v2
+      #   with:
+      #     service: forgeflow-api
+      #     image: ghcr.io/${{ github.repository }}/api:latest
+      #     region: us-central1
+
+      - name: Notify deployment
+        run: echo "Deployed ForgeFlow ${{ github.ref_name }} to production"

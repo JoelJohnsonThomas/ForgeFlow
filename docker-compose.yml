@@ -1,0 +1,121 @@
+version: "3.9"
+
+services:
+  # ----------------------------------------------------------------
+  # PostgreSQL with pgvector extension
+  # ----------------------------------------------------------------
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: forgeflow
+      POSTGRES_USER: forgeflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-forgeflow}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U forgeflow -d forgeflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # ----------------------------------------------------------------
+  # Database migrations (run once, then exits)
+  # ----------------------------------------------------------------
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
+    command: alembic upgrade head
+    environment:
+      POSTGRES_SYNC_URL: postgresql://forgeflow:${POSTGRES_PASSWORD:-forgeflow}@postgres:5432/forgeflow
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - migration
+
+  # ----------------------------------------------------------------
+  # MCP Tool Server
+  # ----------------------------------------------------------------
+  mcp_server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: mcp
+    command: python -m forgeflow.mcp.server.main http
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      TAVILY_API_KEY: ${TAVILY_API_KEY:-}
+      POSTGRES_URL: postgresql+asyncpg://forgeflow:${POSTGRES_PASSWORD:-forgeflow}@postgres:5432/forgeflow
+      MCP_SERVER_HOST: "0.0.0.0"
+      MCP_SERVER_PORT: "8001"
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ----------------------------------------------------------------
+  # FastAPI Backend
+  # ----------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
+    command: uvicorn forgeflow.api.main:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      OPENAI_MODEL_STRONG: ${OPENAI_MODEL_STRONG:-gpt-4o}
+      POSTGRES_URL: postgresql+asyncpg://forgeflow:${POSTGRES_PASSWORD:-forgeflow}@postgres:5432/forgeflow
+      POSTGRES_SYNC_URL: postgresql://forgeflow:${POSTGRES_PASSWORD:-forgeflow}@postgres:5432/forgeflow
+      MCP_SERVER_HOST: mcp_server
+      MCP_SERVER_PORT: "8001"
+      TAVILY_API_KEY: ${TAVILY_API_KEY:-}
+      LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2:-false}
+      LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY:-}
+      LANGCHAIN_PROJECT: ${LANGCHAIN_PROJECT:-forgeflow}
+      API_SECRET_KEY: ${API_SECRET_KEY:-dev-secret-change-in-prod}
+      BUDGET_LIMIT_USD: ${BUDGET_LIMIT_USD:-5.0}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./forgeflow:/app/forgeflow:ro  # hot-reload in dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mcp_server:
+        condition: service_started
+    restart: unless-stopped
+
+  # ----------------------------------------------------------------
+  # Streamlit Observability Dashboard
+  # ----------------------------------------------------------------
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dashboard
+    environment:
+      API_URL: http://api:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+    name: forgeflow_pgdata
