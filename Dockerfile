@@ -30,7 +30,7 @@ FROM base AS api
 
 COPY forgeflow/ ./forgeflow/
 COPY alembic/ ./alembic/
-COPY alembic.ini ./
+COPY alembic.ini ./alembic.ini
 
 EXPOSE 8000
 

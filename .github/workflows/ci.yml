@@ -22,7 +22,7 @@ jobs:
           cache: pip
 
       - name: Install linters
-        run: pip install ruff mypy types-beautifulsoup4
+        run: pip install ruff mypy types-beautifulsoup4 pydantic pydantic-settings
 
       - name: ruff check
         run: ruff check forgeflow/ dashboard/ tests/ --output-format=github
@@ -55,7 +55,8 @@ jobs:
     env:
       POSTGRES_URL: postgresql+asyncpg://forgeflow:testpass@localhost:5432/forgeflow_test
       POSTGRES_SYNC_URL: postgresql://forgeflow:testpass@localhost:5432/forgeflow_test
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY_TEST }}
+      # Use repo secret if available; fall back to a fake key so unit tests (which don't call the API) always pass
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY_TEST || 'sk-test-fake-key-for-unit-tests' }}
       LANGCHAIN_TRACING_V2: "false"
       TAVILY_API_KEY: ""
       API_SECRET_KEY: "test-secret"

@@ -5,9 +5,10 @@ from __future__ import annotations
 import logging
 import time
 from collections import defaultdict
+from typing import Callable
 
 from fastapi import Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.rpm = requests_per_minute
         self._buckets: dict[str, list[float]] = defaultdict(list)
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         user_id = getattr(request.state, "user_id", "anonymous")
         now = time.monotonic()
 

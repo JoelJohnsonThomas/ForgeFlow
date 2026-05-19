@@ -7,9 +7,10 @@ The enforcement logic (RBACEnforcer) is the same either way.
 from __future__ import annotations
 
 import logging
+from typing import Callable
 
 from fastapi import Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from forgeflow.rbac.enforcer import RBACEnforcer
@@ -26,7 +27,7 @@ class RBACMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.enforcer = enforcer or RBACEnforcer()
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         path = request.url.path
         method = request.method
 

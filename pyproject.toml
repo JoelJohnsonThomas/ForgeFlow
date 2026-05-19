@@ -75,7 +75,30 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "ANN"]
-ignore = ["ANN101", "ANN102", "ANN401", "E501"]
+ignore = [
+    "ANN101",  # missing type annotation for `self`
+    "ANN102",  # missing type annotation for `cls`
+    "ANN401",  # Any disallowed — too broad for a dynamic system
+    "ANN201",  # missing return type on public function — FastAPI uses response_model instead
+    "ANN202",  # missing return type on private function
+    "ANN002",  # missing type annotation for *args
+    "ANN003",  # missing type annotation for **kwargs
+    "B008",    # do not perform function calls in default arguments — required by FastAPI Depends()
+    "E501",    # line too long — handled by formatter
+    "SIM108",  # ternary operator — nested ternaries are sometimes clearer
+    "SIM105",  # contextlib.suppress — try/except/pass with fallback return is clearer here
+    "UP007",   # Optional[X] → X | None — Pydantic v2 accepts both; keep Optional for readability
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["ANN", "S101"]
+"scripts/**/*.py" = ["ANN"]
+"dashboard/**/*.py" = ["ANN"]
+"alembic/**/*.py" = ["ANN"]
+# FastAPI route params injected via Depends() cannot carry full type annotations cleanly
+"forgeflow/api/routers/**/*.py" = ["ANN001"]
+# Late router import after app creation avoids circular-import edge cases
+"forgeflow/api/main.py" = ["E402"]
 
 [tool.mypy]
 python_version = "3.11"

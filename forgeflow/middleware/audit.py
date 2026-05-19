@@ -5,8 +5,10 @@ from __future__ import annotations
 import logging
 import time
 import uuid
+from typing import Callable
 
 from fastapi import Request
+from fastapi.responses import Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
 logger = logging.getLogger(__name__)
@@ -16,7 +18,7 @@ _SKIP_AUDIT = {"/health", "/metrics/prometheus", "/docs", "/openapi.json", "/red
 
 
 class AuditMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         if request.url.path in _SKIP_AUDIT:
             return await call_next(request)
 

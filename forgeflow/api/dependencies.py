@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncpg
-from fastapi import Depends, HTTPException, Request
+from fastapi import HTTPException, Request
 
 from forgeflow.rbac.models import UserContext
 

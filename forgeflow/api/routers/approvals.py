@@ -56,7 +56,6 @@ async def approve(
 ):
     """Approve a proposal — resumes the suspended LangGraph workflow."""
     row = await _fetch_by_token(pool, token)
-    run_id = str(row["run_id"])
 
     # Get the thread_id for this run
     async with pool.acquire() as conn:
