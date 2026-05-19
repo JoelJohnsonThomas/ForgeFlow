@@ -1,0 +1,93 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "forgeflow"
+version = "0.1.0"
+description = "Multi-Agent Enterprise Workflow Orchestrator — LangGraph + MCP + A2A"
+requires-python = ">=3.11"
+readme = "README.md"
+license = { text = "MIT" }
+keywords = ["langgraph", "agents", "mcp", "a2a", "enterprise", "workflow"]
+
+dependencies = [
+    # LangGraph + LangChain core
+    "langgraph>=0.2.60",
+    "langgraph-checkpoint-postgres>=2.0.0",
+    "langchain-core>=0.3.28",
+    "langchain-openai>=0.3.0",
+    "langchain-community>=0.3.0",
+    # MCP
+    "langchain-mcp-adapters>=0.1.0",
+    "fastmcp>=2.0.0",
+    # API
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    # Dashboard
+    "streamlit>=1.40.0",
+    "plotly>=5.24.0",
+    # Database
+    "asyncpg>=0.30.0",
+    "pgvector>=0.3.6",
+    "psycopg[binary]>=3.2.0",
+    "psycopg-pool>=3.2.0",
+    "alembic>=1.14.0",
+    # Validation + settings
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.6.0",
+    # HTTP
+    "httpx>=0.28.0",
+    "beautifulsoup4>=4.12.0",
+    # Observability
+    "langsmith>=0.2.11",
+    # Resilience
+    "tenacity>=9.0.0",
+    # Token counting
+    "tiktoken>=0.8.0",
+    # Env
+    "python-dotenv>=1.0.0",
+    # Search
+    "tavily-python>=0.5.0",
+    # Utilities
+    "python-multipart>=0.0.12",
+    "pandas>=2.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "httpx>=0.28.0",
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+    "types-beautifulsoup4",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["forgeflow*", "dashboard*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "ANN"]
+ignore = ["ANN101", "ANN102", "ANN401", "E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["forgeflow"]
+omit = ["tests/*", "scripts/*"]

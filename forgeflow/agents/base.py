@@ -1,0 +1,63 @@
+"""BaseAgent — abstract base class for all ForgeFlow agents."""
+
+from __future__ import annotations
+
+import logging
+from abc import ABC, abstractmethod
+from typing import AsyncIterator
+
+from langchain_core.language_models import BaseChatModel
+from langchain_core.tools import BaseTool
+
+from forgeflow.resilience.circuit_breaker import CircuitBreaker
+from forgeflow.state.workflow_state import WorkflowState
+
+logger = logging.getLogger(__name__)
+
+
+class BaseAgent(ABC):
+    """All agents inherit from this. Provides circuit breaking and a standard interface."""
+
+    def __init__(
+        self,
+        name: str,
+        model: BaseChatModel,
+        tools: list[BaseTool] | None = None,
+        system_prompt: str = "",
+    ) -> None:
+        self.name = name
+        self.tools = tools or []
+        self.system_prompt = system_prompt
+        self._circuit_breaker = CircuitBreaker(name=name, failure_threshold=5, recovery_timeout=30.0)
+
+        # Bind tools to the model so it can emit tool-call messages
+        self.model = model.bind_tools(self.tools) if self.tools else model
+
+    @abstractmethod
+    async def run(self, state: WorkflowState) -> dict:
+        """Execute agent logic. Returns a dict of WorkflowState updates (partial patch)."""
+
+    async def stream(self, state: WorkflowState) -> AsyncIterator[dict]:
+        """Default streaming: yields single chunk from run(). Override for token-level streaming."""
+        result = await self.run(state)
+        yield result
+
+    async def safe_run(self, state: WorkflowState) -> dict:
+        """Wraps run() with circuit breaker protection."""
+        return await self._circuit_breaker.acall(self.run, state)
+
+    def _log_start(self, state: WorkflowState) -> None:
+        logger.info(
+            "Agent '%s' starting | stage=%s | workflow=%s",
+            self.name,
+            state.get("current_stage"),
+            state.get("workflow_id"),
+        )
+
+    def _log_finish(self, tokens: int, cost: float) -> None:
+        logger.info(
+            "Agent '%s' finished | tokens=%d | cost=$%.4f",
+            self.name,
+            tokens,
+            cost,
+        )

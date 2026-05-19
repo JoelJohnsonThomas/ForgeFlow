@@ -1,0 +1,62 @@
+"""ForgeFlow MCP Tool Server — FastMCP with HTTP and stdio transport modes.
+
+Usage:
+  HTTP (production):  python -m forgeflow.mcp.server.main http
+  stdio (local CLI):  python -m forgeflow.mcp.server.main stdio
+
+The HTTP transport exposes tools at POST /mcp (streamable-HTTP per MCP spec).
+Agents connect via the client adapter in forgeflow/mcp/client/adapter.py.
+"""
+
+from __future__ import annotations
+
+import sys
+import logging
+
+from fastmcp import FastMCP
+
+from forgeflow.mcp.server.tools import (
+    search_tools,
+    crm_tools,
+    email_tools,
+    data_tools,
+)
+from forgeflow.config import get_settings
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Main MCP server — compose all tool sub-routers
+mcp = FastMCP(
+    name="ForgeFlow Tool Server",
+    version="1.0.0",
+    instructions=(
+        "This server exposes enterprise tools for ForgeFlow agents: "
+        "web search, CRM management, email sending, and data enrichment."
+    ),
+)
+
+mcp.mount(search_tools.router, prefix="search")
+mcp.mount(crm_tools.router, prefix="crm")
+mcp.mount(email_tools.router, prefix="email")
+mcp.mount(data_tools.router, prefix="data")
+
+
+if __name__ == "__main__":
+    settings = get_settings()
+    mode = sys.argv[1] if len(sys.argv) > 1 else "http"
+
+    if mode == "stdio":
+        logger.info("Starting MCP server in stdio mode")
+        mcp.run(transport="stdio")
+    else:
+        logger.info(
+            "Starting MCP server in HTTP mode on %s:%d",
+            settings.mcp_server_host,
+            settings.mcp_server_port,
+        )
+        mcp.run(
+            transport="streamable-http",
+            host=settings.mcp_server_host,
+            port=settings.mcp_server_port,
+        )

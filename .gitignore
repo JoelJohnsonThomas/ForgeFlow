@@ -1,0 +1,69 @@
+# Environment
+.env
+.env.local
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Testing
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+
+# Ruff
+.ruff_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# LangSmith / LangChain cache
+.langchain/
+langchain.db
+
+# Alembic (keep versions, ignore pycache)
+alembic/__pycache__/
+alembic/versions/__pycache__/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Secrets / keys
+*.pem
+*.key
+*.p12
+secrets/
