@@ -67,5 +67,6 @@ def sample_workflow_state():
         "approval_token": None,
         "total_tokens": 0,
         "total_cost_usd": 0.0,
+        "dry_run": False,
         "run_metadata": {"user_id": "test-user", "role": "sales_rep"},
     }

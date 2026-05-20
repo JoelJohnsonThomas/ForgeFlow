@@ -18,7 +18,11 @@ class FinanceReconPipeline:
         self.graph = graph
 
     def _build_initial_state(
-        self, recon_input: ReconciliationInput, user_id: str, role: str
+        self,
+        recon_input: ReconciliationInput,
+        user_id: str,
+        role: str,
+        dry_run: bool = False,
     ) -> WorkflowState:
         workflow_id = str(uuid.uuid4())
         thread_id = str(uuid.uuid4())
@@ -26,6 +30,15 @@ class FinanceReconPipeline:
         # Serialize dates explicitly — Pydantic .model_dump() returns date objects
         # but downstream JSON encoders need strings.
         recon_data = recon_input.model_dump(mode="json")
+
+        tags = [
+            f"user:{user_id}",
+            f"role:{role}",
+            "finance_recon",
+            f"period:{recon_input.period_label}",
+        ]
+        if dry_run:
+            tags.append("dry_run")
 
         return WorkflowState(
             messages=[],
@@ -44,16 +57,13 @@ class FinanceReconPipeline:
             approval_token=None,
             total_tokens=0,
             total_cost_usd=0.0,
+            dry_run=dry_run,
             run_metadata={
                 "user_id": user_id,
                 "role": role,
                 "workflow_type": "finance_recon",
-                "langsmith_tags": [
-                    f"user:{user_id}",
-                    f"role:{role}",
-                    "finance_recon",
-                    f"period:{recon_input.period_label}",
-                ],
+                "dry_run": dry_run,
+                "langsmith_tags": tags,
             },
         )
 
@@ -62,8 +72,9 @@ class FinanceReconPipeline:
         recon_input: ReconciliationInput,
         user_id: str = "anon",
         role: str = "accountant",
+        dry_run: bool = False,
     ) -> tuple[str, str, WorkflowState]:
-        state = self._build_initial_state(recon_input, user_id, role)
+        state = self._build_initial_state(recon_input, user_id, role, dry_run)
         thread_id = state["thread_id"]
         config = {
             "configurable": {"thread_id": thread_id},
@@ -85,8 +96,9 @@ class FinanceReconPipeline:
         recon_input: ReconciliationInput,
         user_id: str = "anon",
         role: str = "accountant",
+        dry_run: bool = False,
     ) -> AsyncIterator[dict]:
-        state = self._build_initial_state(recon_input, user_id, role)
+        state = self._build_initial_state(recon_input, user_id, role, dry_run)
         thread_id = state["thread_id"]
         config = {
             "configurable": {"thread_id": thread_id},

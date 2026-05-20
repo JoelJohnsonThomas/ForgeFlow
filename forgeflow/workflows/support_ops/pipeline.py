@@ -18,10 +18,23 @@ class SupportOpsPipeline:
         self.graph = graph
 
     def _build_initial_state(
-        self, ticket_input: TicketInput, user_id: str, role: str
+        self,
+        ticket_input: TicketInput,
+        user_id: str,
+        role: str,
+        dry_run: bool = False,
     ) -> WorkflowState:
         workflow_id = str(uuid.uuid4())
         thread_id = str(uuid.uuid4())
+
+        tags = [
+            f"user:{user_id}",
+            f"role:{role}",
+            "support_ops",
+            f"channel:{ticket_input.channel.value}",
+        ]
+        if dry_run:
+            tags.append("dry_run")
 
         return WorkflowState(
             messages=[],
@@ -40,23 +53,24 @@ class SupportOpsPipeline:
             approval_token=None,
             total_tokens=0,
             total_cost_usd=0.0,
+            dry_run=dry_run,
             run_metadata={
                 "user_id": user_id,
                 "role": role,
                 "workflow_type": "support_ops",
-                "langsmith_tags": [
-                    f"user:{user_id}",
-                    f"role:{role}",
-                    "support_ops",
-                    f"channel:{ticket_input.channel.value}",
-                ],
+                "dry_run": dry_run,
+                "langsmith_tags": tags,
             },
         )
 
     async def run(
-        self, ticket_input: TicketInput, user_id: str = "anon", role: str = "support_rep"
+        self,
+        ticket_input: TicketInput,
+        user_id: str = "anon",
+        role: str = "support_rep",
+        dry_run: bool = False,
     ) -> tuple[str, str, WorkflowState]:
-        state = self._build_initial_state(ticket_input, user_id, role)
+        state = self._build_initial_state(ticket_input, user_id, role, dry_run)
         thread_id = state["thread_id"]
 
         config = {
@@ -75,9 +89,13 @@ class SupportOpsPipeline:
         return state["workflow_id"], thread_id, final_state
 
     async def stream(
-        self, ticket_input: TicketInput, user_id: str = "anon", role: str = "support_rep"
+        self,
+        ticket_input: TicketInput,
+        user_id: str = "anon",
+        role: str = "support_rep",
+        dry_run: bool = False,
     ) -> AsyncIterator[dict]:
-        state = self._build_initial_state(ticket_input, user_id, role)
+        state = self._build_initial_state(ticket_input, user_id, role, dry_run)
         thread_id = state["thread_id"]
         config = {
             "configurable": {"thread_id": thread_id},

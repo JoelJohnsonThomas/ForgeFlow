@@ -73,6 +73,7 @@ async def run_workflow(
             domain_input,
             user_id=user.user_id,
             role=user.role,
+            dry_run=request.dry_run,
         )
     except Exception as e:
         logger.error("Workflow run failed: %s", e)
@@ -127,26 +128,30 @@ async def run_workflow(
         except Exception as e:
             logger.error("Failed to create approval request: %s", e)
 
-        # Fire-and-forget Slack notification — no-op when Slack isn't configured
-        try:
-            company = (
-                proposal_payload.get("company")
-                or request.lead_data.get("company_name")
-                or request.lead_data.get("ticket_id")
-                or request.lead_data.get("period_label")
-                or "(unknown)"
-            )
-            summary = (
-                f"workflow_type={request.workflow_type} | "
-                f"subject={company} | run_id={workflow_id}"
-            )
-            await notify_approval_request(
-                approval_token=token,
-                summary=summary,
-                payload=proposal_payload,
-            )
-        except Exception as e:
-            logger.warning("Slack approval notification failed: %s", e)
+        # Fire-and-forget Slack notification — skipped in dry-run, no-op when
+        # Slack isn't configured.
+        if request.dry_run:
+            logger.info("Dry-run — skipping Slack approval notification")
+        else:
+            try:
+                company = (
+                    proposal_payload.get("company")
+                    or request.lead_data.get("company_name")
+                    or request.lead_data.get("ticket_id")
+                    or request.lead_data.get("period_label")
+                    or "(unknown)"
+                )
+                summary = (
+                    f"workflow_type={request.workflow_type} | "
+                    f"subject={company} | run_id={workflow_id}"
+                )
+                await notify_approval_request(
+                    approval_token=token,
+                    summary=summary,
+                    payload=proposal_payload,
+                )
+            except Exception as e:
+                logger.warning("Slack approval notification failed: %s", e)
 
     return WorkflowRunResponse(
         run_id=workflow_id,
@@ -182,7 +187,12 @@ async def stream_workflow(
 
     async def event_generator():
         try:
-            async for event in pipeline.stream(domain_input, user.user_id, user.role):
+            async for event in pipeline.stream(
+                domain_input,
+                user.user_id,
+                user.role,
+                dry_run=request.dry_run,
+            ):
                 yield f"data: {json.dumps(event)}\n\n"
         except Exception as e:
             yield f"data: {json.dumps({'event': 'error', 'message': str(e)})}\n\n"

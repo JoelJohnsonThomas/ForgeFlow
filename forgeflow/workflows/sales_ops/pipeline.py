@@ -24,10 +24,18 @@ class SalesOpsPipeline:
         self.graph = graph
 
     def _build_initial_state(
-        self, lead_input: LeadInput, user_id: str, role: str
+        self,
+        lead_input: LeadInput,
+        user_id: str,
+        role: str,
+        dry_run: bool = False,
     ) -> WorkflowState:
         workflow_id = str(uuid.uuid4())
         thread_id = str(uuid.uuid4())
+
+        tags = [f"user:{user_id}", f"role:{role}", "sales_ops"]
+        if dry_run:
+            tags.append("dry_run")
 
         return WorkflowState(
             messages=[],
@@ -46,18 +54,24 @@ class SalesOpsPipeline:
             approval_token=None,
             total_tokens=0,
             total_cost_usd=0.0,
+            dry_run=dry_run,
             run_metadata={
                 "user_id": user_id,
                 "role": role,
-                "langsmith_tags": [f"user:{user_id}", f"role:{role}", "sales_ops"],
+                "dry_run": dry_run,
+                "langsmith_tags": tags,
             },
         )
 
     async def run(
-        self, lead_input: LeadInput, user_id: str = "anon", role: str = "sales_rep"
+        self,
+        lead_input: LeadInput,
+        user_id: str = "anon",
+        role: str = "sales_rep",
+        dry_run: bool = False,
     ) -> tuple[str, str, WorkflowState]:
         """Run workflow to completion (or first interrupt). Returns (run_id, thread_id, final_state)."""
-        state = self._build_initial_state(lead_input, user_id, role)
+        state = self._build_initial_state(lead_input, user_id, role, dry_run)
         thread_id = state["thread_id"]
 
         config = {
@@ -75,10 +89,14 @@ class SalesOpsPipeline:
         return state["workflow_id"], thread_id, final_state
 
     async def stream(
-        self, lead_input: LeadInput, user_id: str = "anon", role: str = "sales_rep"
+        self,
+        lead_input: LeadInput,
+        user_id: str = "anon",
+        role: str = "sales_rep",
+        dry_run: bool = False,
     ) -> AsyncIterator[dict]:
         """Stream workflow events — yields {node, patch} dicts for SSE."""
-        state = self._build_initial_state(lead_input, user_id, role)
+        state = self._build_initial_state(lead_input, user_id, role, dry_run)
         thread_id = state["thread_id"]
 
         config = {

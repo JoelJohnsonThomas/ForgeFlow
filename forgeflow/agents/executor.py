@@ -144,6 +144,7 @@ class ExecutorAgent(BaseAgent):
         lead_data = state.get("lead_data") or {}
         proposal = state.get("proposal") or {}
         company = lead_data.get("company_name", "Unknown")
+        dry_run = bool(state.get("dry_run"))
 
         # Simulate CRM update and email send via tools or mock
         crm_tool = self._tool_map.get("update_lead")
@@ -151,30 +152,41 @@ class ExecutorAgent(BaseAgent):
 
         actions: list[str] = []
 
-        if crm_tool:
-            try:
-                await crm_tool.ainvoke({
-                    "lead_id": state.get("lead_id"),
-                    "status": "proposed",
-                    "deal_value": proposal.get("estimated_deal_value_usd"),
-                })
-                actions.append("crm_updated")
-            except Exception as e:
-                logger.error("CRM update failed: %s", e)
+        if dry_run:
+            # Side-effecting tools are skipped — log what we would have done
+            actions = ["crm_updated_dry_run", "email_sent_dry_run"]
+            logger.info(
+                "Executor DRY-RUN — skipped CRM + email side effects for %s",
+                company,
+            )
+        else:
+            if crm_tool:
+                try:
+                    await crm_tool.ainvoke({
+                        "lead_id": state.get("lead_id"),
+                        "status": "proposed",
+                        "deal_value": proposal.get("estimated_deal_value_usd"),
+                    })
+                    actions.append("crm_updated")
+                except Exception as e:
+                    logger.error("CRM update failed: %s", e)
 
-        if email_tool:
-            try:
-                await email_tool.ainvoke({
-                    "to": lead_data.get("contact_email", f"contact@{company.lower().replace(' ', '')}.com"),
-                    "subject": f"ForgeFlow Enterprise AI Proposal — {company}",
-                    "body": proposal.get("executive_summary", "Please review our proposal."),
-                })
-                actions.append("email_sent")
-            except Exception as e:
-                logger.error("Email send failed: %s", e)
+            if email_tool:
+                try:
+                    await email_tool.ainvoke({
+                        "to": lead_data.get(
+                            "contact_email",
+                            f"contact@{company.lower().replace(' ', '')}.com",
+                        ),
+                        "subject": f"ForgeFlow Enterprise AI Proposal — {company}",
+                        "body": proposal.get("executive_summary", "Please review our proposal."),
+                    })
+                    actions.append("email_sent")
+                except Exception as e:
+                    logger.error("Email send failed: %s", e)
 
-        if not actions:
-            actions = ["crm_updated_mock", "email_sent_mock"]
+            if not actions:
+                actions = ["crm_updated_mock", "email_sent_mock"]
 
         logger.info("Executor completed actions: %s", actions)
 

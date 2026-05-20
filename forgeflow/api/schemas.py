@@ -24,6 +24,13 @@ class WorkflowRunRequest(BaseModel):
     )
     user_id: str = "anon"
     role: str = "sales_rep"
+    dry_run: bool = Field(
+        False,
+        description=(
+            "Simulation mode. LLM calls still happen; CRM writes, emails, Slack "
+            "posts, and other side-effecting tools are skipped and stub a success."
+        ),
+    )
 
 
 class WorkflowRunResponse(BaseModel):

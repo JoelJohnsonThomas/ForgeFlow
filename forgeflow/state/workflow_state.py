@@ -53,5 +53,10 @@ class WorkflowState(TypedDict):
     total_tokens: int
     total_cost_usd: float
 
+    # Dry-run flag — when True, side-effecting tools (CRM writes, emails,
+    # Slack posts) are skipped and a stub response is returned. LLM calls
+    # still happen so the workflow plan is exercised end-to-end.
+    dry_run: bool
+
     # Metadata forwarded to LangSmith and audit log
     run_metadata: dict           # {user_id, role, budget_limit, langsmith_tags}
