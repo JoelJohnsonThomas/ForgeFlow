@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: forgeflow-config
+  namespace: forgeflow
+  labels:
+    app.kubernetes.io/name: forgeflow
+    app.kubernetes.io/part-of: forgeflow
+# Non-secret runtime config. Secret values live in 11-secret.yaml.
+data:
+  # --- LLM provider ---
+  LLM_PROVIDER: "openai"
+  OPENAI_MODEL: "gpt-4o-mini"
+  OPENAI_MODEL_STRONG: "gpt-4o"
+
+  # --- Database (host is the in-cluster StatefulSet) ---
+  POSTGRES_URL: "postgresql+asyncpg://forgeflow:CHANGE_ME@forgeflow-postgres:5432/forgeflow"
+  POSTGRES_SYNC_URL: "postgresql+psycopg://forgeflow:CHANGE_ME@forgeflow-postgres:5432/forgeflow"
+
+  # --- MCP server ---
+  MCP_SERVER_HOST: "0.0.0.0"
+  MCP_SERVER_PORT: "8001"
+
+  # --- API ---
+  API_HOST: "0.0.0.0"
+  API_PORT: "8000"
+
+  # --- Cost + resilience defaults ---
+  BUDGET_LIMIT_USD: "5.0"
+  MAX_RETRIES: "3"
+  CIRCUIT_BREAKER_THRESHOLD: "5"
+
+  # --- LangSmith (optional — leave blank to disable) ---
+  LANGCHAIN_TRACING_V2: "false"
+  LANGCHAIN_PROJECT: "forgeflow"
+
+  # --- Approval escalation ---
+  APPROVAL_ESCALATION_INTERVAL_SECONDS: "300"
+  APPROVAL_FIRST_ESCALATION_MINUTES: "30"
+  APPROVAL_SECOND_ESCALATION_MINUTES: "120"
+  APPROVAL_AUTO_REJECT_MINUTES: "1440"
+
+  # --- A2A ---
+  A2A_DISPATCH_ENABLED: "true"
+
+  # --- Observability ---
+  OTEL_ENABLED: "false"
+  TRACING_PROVIDER: "langsmith"
+
+  # --- Dashboard ---
+  API_URL: "http://forgeflow-api:8000"
+  API_PUBLIC_URL: "http://forgeflow-api:8000"

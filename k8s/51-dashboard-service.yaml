@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: forgeflow-dashboard
+  namespace: forgeflow
+  labels:
+    app.kubernetes.io/name: forgeflow
+    app.kubernetes.io/component: dashboard
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: forgeflow
+    app.kubernetes.io/component: dashboard
+  # Streamlit needs session affinity to keep WebSockets pinned to one pod.
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+  ports:
+    - name: http
+      port: 8501
+      targetPort: http

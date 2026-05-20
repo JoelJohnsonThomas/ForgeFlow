@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: forgeflow
+  labels:
+    app.kubernetes.io/name: forgeflow
+    app.kubernetes.io/part-of: forgeflow

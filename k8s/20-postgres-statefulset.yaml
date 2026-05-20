@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: forgeflow-postgres
+  namespace: forgeflow
+  labels:
+    app.kubernetes.io/name: forgeflow
+    app.kubernetes.io/component: postgres
+spec:
+  serviceName: forgeflow-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: forgeflow
+      app.kubernetes.io/component: postgres
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: forgeflow
+        app.kubernetes.io/component: postgres
+    spec:
+      securityContext:
+        fsGroup: 999  # PG container expects this for /var/lib/postgresql/data
+      containers:
+        - name: postgres
+          image: pgvector/pgvector:pg16
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: forgeflow
+            - name: POSTGRES_USER
+              value: forgeflow
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: forgeflow-secrets
+                  key: POSTGRES_PASSWORD
+            # PGDATA inside the mounted volume — avoids the
+            # "lost+found" subdir issue on cloud block storage.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 2Gi
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "forgeflow", "-d", "forgeflow"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "forgeflow", "-d", "forgeflow"]
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: pgdata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        # storageClassName: gp3   # uncomment + set for your cluster's StorageClass
+        resources:
+          requests:
+            storage: 20Gi
