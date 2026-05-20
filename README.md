@@ -8,7 +8,7 @@
 [![LangGraph](https://img.shields.io/badge/LangGraph-0.2.60+-green.svg)](https://langchain-ai.github.io/langgraph/)
 [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-purple.svg)](https://modelcontextprotocol.io)
 [![Docker](https://img.shields.io/badge/docker-compose-blue.svg)](https://docker.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 ForgeFlow orchestrates a **team of specialized AI agents** to qualify sales leads, research companies, generate personalized proposals, and execute CRM actions — all with human-in-the-loop approvals, full observability, and enterprise-grade reliability.
 
