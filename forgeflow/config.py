@@ -128,6 +128,20 @@ class Settings(BaseSettings):
         description="langsmith | phoenix | langfuse | none",
     )
 
+    # --- GitHub connector ---
+    github_token: SecretStr = Field(
+        SecretStr(""),
+        description="GitHub PAT or installation token (repo scope)",
+    )
+    github_base_url: str = Field(
+        "https://api.github.com",
+        description="GitHub REST API base — override for GHES",
+    )
+    github_default_owner: str = Field(
+        "",
+        description="Default repo owner so tool calls can omit it",
+    )
+
     # --- Slack (for HITL approval notifications) ---
     slack_bot_token: SecretStr = Field(
         SecretStr(""),

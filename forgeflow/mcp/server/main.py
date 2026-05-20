@@ -20,6 +20,7 @@ from forgeflow.mcp.server.tools import (
     crm_tools,
     data_tools,
     email_tools,
+    github_tools,
     search_tools,
     slack_tools,
 )
@@ -42,6 +43,7 @@ mcp.mount(crm_tools.router, prefix="crm")
 mcp.mount(email_tools.router, prefix="email")
 mcp.mount(data_tools.router, prefix="data")
 mcp.mount(slack_tools.router, prefix="slack")
+mcp.mount(github_tools.router, prefix="github")
 
 
 if __name__ == "__main__":
