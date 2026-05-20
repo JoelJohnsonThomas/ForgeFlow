@@ -3,7 +3,7 @@
 > **Production-grade Multi-Agent Enterprise Workflow Orchestrator**
 > Built for the bleeding edge of agentic AI deployment in 2026.
 
-[![CI](https://github.com/yourusername/forgeflow/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/forgeflow/actions)
+[![CI](https://github.com/JoelJohnsonThomas/forgeflow/actions/workflows/ci.yml/badge.svg)](https://github.com/JoelJohnsonThomas/forgeflow/actions)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org)
 [![LangGraph](https://img.shields.io/badge/LangGraph-0.2.60+-green.svg)](https://langchain-ai.github.io/langgraph/)
 [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-purple.svg)](https://modelcontextprotocol.io)
@@ -74,7 +74,7 @@ graph TB
 ### 1. Clone and configure
 
 ```bash
-git clone https://github.com/yourusername/forgeflow.git
+git clone https://github.com/JoelJohnsonThomas/forgeflow.git
 cd forgeflow
 cp .env.example .env
 # Edit .env — set OPENAI_API_KEY at minimum
