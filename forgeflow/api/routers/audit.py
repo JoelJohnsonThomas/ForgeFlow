@@ -16,7 +16,7 @@ from datetime import datetime
 import asyncpg
 from fastapi import APIRouter, Depends, Query
 
-from forgeflow.api.dependencies import get_pool
+from forgeflow.api.dependencies import get_pool, get_workspace_id
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -34,8 +34,14 @@ async def search_audit_log(
     limit: int = Query(50, ge=1, le=500),
     offset: int = Query(0, ge=0),
     pool: asyncpg.Pool = Depends(get_pool),
+    workspace_id: str | None = Depends(get_workspace_id),
 ) -> dict:
-    """Search the audit log. Returns {total, items, limit, offset}."""
+    """Search the audit log. Returns {total, items, limit, offset}.
+
+    Tenant-scoped via workspace_id: a caller with a workspace claim only
+    sees their own audit entries. Calls without workspace_id see only
+    rows where workspace_id IS NULL (legacy / global).
+    """
 
     clauses: list[str] = ["1=1"]
     params: list = []
@@ -46,6 +52,14 @@ async def search_audit_log(
         clauses.append(clause.replace("$X", f"${idx}"))
         params.append(value)
         idx += 1
+
+    # Workspace scoping always applies — it's the multi-tenant boundary
+    if workspace_id:
+        import uuid as _uuid
+
+        _add("workspace_id = $X", _uuid.UUID(workspace_id))
+    else:
+        clauses.append("workspace_id IS NULL")
 
     if user_id:
         _add("user_id::text = $X", user_id)

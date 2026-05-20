@@ -11,7 +11,12 @@ import asyncpg
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
-from forgeflow.api.dependencies import get_current_user, get_graphs, get_pool
+from forgeflow.api.dependencies import (
+    get_current_user,
+    get_graphs,
+    get_pool,
+    get_workspace_id,
+)
 from forgeflow.api.schemas import (
     AgentTraceResponse,
     WorkflowRunRequest,
@@ -47,6 +52,7 @@ async def run_workflow(
     graphs: dict = Depends(get_graphs),
     pool: asyncpg.Pool = Depends(get_pool),
     user: UserContext = Depends(get_current_user),
+    workspace_id: str | None = Depends(get_workspace_id),
 ):
     """Trigger a new workflow run. Returns run_id and thread_id for tracking."""
     graph = graphs.get(request.workflow_type)
@@ -82,15 +88,15 @@ async def run_workflow(
     latency_ms = (time.monotonic() - start) * 1000
     stage = final_state.get("current_stage", "unknown")
 
-    # Persist run record
+    # Persist run record (tenant-scoped via workspace_id when present)
     try:
         async with pool.acquire() as conn:
             await conn.execute(
                 """
                 INSERT INTO workflow_runs
                   (id, thread_id, workflow_type, status, input_data, output_data,
-                   total_tokens, total_cost_usd, user_id, metadata)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                   total_tokens, total_cost_usd, user_id, metadata, workspace_id)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                 """,
                 uuid.UUID(workflow_id),
                 uuid.UUID(thread_id),
@@ -104,6 +110,7 @@ async def run_workflow(
                 final_state.get("total_cost_usd", 0.0),
                 user.user_id,
                 {"latency_ms": round(latency_ms, 1)},
+                uuid.UUID(workspace_id) if workspace_id else None,
             )
     except Exception as e:
         logger.error("Failed to persist workflow run: %s", e)
@@ -214,14 +221,34 @@ async def stream_workflow(
 async def get_workflow(
     run_id: str,
     pool: asyncpg.Pool = Depends(get_pool),
+    workspace_id: str | None = Depends(get_workspace_id),
 ):
-    """Get the current status and state of a workflow run."""
+    """Get the current status and state of a workflow run.
+
+    Tenant-scoped: callers carrying a workspace claim can only fetch runs
+    in their workspace. Calls with no workspace_id see rows where
+    workspace_id IS NULL (legacy / global runs) — this preserves
+    single-tenant deployments through the migration window.
+    """
     try:
         async with pool.acquire() as conn:
-            row = await conn.fetchrow(
-                "SELECT * FROM workflow_runs WHERE id = $1",
-                uuid.UUID(run_id),
-            )
+            if workspace_id:
+                row = await conn.fetchrow(
+                    """
+                    SELECT * FROM workflow_runs
+                    WHERE id = $1 AND workspace_id = $2
+                    """,
+                    uuid.UUID(run_id),
+                    uuid.UUID(workspace_id),
+                )
+            else:
+                row = await conn.fetchrow(
+                    """
+                    SELECT * FROM workflow_runs
+                    WHERE id = $1 AND workspace_id IS NULL
+                    """,
+                    uuid.UUID(run_id),
+                )
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid run_id: {e}") from e
 

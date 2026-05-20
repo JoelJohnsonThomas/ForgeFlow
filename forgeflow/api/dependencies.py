@@ -36,3 +36,17 @@ async def get_current_user(request: Request) -> UserContext:
         user_id=getattr(request.state, "user_id", "anonymous"),
         role=getattr(request.state, "role", "viewer"),
     )
+
+
+async def get_workspace_id(request: Request) -> str | None:
+    """Return the tenant scope for this request, or None for a global/unscoped call.
+
+    The middleware sets request.state.workspace_id from either:
+      - the JWT `workspace` claim
+      - the legacy X-Workspace-Id header (dev fallback)
+
+    Endpoints that touch tenant-scoped tables should depend on this and
+    filter every query by the returned ID. See Phase 3.5 plan in ROADMAP.md
+    for the full list of queries still to be updated.
+    """
+    return getattr(request.state, "workspace_id", None)

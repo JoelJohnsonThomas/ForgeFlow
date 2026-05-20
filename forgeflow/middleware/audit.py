@@ -17,6 +17,15 @@ logger = logging.getLogger(__name__)
 _SKIP_AUDIT = {"/health", "/metrics/prometheus", "/docs", "/openapi.json", "/redoc"}
 
 
+def _is_uuid(value: str) -> bool:
+    """Cheap UUID-shape check so we don't write 'anonymous' into a UUID column."""
+    try:
+        uuid.UUID(str(value))
+        return True
+    except (ValueError, TypeError, AttributeError):
+        return False
+
+
 class AuditMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         if request.url.path in _SKIP_AUDIT:
@@ -39,23 +48,27 @@ class AuditMiddleware(BaseHTTPMiddleware):
         try:
             pool = getattr(request.app.state, "pool", None)
             if pool:
+                workspace_id = getattr(request.state, "workspace_id", None)
                 async with pool.acquire() as conn:
                     await conn.execute(
                         """
                         INSERT INTO audit_log
-                          (user_id, role, action, resource, outcome, request_id, metadata)
-                        VALUES ($1, $2, $3, $4, $5, $6, $7)
+                          (user_id, role, action, resource, outcome, request_id,
+                           workspace_id, metadata)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                         """,
-                        user_id,
+                        user_id if _is_uuid(user_id) else None,
                         role,
                         request.method,
                         request.url.path,
                         outcome,
                         uuid.UUID(request_id),
+                        uuid.UUID(workspace_id) if workspace_id else None,
                         {
                             "status_code": response.status_code,
                             "latency_ms": round(latency_ms, 1),
                             "user_agent": request.headers.get("user-agent", ""),
+                            "user_id_str": str(user_id),
                         },
                     )
         except Exception as e:

@@ -15,6 +15,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         "read:agents",
         "read:memory",
         "read:audit",
+        "read:workspaces",
     },
     "sales_rep": {
         "execute:workflows",
@@ -45,4 +46,6 @@ ROUTE_PERMISSION_MAP: dict[tuple[str, str], tuple[str, str]] = {
     ("POST", "/memory"):                 ("write",   "memory"),
     ("DELETE", "/memory"):               ("write",   "memory"),
     ("GET",  "/audit"):                  ("read",    "audit"),
+    ("GET",  "/workspaces"):             ("read",    "workspaces"),
+    ("POST", "/workspaces"):             ("write",   "workspaces"),
 }

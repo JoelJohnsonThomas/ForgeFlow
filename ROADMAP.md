@@ -44,15 +44,15 @@ Closed the gap between "architectural scaffolding exists" and "production-useful
 | Cost dashboard improvements | _shipped_ | Per-workflow-type breakdown, budget alert banner, top-cost drill-down |
 | Audit log search UI | _shipped_ | `/audit/search` + dashboard page 5 for compliance queries |
 
-## Phase 3 — Enterprise Features
+## Phase 3 — Enterprise Features _(shipped)_
 
-| Item | Rationale |
-|------|-----------|
-| JWT authentication | Replace dev-only `X-User-Id` / `X-Role` headers |
-| Multi-tenant isolation | Per-workspace state, secrets, RBAC scopes |
-| A2A in-workflow dispatch | Agents calling `registry.discover()` for true cross-process orchestration |
-| Workflow simulation / dry-run | "What if" mode that runs without external side effects |
-| Approval escalation rules | Auto-escalate stale approvals to a manager after timeout |
+| Item | Status | Description |
+|------|--------|-------------|
+| JWT authentication | _shipped_ | Bearer JWT replaces X-Role; `/auth/login` + `/auth/introspect`; legacy header fallback for migration |
+| Multi-tenant isolation | _foundation shipped_ | Schema, workspaces table, JWT claim, middleware state, two sample endpoints scoped. Remaining query updates tracked as separate issue. |
+| A2A in-workflow dispatch | _shipped_ | LangGraph nodes record A2A tasks via the registry; `/agents/dispatch` shows the resolution map |
+| Workflow simulation / dry-run | _shipped_ | `dry_run: true` skips CRM writes, emails, Slack pings while still running the LLM plan |
+| Approval escalation rules | _shipped_ | Background task ratchets stale approvals through level 1 → 2 → auto-rejected with Slack pings |
 
 ## Phase 4 — Connector Library
 
