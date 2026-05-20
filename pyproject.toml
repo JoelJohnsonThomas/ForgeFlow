@@ -55,6 +55,8 @@ dependencies = [
     "pandas>=2.2.0",
     # Notifications
     "slack-sdk>=3.30.0",
+    # Prometheus exposition
+    "prometheus-client>=0.21.0",
 ]
 
 [project.optional-dependencies]
@@ -74,6 +76,13 @@ ollama = [
 # Anthropic Claude support (bonus provider alongside OpenAI)
 anthropic = [
     "langchain-anthropic>=0.3.0",
+]
+# OpenTelemetry — exports to Phoenix, Langfuse, Jaeger, Tempo, Datadog APM, etc.
+otel = [
+    "opentelemetry-api>=1.27.0",
+    "opentelemetry-sdk>=1.27.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.27.0",
+    "opentelemetry-instrumentation-fastapi>=0.48b0",
 ]
 
 [tool.setuptools.packages.find]

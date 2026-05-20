@@ -1,15 +1,41 @@
-"""Metrics routes — observability data for the Streamlit dashboard."""
+"""Metrics routes — observability data for the Streamlit dashboard + Prometheus."""
 
 from __future__ import annotations
 
 import asyncpg
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
+from fastapi.responses import Response
 
 from forgeflow.api.dependencies import get_pool
 from forgeflow.api.schemas import EvaluationSummaryResponse, MetricsSummaryResponse
 from forgeflow.observability.metrics_store import MetricsStore
+from forgeflow.observability.prometheus import refresh_from_db, render
 
 router = APIRouter()
+
+
+@router.get("/prometheus", include_in_schema=False)
+async def prometheus_metrics(
+    request: Request,
+    pool: asyncpg.Pool = Depends(get_pool),
+):
+    """Prometheus scrape endpoint. Returns text/plain in the standard format.
+
+    The registry is held on app.state.prom_registry and was built at startup
+    in forgeflow/api/main.py. We refresh DB-backed series on every scrape.
+    """
+    registry = getattr(request.app.state, "prom_registry", None)
+    metrics_collectors = getattr(request.app.state, "prom_metrics", None)
+    if registry is None or metrics_collectors is None:
+        return Response(
+            content="# prometheus registry not initialised\n",
+            media_type="text/plain",
+            status_code=503,
+        )
+
+    await refresh_from_db(pool, metrics_collectors)
+    body, content_type = render(registry)
+    return Response(content=body, media_type=content_type)
 
 
 @router.get("/", response_model=MetricsSummaryResponse)

@@ -27,6 +27,8 @@ from forgeflow.middleware.audit import AuditMiddleware
 from forgeflow.middleware.auth import RBACMiddleware
 from forgeflow.middleware.rate_limit import RateLimitMiddleware
 from forgeflow.middleware.security import SecurityMiddleware
+from forgeflow.observability.prometheus import _build_registry
+from forgeflow.observability.tracing import init_tracing
 
 logging.basicConfig(
     level=logging.INFO,
@@ -61,6 +63,12 @@ async def lifespan(app: FastAPI):
     register_default_agents()
     logger.info("A2A registry populated")
 
+    # Prometheus registry — populated lazily on each /metrics/prometheus scrape
+    registry, prom_metrics = _build_registry()
+    app.state.prom_registry = registry
+    app.state.prom_metrics = prom_metrics
+    logger.info("Prometheus registry initialised")
+
     logger.info("ForgeFlow API ready")
     yield
 
@@ -76,6 +84,9 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+# Optional OpenTelemetry instrumentation — no-op when OTEL_ENABLED is false
+init_tracing(app)
 
 # CORS — restrict in production
 app.add_middleware(

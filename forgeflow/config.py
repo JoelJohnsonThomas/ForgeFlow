@@ -84,6 +84,25 @@ class Settings(BaseSettings):
     # --- Search ---
     tavily_api_key: SecretStr = Field(SecretStr(""), description="Tavily search API key")
 
+    # --- OpenTelemetry (optional — for Phoenix/Langfuse/Jaeger/Datadog APM) ---
+    otel_enabled: bool = Field(False, description="Toggle OpenTelemetry tracing")
+    otel_service_name: str = Field("forgeflow-api")
+    otel_environment: str = Field("development", description="prod | staging | development")
+    otel_exporter_endpoint: str = Field(
+        "http://localhost:4318/v1/traces",
+        description="OTLP-HTTP endpoint (Phoenix/Langfuse/Tempo/etc.)",
+    )
+    otel_exporter_headers: str = Field(
+        "",
+        description="Comma-separated 'k=v' headers for the OTLP exporter (e.g. auth)",
+    )
+
+    # --- Tracing provider switch (high-level — sets OTel endpoint accordingly) ---
+    tracing_provider: str = Field(
+        "langsmith",
+        description="langsmith | phoenix | langfuse | none",
+    )
+
     # --- Slack (for HITL approval notifications) ---
     slack_bot_token: SecretStr = Field(
         SecretStr(""),
