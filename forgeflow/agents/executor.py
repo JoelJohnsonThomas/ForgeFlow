@@ -7,12 +7,11 @@ Two sub-modes:
 
 from __future__ import annotations
 
-import json
 import logging
 import uuid
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 
