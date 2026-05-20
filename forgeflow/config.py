@@ -161,6 +161,21 @@ class Settings(BaseSettings):
     )
     sap_client: str = Field("100", description="SAP client number")
 
+    # --- QuickBooks Online connector ---
+    quickbooks_access_token: SecretStr = Field(
+        SecretStr(""),
+        description="Intuit OAuth access token (refreshed externally)",
+    )
+    quickbooks_realm_id: str = Field(
+        "", description="QuickBooks Company ID (realmId from OAuth callback)"
+    )
+    quickbooks_environment: str = Field(
+        "production", description="sandbox | production"
+    )
+    quickbooks_minor_version: int = Field(
+        65, description="Intuit API minor version"
+    )
+
     # --- Salesforce connector ---
     salesforce_instance_url: str = Field(
         "",
