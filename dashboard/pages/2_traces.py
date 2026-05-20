@@ -1,6 +1,7 @@
 """Agent Traces page — Gantt chart visualization of agent execution hops."""
 
 import os
+
 import httpx
 import streamlit as st
 

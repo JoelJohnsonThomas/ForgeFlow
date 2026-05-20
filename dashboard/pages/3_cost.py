@@ -1,11 +1,12 @@
 """Cost Analysis page — spending trends by agent and model."""
 
 import os
+
 import httpx
-import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import streamlit as st
 
 from forgeflow.config import get_settings
 

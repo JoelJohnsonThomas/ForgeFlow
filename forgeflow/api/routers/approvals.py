@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import asyncpg
 from fastapi import APIRouter, Depends, HTTPException
@@ -75,7 +75,7 @@ async def approve(
         await pipeline.resume(thread_id=thread_id, approval_status="approved", resolved_by=user.user_id)
     except Exception as e:
         logger.error("Graph resume failed: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to resume workflow: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to resume workflow: {e}") from e
 
     # Update approval record
     async with pool.acquire() as conn:
@@ -144,8 +144,8 @@ async def reject(
 async def _fetch_by_token(pool: asyncpg.Pool, token: str) -> dict:
     try:
         token_uuid = uuid.UUID(token)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid token format")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="Invalid token format") from exc
 
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
@@ -159,7 +159,7 @@ async def _fetch_by_token(pool: asyncpg.Pool, token: str) -> dict:
     if row["status"] != "pending":
         raise HTTPException(status_code=409, detail=f"Approval already {row['status']}")
 
-    if row["expires_at"].replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
+    if row["expires_at"].replace(tzinfo=UTC) < datetime.now(UTC):
         raise HTTPException(status_code=410, detail="Approval request has expired")
 
     return dict(row)

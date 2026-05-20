@@ -12,7 +12,7 @@ Reference: https://a2a-protocol.org/latest/specification/
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -55,21 +55,21 @@ class A2ATask(BaseModel):
     method: str = Field(description="The action requested e.g. 'research_company'")
     params: dict[str, Any] = Field(default_factory=dict)
     state: TaskState = TaskState.SUBMITTED
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     timeout_seconds: int = 300
 
     def mark_working(self) -> None:
         self.state = TaskState.WORKING
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
 
     def mark_completed(self) -> None:
         self.state = TaskState.COMPLETED
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
 
     def mark_failed(self) -> None:
         self.state = TaskState.FAILED
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
 
 
 class A2AArtifact(BaseModel):
@@ -80,7 +80,7 @@ class A2AArtifact(BaseModel):
     artifact_type: ArtifactType = ArtifactType.DATA
     content: str | dict | list
     metadata: dict[str, Any] = Field(default_factory=dict)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class A2AMessage(BaseModel):
@@ -92,14 +92,14 @@ class A2AMessage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
 
     @classmethod
-    def task_request(cls, task: A2ATask) -> "A2AMessage":
+    def task_request(cls, task: A2ATask) -> A2AMessage:
         return cls(
             method="tasks/send",
             params={"task": task.model_dump(mode="json")},
         )
 
     @classmethod
-    def artifact_response(cls, artifact: A2AArtifact, request_id: str) -> "A2AMessage":
+    def artifact_response(cls, artifact: A2AArtifact, request_id: str) -> A2AMessage:
         return cls(
             method="artifacts/send",
             params={"artifact": artifact.model_dump(mode="json")},

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import statistics
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
@@ -19,10 +18,10 @@ class RunMetrics:
     stage_reached: str
 
     # LLM judge scores (optional — populated after evaluation)
-    faithfulness: Optional[float] = None
-    relevance: Optional[float] = None
-    coherence: Optional[float] = None
-    hallucination_flag: Optional[bool] = None
+    faithfulness: float | None = None
+    relevance: float | None = None
+    coherence: float | None = None
+    hallucination_flag: bool | None = None
 
     @property
     def tokens_per_dollar(self) -> float:

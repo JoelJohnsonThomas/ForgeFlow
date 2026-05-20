@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Optional
 
 from pydantic import BaseModel, Field
-
 
 # ------------------------------------------------------------------ #
 # Workflow                                                             #
@@ -33,10 +31,10 @@ class WorkflowStatusResponse(BaseModel):
     current_stage: str
     total_tokens: int
     total_cost_usd: float
-    created_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    lead_data: Optional[dict] = None
-    proposal: Optional[dict] = None
+    created_at: datetime | None = None
+    completed_at: datetime | None = None
+    lead_data: dict | None = None
+    proposal: dict | None = None
     analysis_scores: list[dict] = []
     executed_actions: list[str] = []
     errors: list[str] = []
@@ -47,11 +45,11 @@ class AgentTraceResponse(BaseModel):
     agent_name: str
     stage: str
     started_at: datetime
-    completed_at: Optional[datetime]
+    completed_at: datetime | None
     tokens_used: int
     cost_usd: float
-    error: Optional[str]
-    output_patch: Optional[dict]
+    error: str | None
+    output_patch: dict | None
 
 
 # ------------------------------------------------------------------ #
@@ -67,8 +65,8 @@ class ApprovalRequestResponse(BaseModel):
     payload: dict
     requested_at: datetime
     expires_at: datetime
-    resolved_at: Optional[datetime] = None
-    resolution_note: Optional[str] = None
+    resolved_at: datetime | None = None
+    resolution_note: str | None = None
 
 
 class ApprovalActionRequest(BaseModel):
@@ -84,7 +82,7 @@ class MemoryStoreRequest(BaseModel):
     content: str = Field(..., min_length=1)
     namespace: str = "default"
     metadata: dict = Field(default_factory=dict)
-    ttl_hours: Optional[int] = None
+    ttl_hours: int | None = None
 
 
 class MemoryStoreResponse(BaseModel):

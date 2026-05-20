@@ -10,11 +10,10 @@ from __future__ import annotations
 import asyncio
 import logging
 from abc import ABC, abstractmethod
-from typing import Any
 
 import httpx
 
-from forgeflow.a2a.protocol import A2AMessage, A2ATask, A2AArtifact
+from forgeflow.a2a.protocol import A2AMessage
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +46,7 @@ class InMemoryTransport(BaseTransport):
         queue = self.get_queue(agent_id)
         try:
             return await asyncio.wait_for(queue.get(), timeout=timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return None
 
 

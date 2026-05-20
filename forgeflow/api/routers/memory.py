@@ -27,7 +27,7 @@ async def store_memory(
             ttl_hours=request.ttl_hours,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to store memory: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to store memory: {e}") from e
 
     return MemoryStoreResponse(memory_id=memory_id)
 
@@ -44,7 +44,7 @@ async def search_memory(
     try:
         results = await manager.recall(query=q, k=k, namespace=namespace)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Memory search failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Memory search failed: {e}") from e
 
     return [
         MemorySearchResult(

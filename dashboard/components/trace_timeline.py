@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import plotly.figure_factory as ff
-import streamlit as st
 from datetime import datetime
 
+import plotly.figure_factory as ff
+import streamlit as st
 
 AGENT_COLORS = {
     "supervisor": "#4F8EF7",

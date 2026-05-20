@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field

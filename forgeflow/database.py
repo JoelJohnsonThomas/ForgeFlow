@@ -1,8 +1,9 @@
 """asyncpg connection pool factory — shared across all modules."""
 
-import asyncpg
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+
+import asyncpg
 
 from forgeflow.config import get_settings
 

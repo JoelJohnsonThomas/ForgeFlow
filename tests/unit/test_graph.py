@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from forgeflow.graph.edges import route_supervisor, route_human_approval
+from forgeflow.graph.edges import route_human_approval, route_supervisor
 
 
 class TestRouteSupervisor:

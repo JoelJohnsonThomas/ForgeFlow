@@ -10,8 +10,8 @@ from __future__ import annotations
 import logging
 from typing import Literal
 
-from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
 from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from pydantic import BaseModel
 
 from forgeflow.agents.base import BaseAgent
@@ -56,7 +56,6 @@ class SupervisorAgent(BaseAgent):
         self._log_start(state)
 
         stage = state.get("current_stage", "qualify")
-        messages = state.get("messages", [])
         errors = state.get("errors", [])
         analysis = state.get("analysis_scores", [])
 

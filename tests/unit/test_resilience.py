@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
+from forgeflow.resilience.budget_guard import BudgetExceededError, BudgetGuard
 from forgeflow.resilience.circuit_breaker import CBState, CircuitBreaker, CircuitOpenError
-from forgeflow.resilience.budget_guard import BudgetGuard, BudgetExceededError
 
 
 class TestCircuitBreaker:

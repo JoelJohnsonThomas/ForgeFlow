@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from typing import Optional
+from typing import Any
 
 from forgeflow.evaluation.dataset import EvalExample, get_dataset, get_sample
 from forgeflow.evaluation.judge import LLMJudge
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class EvalRunner:
-    def __init__(self, graph, judge: Optional[LLMJudge] = None) -> None:
+    def __init__(self, graph: Any, judge: LLMJudge | None = None) -> None:
         self.graph = graph
         self.pipeline = SalesOpsPipeline(graph)
         self.judge = judge or LLMJudge()
@@ -48,7 +48,6 @@ class EvalRunner:
 
             scores = final_state.get("analysis_scores", [])
             if scores:
-                actual_score = scores[-1].get("score", 0)
                 actual_qualified = scores[-1].get("qualified", False)
                 success = actual_qualified == example.expected_qualified
 
@@ -88,7 +87,7 @@ class EvalRunner:
 
     async def run_suite(
         self,
-        n: Optional[int] = None,
+        n: int | None = None,
         concurrency: int = 3,
     ) -> EvalSummary:
         """Run the full or partial eval suite with bounded concurrency.

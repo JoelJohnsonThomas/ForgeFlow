@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import streamlit as st
 from datetime import datetime, timedelta
+
+import streamlit as st
 
 
 def render_sidebar() -> dict:

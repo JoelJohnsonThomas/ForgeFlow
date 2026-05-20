@@ -6,7 +6,6 @@ import json
 import logging
 import time
 import uuid
-from datetime import datetime, timezone
 
 import asyncpg
 from fastapi import APIRouter, Depends, HTTPException
@@ -51,7 +50,7 @@ async def run_workflow(
         )
     except Exception as e:
         logger.error("Workflow run failed: %s", e)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
     latency_ms = (time.monotonic() - start) * 1000
     stage = final_state.get("current_stage", "unknown")
@@ -152,7 +151,7 @@ async def get_workflow(
                 uuid.UUID(run_id),
             )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid run_id: {e}")
+        raise HTTPException(status_code=400, detail=f"Invalid run_id: {e}") from e
 
     if not row:
         raise HTTPException(status_code=404, detail="Workflow run not found")
@@ -184,7 +183,7 @@ async def get_trace(
                 uuid.UUID(run_id),
             )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     return [
         AgentTraceResponse(

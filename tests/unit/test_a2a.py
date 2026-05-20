@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from forgeflow.a2a.protocol import AgentCard, A2ATask, TaskState
+from forgeflow.a2a.protocol import A2ATask, AgentCard, TaskState
 from forgeflow.a2a.registry import AgentRegistry
 
 

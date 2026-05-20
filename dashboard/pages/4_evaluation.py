@@ -1,9 +1,10 @@
 """Evaluation page — LLM-as-judge scores and hallucination rate."""
 
 import os
+
 import httpx
-import streamlit as st
 import plotly.graph_objects as go
+import streamlit as st
 
 API_URL = os.environ.get("API_URL", "http://localhost:8000")
 

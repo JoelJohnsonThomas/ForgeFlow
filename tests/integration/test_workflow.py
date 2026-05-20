@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from forgeflow.workflows.sales_ops.models import LeadInput
+import pytest
 
+from forgeflow.workflows.sales_ops.models import LeadInput
 
 
 @pytest.fixture

@@ -76,8 +76,6 @@ target-version = "py311"
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "ANN"]
 ignore = [
-    "ANN101",  # missing type annotation for `self`
-    "ANN102",  # missing type annotation for `cls`
     "ANN401",  # Any disallowed — too broad for a dynamic system
     "ANN201",  # missing return type on public function — FastAPI uses response_model instead
     "ANN202",  # missing return type on private function

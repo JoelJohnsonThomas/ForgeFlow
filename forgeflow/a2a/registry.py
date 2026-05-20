@@ -6,7 +6,6 @@ The supervisor uses capability-based discovery to find the right worker.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import time
 from collections import defaultdict
@@ -20,7 +19,7 @@ logger = logging.getLogger(__name__)
 class AgentRegistry:
     """In-memory registry with capability-based discovery and heartbeat tracking."""
 
-    _instance: "AgentRegistry | None" = None
+    _instance: AgentRegistry | None = None
 
     def __init__(self) -> None:
         self._agents: dict[str, AgentCard] = {}
@@ -29,7 +28,7 @@ class AgentRegistry:
         self._run_counts: dict[str, int] = defaultdict(int)
 
     @classmethod
-    def get_instance(cls) -> "AgentRegistry":
+    def get_instance(cls) -> AgentRegistry:
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance

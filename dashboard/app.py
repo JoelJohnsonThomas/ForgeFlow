@@ -7,11 +7,12 @@ Pages are in dashboard/pages/ and loaded automatically by Streamlit's multi-page
 """
 
 import os
-import streamlit as st
-import httpx
 
-from dashboard.components.sidebar import render_sidebar
+import httpx
+import streamlit as st
+
 from dashboard.components.metric_cards import render_kpi_row
+from dashboard.components.sidebar import render_sidebar
 
 API_URL = os.environ.get("API_URL", "http://localhost:8000")
 
@@ -107,7 +108,7 @@ with col2:
                 with st.expander(f"🔔 {item.get('stage', 'proposal')} approval"):
                     st.json(item.get("payload", {}))
                     token = item.get("token", "")
-                    if st.button(f"✅ Approve", key=f"approve_{token}"):
+                    if st.button("✅ Approve", key=f"approve_{token}"):
                         httpx.post(
                             f"{API_URL}/approvals/{token}/approve",
                             json={"note": "Approved via dashboard"},
