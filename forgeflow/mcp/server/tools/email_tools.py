@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 from fastmcp import FastMCP
 
@@ -56,7 +56,7 @@ sales@forgeflow.ai | calendly.com/forgeflow"""
         "body": body,
         "tone": tone,
         "draft_id": str(uuid.uuid4()),
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(datetime.UTC).isoformat(),
     }
     logger.info("Email drafted for %s | subject: %s", to, subject)
     return draft
@@ -89,7 +89,7 @@ async def send_email(
         "cc": cc or [],
         "subject": subject,
         "body": body[:200] + "...",  # truncate for logging
-        "sent_at": datetime.now(timezone.utc).isoformat(),
+        "sent_at": datetime.now(datetime.UTC).isoformat(),
         "status": "sent",
     }
     _sent_emails.append(record)

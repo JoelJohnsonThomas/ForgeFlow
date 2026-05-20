@@ -10,7 +10,8 @@ from __future__ import annotations
 
 import logging
 import uuid
-from typing import Any, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import Any
 
 from forgeflow.state.workflow_state import WorkflowState
 from forgeflow.workflows.sales_ops.models import LeadInput

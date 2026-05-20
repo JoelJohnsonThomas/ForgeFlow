@@ -5,7 +5,8 @@ from __future__ import annotations
 import logging
 import time
 from collections import defaultdict
-from typing import Callable
+from collections.abc import Callable
+from typing import Any
 
 from fastapi import Request
 from fastapi.responses import JSONResponse, Response
@@ -19,7 +20,7 @@ _BUCKET_WINDOW = 60.0  # seconds
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app, requests_per_minute: int = _REQUESTS_PER_MINUTE) -> None:
+    def __init__(self, app: Any, requests_per_minute: int = _REQUESTS_PER_MINUTE) -> None:
         super().__init__(app)
         self.rpm = requests_per_minute
         self._buckets: dict[str, list[float]] = defaultdict(list)

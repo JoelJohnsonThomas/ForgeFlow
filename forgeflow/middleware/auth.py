@@ -7,7 +7,8 @@ The enforcement logic (RBACEnforcer) is the same either way.
 from __future__ import annotations
 
 import logging
-from typing import Callable
+from collections.abc import Callable
+from typing import Any
 
 from fastapi import Request
 from fastapi.responses import JSONResponse, Response
@@ -23,7 +24,7 @@ _OPEN_PATHS = {"/", "/health", "/docs", "/openapi.json", "/redoc"}
 
 
 class RBACMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app, enforcer: RBACEnforcer | None = None) -> None:
+    def __init__(self, app: Any, enforcer: RBACEnforcer | None = None) -> None:
         super().__init__(app)
         self.enforcer = enforcer or RBACEnforcer()
 

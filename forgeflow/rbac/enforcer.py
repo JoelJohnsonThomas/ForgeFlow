@@ -17,7 +17,4 @@ class RBACEnforcer:
             return True
 
         # Wildcard resource: "action:*"
-        if f"{action}:*" in permissions:
-            return True
-
-        return False
+        return f"{action}:*" in permissions

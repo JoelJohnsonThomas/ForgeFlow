@@ -6,6 +6,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
 
+
 class TestMCPSearchTools:
     @pytest.mark.asyncio
     async def test_web_search_mock_mode(self):

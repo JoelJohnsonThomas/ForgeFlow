@@ -25,17 +25,17 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Agent singletons — set by build_node_factory() in builder.py
-_supervisor: "SupervisorAgent | None" = None
-_researcher: "ResearcherAgent | None" = None
-_analyzer: "AnalyzerAgent | None" = None
-_executor: "ExecutorAgent | None" = None
+_supervisor: SupervisorAgent | None = None
+_researcher: ResearcherAgent | None = None
+_analyzer: AnalyzerAgent | None = None
+_executor: ExecutorAgent | None = None
 
 
 def build_node_factory(
-    supervisor: "SupervisorAgent",
-    researcher: "ResearcherAgent",
-    analyzer: "AnalyzerAgent",
-    executor: "ExecutorAgent",
+    supervisor: SupervisorAgent,
+    researcher: ResearcherAgent,
+    analyzer: AnalyzerAgent,
+    executor: ExecutorAgent,
 ) -> None:
     global _supervisor, _researcher, _analyzer, _executor
     _supervisor = supervisor

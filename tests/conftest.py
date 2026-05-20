@@ -6,13 +6,12 @@ import os
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-import pytest_asyncio
 from langchain_core.messages import AIMessage
 
 # Ensure test env vars are set before any imports
 os.environ.setdefault("OPENAI_API_KEY", "sk-test-fake-key-for-testing")
 os.environ.setdefault("POSTGRES_URL", "postgresql+asyncpg://forgeflow:testpass@localhost:5432/forgeflow_test")
-os.environ.setdefault("POSTGRES_SYNC_URL", "postgresql://forgeflow:testpass@localhost:5432/forgeflow_test")
+os.environ.setdefault("POSTGRES_SYNC_URL", "postgresql+psycopg://forgeflow:testpass@localhost:5432/forgeflow_test")
 os.environ.setdefault("LANGCHAIN_TRACING_V2", "false")
 os.environ.setdefault("API_SECRET_KEY", "test-secret")
 os.environ.setdefault("BUDGET_LIMIT_USD", "10.0")

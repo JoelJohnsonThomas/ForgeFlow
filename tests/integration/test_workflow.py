@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock
 from forgeflow.workflows.sales_ops.models import LeadInput
 
 
+
 @pytest.fixture
 def mock_graph():
     graph = MagicMock()
@@ -101,7 +102,6 @@ class TestSalesOpsPipeline:
         await pipeline.resume(thread_id="thread-001", approval_status="approved")
 
         mock_graph.ainvoke.assert_called_once()
-        update_arg, kwargs = mock_graph.ainvoke.call_args[0], mock_graph.ainvoke.call_args[1]
         state_update = mock_graph.ainvoke.call_args[0][0]
         assert state_update["approval_status"] == "approved"
 

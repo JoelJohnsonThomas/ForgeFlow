@@ -54,7 +54,7 @@ jobs:
 
     env:
       POSTGRES_URL: postgresql+asyncpg://forgeflow:testpass@localhost:5432/forgeflow_test
-      POSTGRES_SYNC_URL: postgresql://forgeflow:testpass@localhost:5432/forgeflow_test
+      POSTGRES_SYNC_URL: postgresql+psycopg://forgeflow:testpass@localhost:5432/forgeflow_test
       # Use repo secret if available; fall back to a fake key so unit tests (which don't call the API) always pass
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY_TEST || 'sk-test-fake-key-for-unit-tests' }}
       LANGCHAIN_TRACING_V2: "false"
@@ -76,7 +76,7 @@ jobs:
       - name: Run Alembic migrations
         run: alembic upgrade head
         env:
-          POSTGRES_SYNC_URL: postgresql://forgeflow:testpass@localhost:5432/forgeflow_test
+          POSTGRES_SYNC_URL: postgresql+psycopg://forgeflow:testpass@localhost:5432/forgeflow_test
 
       - name: Run tests
         run: pytest tests/unit tests/integration -v --cov=forgeflow --cov-report=xml

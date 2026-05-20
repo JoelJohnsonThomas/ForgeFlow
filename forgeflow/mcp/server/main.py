@@ -10,18 +10,18 @@ Agents connect via the client adapter in forgeflow/mcp/client/adapter.py.
 
 from __future__ import annotations
 
-import sys
 import logging
+import sys
 
 from fastmcp import FastMCP
 
-from forgeflow.mcp.server.tools import (
-    search_tools,
-    crm_tools,
-    email_tools,
-    data_tools,
-)
 from forgeflow.config import get_settings
+from forgeflow.mcp.server.tools import (
+    crm_tools,
+    data_tools,
+    email_tools,
+    search_tools,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

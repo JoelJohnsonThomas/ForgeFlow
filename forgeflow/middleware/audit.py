@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import time
 import uuid
-from typing import Callable
+from collections.abc import Callable
 
 from fastapi import Request
 from fastapi.responses import Response

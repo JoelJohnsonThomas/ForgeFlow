@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 from fastmcp import FastMCP
 
@@ -45,8 +45,8 @@ async def create_lead(
         "industry": industry,
         "source": source,
         "status": "raw",
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(datetime.UTC).isoformat(),
+        "updated_at": datetime.now(datetime.UTC).isoformat(),
     }
     _leads_db[lead_id] = lead
     logger.info("CRM: Created lead %s for %s", lead_id, company_name)
@@ -86,9 +86,9 @@ async def update_lead(
         lead["deal_value_usd"] = deal_value
     if notes:
         lead.setdefault("notes", [])
-        lead["notes"].append({"text": notes, "at": datetime.now(timezone.utc).isoformat()})
+        lead["notes"].append({"text": notes, "at": datetime.now(datetime.UTC).isoformat()})
 
-    lead["updated_at"] = datetime.now(timezone.utc).isoformat()
+    lead["updated_at"] = datetime.now(datetime.UTC).isoformat()
     logger.info("CRM: Updated lead %s | status=%s", lead_id, lead.get("status"))
     return lead
 

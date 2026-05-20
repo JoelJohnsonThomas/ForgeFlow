@@ -25,7 +25,7 @@ class Settings(BaseSettings):
         description="asyncpg DSN for application queries",
     )
     postgres_sync_url: str = Field(
-        "postgresql://forgeflow:forgeflow@localhost:5432/forgeflow",
+        "postgresql+psycopg://forgeflow:forgeflow@localhost:5432/forgeflow",
         description="psycopg3 DSN for LangGraph checkpointer",
     )
 

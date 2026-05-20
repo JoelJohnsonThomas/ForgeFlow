@@ -13,10 +13,10 @@ Stages (in order):
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class Stage(str, Enum):
+class Stage(StrEnum):
     QUALIFY = "qualify"
     RESEARCH = "research"
     ANALYZE = "analyze"

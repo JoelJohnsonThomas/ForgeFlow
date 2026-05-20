@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Type
+from collections.abc import Callable
+from typing import Any
 
 import httpx
 from tenacity import (
     AsyncRetrying,
-    RetryError,
     before_sleep_log,
     retry,
     retry_if_exception_type,
@@ -31,7 +31,7 @@ def with_retry(
     max_attempts: int = 3,
     min_wait: float = 1.0,
     max_wait: float = 10.0,
-    retryable: tuple[Type[Exception], ...] = _RETRYABLE,
+    retryable: tuple[type[Exception], ...] = _RETRYABLE,
 ) -> Any:
     """Decorator factory: wraps a sync or async function with retry logic."""
     return retry(

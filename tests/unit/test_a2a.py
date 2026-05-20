@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import pytest
-
-from forgeflow.a2a.protocol import AgentCard, A2ATask, A2AArtifact, A2AMessage, TaskState
+from forgeflow.a2a.protocol import AgentCard, A2ATask, TaskState
 from forgeflow.a2a.registry import AgentRegistry
 
 
