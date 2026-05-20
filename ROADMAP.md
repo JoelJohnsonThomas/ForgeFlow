@@ -54,7 +54,7 @@ Closed the gap between "architectural scaffolding exists" and "production-useful
 | Workflow simulation / dry-run | _shipped_ | `dry_run: true` skips CRM writes, emails, Slack pings while still running the LLM plan |
 | Approval escalation rules | _shipped_ | Background task ratchets stale approvals through level 1 → 2 → auto-rejected with Slack pings |
 
-## Phase 4 — Connector Library _(4 shipped, 4 pending)_
+## Phase 4 — Connector Library _(shipped)_
 
 Real (non-mock) integrations via MCP tools. All connectors built on
 [`forgeflow/connectors/base.py`](forgeflow/connectors/base.py) — graceful
@@ -66,10 +66,10 @@ degradation when credentials are missing.
 | Jira | _shipped_ | support_ops (ticket creation + transitions) |
 | HubSpot | _shipped_ | sales_ops (contacts + deals + notes) |
 | Salesforce | _shipped_ | sales_ops (leads + opportunities + SOQL) |
-| ServiceNow | _pending_ | Incident management workflow |
-| SAP S/4HANA | _pending_ | ERP order + invoice operations |
-| QuickBooks | _pending_ | finance_recon real ledger reads |
-| Microsoft Graph (Teams, Outlook) | _pending_ | HITL approvals (Slack alternative) |
+| ServiceNow | _shipped_ | Incident management workflow |
+| SAP S/4HANA | _shipped_ | ERP order + invoice operations (OData v2 + CSRF) |
+| QuickBooks Online | _shipped_ | finance_recon ledger + journal entries |
+| Microsoft Graph (Teams, Outlook) | _shipped_ | HITL approvals (Slack alternative) |
 
 ## Phase 5 — Deployment & Platform
 
