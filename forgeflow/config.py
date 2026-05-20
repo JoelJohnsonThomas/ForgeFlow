@@ -150,6 +150,17 @@ class Settings(BaseSettings):
         SecretStr(""), description="Service account password"
     )
 
+    # --- SAP S/4HANA connector ---
+    sap_base_url: str = Field(
+        "",
+        description="S/4HANA host, e.g. https://my300000-api.s4hana.cloud.sap",
+    )
+    sap_username: str = Field("", description="SAP technical user")
+    sap_password: SecretStr = Field(
+        SecretStr(""), description="SAP password / client secret"
+    )
+    sap_client: str = Field("100", description="SAP client number")
+
     # --- Salesforce connector ---
     salesforce_instance_url: str = Field(
         "",

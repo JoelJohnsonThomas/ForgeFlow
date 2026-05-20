@@ -24,6 +24,7 @@ from forgeflow.mcp.server.tools import (
     hubspot_tools,
     jira_tools,
     salesforce_tools,
+    sap_tools,
     search_tools,
     servicenow_tools,
     slack_tools,
@@ -52,6 +53,7 @@ mcp.mount(jira_tools.router, prefix="jira")
 mcp.mount(hubspot_tools.router, prefix="hubspot")
 mcp.mount(salesforce_tools.router, prefix="salesforce")
 mcp.mount(servicenow_tools.router, prefix="servicenow")
+mcp.mount(sap_tools.router, prefix="sap")
 
 
 if __name__ == "__main__":
