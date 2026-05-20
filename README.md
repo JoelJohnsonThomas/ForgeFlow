@@ -285,22 +285,6 @@ alembic/              # 3 database migrations (schema + pgvector + RBAC)
 
 ---
 
-## Why This Matters for FDE Roles
-
-Building ForgeFlow demonstrates five capabilities that distinguish senior forward-deployed engineers:
-
-1. **Systems thinking**: The agent graph, MCP tool layer, and A2A protocol are independently swappable. A customer who uses ServiceNow can plug in a ServiceNow MCP server without changing any agent code.
-
-2. **Production readiness**: Migrations, RBAC, immutable audit log, circuit breakers, budget guards, retry logic — not just "it works in a notebook."
-
-3. **Protocol fluency**: MCP (Anthropic/2024), A2A (Google/2025), PostgresSaver wire protocol — showing you track the ecosystem, not just use it.
-
-4. **Evaluation rigor**: LLM-as-judge with quantified metrics on a labeled dataset. "The agent performs well" becomes "faithfulness 0.91, hallucination rate 3.2%."
-
-5. **Observability discipline**: Every run is traced, costed, and queryable. A customer's ops team can answer "why did run X fail and what did it cost?" without digging through logs.
-
----
-
 ## Local Development
 
 ```bash
@@ -325,6 +309,3 @@ streamlit run dashboard/app.py
 
 ---
 
-## License
-
-MIT © 2026 — Built as a portfolio project demonstrating enterprise agentic AI deployment.
