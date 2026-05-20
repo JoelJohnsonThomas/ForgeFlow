@@ -128,6 +128,20 @@ class Settings(BaseSettings):
         description="langsmith | phoenix | langfuse | none",
     )
 
+    # --- Jira connector ---
+    jira_base_url: str = Field(
+        "",
+        description="Jira tenant URL, e.g. https://acme.atlassian.net",
+    )
+    jira_email: str = Field(
+        "",
+        description="Atlassian account email (Basic auth username)",
+    )
+    jira_api_token: SecretStr = Field(
+        SecretStr(""),
+        description="Jira API token from id.atlassian.com",
+    )
+
     # --- GitHub connector ---
     github_token: SecretStr = Field(
         SecretStr(""),
