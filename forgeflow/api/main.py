@@ -29,6 +29,7 @@ from forgeflow.middleware.rate_limit import RateLimitMiddleware
 from forgeflow.middleware.security import SecurityMiddleware
 from forgeflow.observability.prometheus import _build_registry
 from forgeflow.observability.tracing import init_tracing
+from forgeflow.observability.tracing_provider import configure as configure_tracing_provider
 
 logging.basicConfig(
     level=logging.INFO,
@@ -85,7 +86,9 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# Optional OpenTelemetry instrumentation — no-op when OTEL_ENABLED is false
+# Pick the tracing backend (phoenix / langfuse / langsmith / none), then wire
+# OTel instrumentation if the selected backend uses OTLP.
+configure_tracing_provider()
 init_tracing(app)
 
 # CORS — restrict in production

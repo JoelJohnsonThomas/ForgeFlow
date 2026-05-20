@@ -34,15 +34,15 @@ Closed the gap between "architectural scaffolding exists" and "production-useful
 
 ---
 
-## Phase 2 — Observability & Governance
+## Phase 2 — Observability & Governance _(shipped)_
 
-| Item | Rationale |
-|------|-----------|
-| Prometheus + OpenTelemetry export | Enterprise teams need pull-based metrics for their existing Grafana dashboards |
-| Phoenix / Langfuse integration | Alternative LLM tracing backends for teams not on LangSmith |
-| Evaluation suite in CI | Regression baseline comparison on every PR — catches quality drift |
-| Cost dashboard improvements | Per-agent breakdown, budget gauges, drill-down by run |
-| Audit log search UI | Compliance teams need to query the immutable audit trail |
+| Item | Status | Rationale |
+|------|--------|-----------|
+| Prometheus + OpenTelemetry export | _shipped_ | `/metrics/prometheus` endpoint + OTel FastAPI instrumentor; vendor-neutral via OTLP |
+| Phoenix / Langfuse integration | _shipped_ | `TRACING_PROVIDER` switch auto-configures OTel endpoint + auth per backend |
+| Evaluation suite in CI | _shipped_ | `.github/workflows/eval.yml` runs the eval suite + regression check against a baseline JSON |
+| Cost dashboard improvements | _shipped_ | Per-workflow-type breakdown, budget alert banner, top-cost drill-down |
+| Audit log search UI | _shipped_ | `/audit/search` + dashboard page 5 for compliance queries |
 
 ## Phase 3 — Enterprise Features
 
