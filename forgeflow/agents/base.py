@@ -30,6 +30,12 @@ class BaseAgent(ABC):
         self.system_prompt = system_prompt
         self._circuit_breaker = CircuitBreaker(name=name, failure_threshold=5, recovery_timeout=30.0)
 
+        # Capture the underlying model identifier for cost-tracking lookups.
+        # Different providers expose the name under different attribute names.
+        self.model_name = (
+            getattr(model, "model_name", None) or getattr(model, "model", None) or "unknown"
+        )
+
         # Bind tools to the model so it can emit tool-call messages
         self.model = model.bind_tools(self.tools) if self.tools else model
 
