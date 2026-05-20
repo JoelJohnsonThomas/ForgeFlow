@@ -81,6 +81,15 @@ class Settings(BaseSettings):
     circuit_breaker_threshold: int = Field(5, ge=1)
     budget_limit_usd: float = Field(5.0, gt=0, description="Max USD spend per workflow run")
 
+    # --- A2A protocol ---
+    a2a_dispatch_enabled: bool = Field(
+        True,
+        description=(
+            "Route LangGraph node invocations through the A2A registry. "
+            "Required if agents are deployed out-of-process via HTTPTransport."
+        ),
+    )
+
     # --- Approval escalation ---
     approval_escalation_interval_seconds: int = Field(
         300,

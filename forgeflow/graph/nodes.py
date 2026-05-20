@@ -20,6 +20,7 @@ import logging
 import uuid
 from typing import TYPE_CHECKING, Any
 
+from forgeflow.a2a.dispatcher import dispatch_node
 from forgeflow.observability.cost_tracker import calculate_cost, count_tokens
 from forgeflow.resilience.budget_guard import BudgetExceededError, BudgetGuard
 from forgeflow.state.workflow_state import WorkflowState
@@ -78,7 +79,8 @@ def _extract_usage(messages: list[Any], model_name: str) -> tuple[int, int]:
 
 
 async def _run_with_cost_tracking(agent: BaseAgent, state: WorkflowState) -> dict:
-    """Wrap agent.safe_run() with a pre-call budget check and post-call cost record."""
+    """Wrap agent.safe_run() with a pre-call budget check, A2A dispatch
+    record, and post-call cost record."""
     current_cost = float(state.get("total_cost_usd") or 0.0)
     current_tokens = int(state.get("total_tokens") or 0)
 
@@ -93,6 +95,12 @@ async def _run_with_cost_tracking(agent: BaseAgent, state: WorkflowState) -> dic
             "total_cost_usd": current_cost,
             "total_tokens": current_tokens,
         }
+
+    # Record the dispatch in the A2A registry (no-op if disabled).
+    # This is observability glue — the actual agent.safe_run() call below
+    # is what does the work in-process. The dispatch makes the same call
+    # site swappable for HTTPTransport in a multi-process deployment.
+    await dispatch_node(agent.name, dict(state))
 
     patch = await agent.safe_run(state)
 
