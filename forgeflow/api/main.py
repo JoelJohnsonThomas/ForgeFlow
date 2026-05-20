@@ -20,8 +20,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from forgeflow.a2a.registry import register_default_agents
+from forgeflow.config import get_settings
 from forgeflow.database import close_pool, init_pool
 from forgeflow.graph.builder import compile_graph
+from forgeflow.jobs.escalation import ApprovalEscalationJob, EscalationThresholds
 from forgeflow.mcp.client.adapter import get_mcp_tools
 from forgeflow.middleware.audit import AuditMiddleware
 from forgeflow.middleware.auth import RBACMiddleware
@@ -70,10 +72,26 @@ async def lifespan(app: FastAPI):
     app.state.prom_metrics = prom_metrics
     logger.info("Prometheus registry initialised")
 
+    # Approval escalation background task
+    settings = get_settings()
+    escalation_job = ApprovalEscalationJob(
+        pool=app.state.pool,
+        interval_seconds=settings.approval_escalation_interval_seconds,
+        thresholds=EscalationThresholds(
+            first_escalation_minutes=settings.approval_first_escalation_minutes,
+            second_escalation_minutes=settings.approval_second_escalation_minutes,
+            auto_reject_minutes=settings.approval_auto_reject_minutes,
+        ),
+    )
+    escalation_job.start()
+    app.state.escalation_job = escalation_job
+
     logger.info("ForgeFlow API ready")
     yield
 
     logger.info("ForgeFlow API shutting down...")
+    if getattr(app.state, "escalation_job", None):
+        await app.state.escalation_job.stop()
     await close_pool()
 
 

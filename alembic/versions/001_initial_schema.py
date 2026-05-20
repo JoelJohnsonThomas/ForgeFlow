@@ -5,9 +5,10 @@ Revises: (none)
 Create Date: 2026-05-19
 """
 
-from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import UUID, JSONB, INET
+from sqlalchemy.dialects.postgresql import JSONB, UUID
+
+from alembic import op
 
 revision = "001"
 down_revision = None

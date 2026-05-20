@@ -81,6 +81,22 @@ class Settings(BaseSettings):
     circuit_breaker_threshold: int = Field(5, ge=1)
     budget_limit_usd: float = Field(5.0, gt=0, description="Max USD spend per workflow run")
 
+    # --- Approval escalation ---
+    approval_escalation_interval_seconds: int = Field(
+        300,
+        ge=10,
+        description="How often the escalation background task runs (>=10s)",
+    )
+    approval_first_escalation_minutes: int = Field(
+        30, ge=1, description="Pending approval older than this -> level 1 (manager)"
+    )
+    approval_second_escalation_minutes: int = Field(
+        120, ge=1, description="Pending approval older than this -> level 2 (director)"
+    )
+    approval_auto_reject_minutes: int = Field(
+        1440, ge=1, description="Pending approval older than this -> auto-rejected"
+    )
+
     # --- Search ---
     tavily_api_key: SecretStr = Field(SecretStr(""), description="Tavily search API key")
 
