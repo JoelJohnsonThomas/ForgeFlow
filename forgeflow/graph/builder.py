@@ -38,7 +38,23 @@ from forgeflow.state.workflow_state import WorkflowState
 logger = logging.getLogger(__name__)
 
 
-async def compile_graph(mcp_tools: list | None = None, use_checkpointer: bool = True):
+def _get_domain_prompts(workflow_type: str) -> dict[str, str]:
+    """Load prompt overrides for a workflow domain. Returns empty dict for sales_ops (defaults)."""
+    if workflow_type == "support_ops":
+        from forgeflow.workflows.support_ops import PROMPTS
+        return PROMPTS
+    if workflow_type == "finance_recon":
+        from forgeflow.workflows.finance_recon import PROMPTS
+        return PROMPTS
+    # sales_ops uses each agent's built-in defaults
+    return {}
+
+
+async def compile_graph(
+    mcp_tools: list | None = None,
+    use_checkpointer: bool = True,
+    workflow_type: str = "sales_ops",
+):
     """Build and compile the ForgeFlow StateGraph.
 
     Args:
@@ -46,6 +62,8 @@ async def compile_graph(mcp_tools: list | None = None, use_checkpointer: bool = 
                    Passed to researcher and executor. If None, agents run
                    without external tools (useful for testing).
         use_checkpointer: If False, compile without persistence (test mode).
+        workflow_type: Domain template name — sales_ops (default) | support_ops |
+                       finance_recon. Selects per-domain prompts for each agent.
 
     Returns:
         CompiledStateGraph ready for ainvoke() / astream().
@@ -62,13 +80,24 @@ async def compile_graph(mcp_tools: list | None = None, use_checkpointer: bool = 
     # Supervisor + judge use the strong model; workers use the cheap one.
     model_fast = get_model(strong=False)
     model_strong = get_model(strong=True)
-    logger.info("Models built via provider '%s'", settings.llm_provider)
+    logger.info(
+        "Models built via provider '%s' | workflow_type=%s",
+        settings.llm_provider,
+        workflow_type,
+    )
 
-    # Instantiate agents
-    supervisor = SupervisorAgent(model=model_strong)
-    researcher = ResearcherAgent(model=model_fast, tools=mcp_tools or [])
-    analyzer = AnalyzerAgent(model=model_fast)
-    executor = ExecutorAgent(model=model_fast, tools=mcp_tools or [])
+    # Per-domain prompts — empty dict means "use each agent's built-in default"
+    prompts = _get_domain_prompts(workflow_type)
+
+    # Instantiate agents with domain-specific prompts where provided
+    supervisor = SupervisorAgent(model=model_strong, system_prompt=prompts.get("supervisor"))
+    researcher = ResearcherAgent(
+        model=model_fast, tools=mcp_tools or [], system_prompt=prompts.get("researcher")
+    )
+    analyzer = AnalyzerAgent(model=model_fast, system_prompt=prompts.get("analyzer"))
+    executor = ExecutorAgent(
+        model=model_fast, tools=mcp_tools or [], system_prompt=prompts.get("executor")
+    )
 
     # Register agents with node functions
     build_node_factory(supervisor, researcher, analyzer, executor)

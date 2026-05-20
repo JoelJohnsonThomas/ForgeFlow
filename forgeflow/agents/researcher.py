@@ -40,12 +40,17 @@ MAX_TOOL_ITERATIONS = 5
 
 
 class ResearcherAgent(BaseAgent):
-    def __init__(self, model: BaseChatModel, tools: list[BaseTool]) -> None:
+    def __init__(
+        self,
+        model: BaseChatModel,
+        tools: list[BaseTool],
+        system_prompt: str | None = None,
+    ) -> None:
         super().__init__(
             name="researcher",
             model=model,
             tools=tools,
-            system_prompt=RESEARCHER_SYSTEM,
+            system_prompt=system_prompt or RESEARCHER_SYSTEM,
         )
         self._tool_map = {t.name: t for t in tools}
 

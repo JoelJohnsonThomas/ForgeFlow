@@ -16,10 +16,19 @@ async def get_pool(request: Request) -> asyncpg.Pool:
 
 
 async def get_graph(request: Request):
+    """Backwards-compatible accessor returning the default (sales_ops) graph."""
     graph = getattr(request.app.state, "graph", None)
     if graph is None:
         raise HTTPException(status_code=503, detail="Agent graph not initialised")
     return graph
+
+
+async def get_graphs(request: Request) -> dict:
+    """Return the dict of {workflow_type: compiled_graph}. Populated at startup."""
+    graphs = getattr(request.app.state, "graphs", None)
+    if not graphs:
+        raise HTTPException(status_code=503, detail="Agent graphs not initialised")
+    return graphs
 
 
 async def get_current_user(request: Request) -> UserContext:

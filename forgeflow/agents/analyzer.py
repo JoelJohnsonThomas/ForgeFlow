@@ -56,8 +56,13 @@ class QualificationResult(BaseModel):
 
 
 class AnalyzerAgent(BaseAgent):
-    def __init__(self, model: BaseChatModel) -> None:
-        super().__init__(name="analyzer", model=model, tools=[], system_prompt=ANALYZER_SYSTEM)
+    def __init__(self, model: BaseChatModel, system_prompt: str | None = None) -> None:
+        super().__init__(
+            name="analyzer",
+            model=model,
+            tools=[],
+            system_prompt=system_prompt or ANALYZER_SYSTEM,
+        )
         self._structured_model = model.with_structured_output(QualificationResult)
 
     async def run(self, state: WorkflowState) -> dict:

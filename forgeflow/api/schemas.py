@@ -3,16 +3,25 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
+
+WorkflowType = Literal["sales_ops", "support_ops", "finance_recon"]
 
 # ------------------------------------------------------------------ #
 # Workflow                                                             #
 # ------------------------------------------------------------------ #
 
 class WorkflowRunRequest(BaseModel):
-    workflow_type: str = "sales_ops"
-    lead_data: dict = Field(..., description="Lead input data — must include company_name")
+    workflow_type: WorkflowType = "sales_ops"
+    lead_data: dict = Field(
+        ...,
+        description=(
+            "Domain-specific input payload. sales_ops: LeadInput; "
+            "support_ops: TicketInput; finance_recon: ReconciliationInput."
+        ),
+    )
     user_id: str = "anon"
     role: str = "sales_rep"
 

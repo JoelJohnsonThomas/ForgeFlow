@@ -10,7 +10,14 @@
 [![Docker](https://img.shields.io/badge/docker-compose-blue.svg)](https://docker.com)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-ForgeFlow orchestrates a **team of specialized AI agents** to qualify sales leads, research companies, generate personalized proposals, and execute CRM actions — all with human-in-the-loop approvals, full observability, and enterprise-grade reliability.
+ForgeFlow orchestrates a **team of specialized AI agents** across multiple business domains — sales lead qualification, customer support triage, and finance reconciliation — all with human-in-the-loop approvals, full observability, and enterprise-grade reliability.
+
+**Workflow templates shipped:**
+- `sales_ops` — qualify → research → analyze → propose → approve → execute
+- `support_ops` — triage → investigate → respond → escalate → resolve
+- `finance_recon` — ingest → match → flag_variance → approve → post
+
+Pick a workflow with `workflow_type: "..."` on `POST /workflows/run`. See [forgeflow/workflows/](forgeflow/workflows/) for each domain's prompt + state shape.
 
 ---
 

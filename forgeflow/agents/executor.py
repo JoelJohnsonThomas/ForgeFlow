@@ -58,12 +58,17 @@ class ProposalContent(BaseModel):
 
 
 class ExecutorAgent(BaseAgent):
-    def __init__(self, model: BaseChatModel, tools: list[BaseTool] | None = None) -> None:
+    def __init__(
+        self,
+        model: BaseChatModel,
+        tools: list[BaseTool] | None = None,
+        system_prompt: str | None = None,
+    ) -> None:
         super().__init__(
             name="executor",
             model=model,
             tools=tools or [],
-            system_prompt=EXECUTOR_SYSTEM_PROPOSE,
+            system_prompt=system_prompt or EXECUTOR_SYSTEM_PROPOSE,
         )
         self._proposal_model = model.with_structured_output(ProposalContent)
         self._tool_map = {t.name: t for t in (tools or [])}
@@ -95,7 +100,7 @@ class ExecutorAgent(BaseAgent):
                 break
 
         prompt = [
-            SystemMessage(content=EXECUTOR_SYSTEM_PROPOSE),
+            SystemMessage(content=self.system_prompt),
             HumanMessage(
                 content=f"Draft a proposal for:\n\nCompany: {company}\n"
                 f"Qualification Score: {score}/10\n"

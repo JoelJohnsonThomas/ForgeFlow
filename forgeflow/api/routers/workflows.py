@@ -11,7 +11,7 @@ import asyncpg
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
-from forgeflow.api.dependencies import get_current_user, get_graph, get_pool
+from forgeflow.api.dependencies import get_current_user, get_graphs, get_pool
 from forgeflow.api.schemas import (
     AgentTraceResponse,
     WorkflowRunRequest,
@@ -19,32 +19,57 @@ from forgeflow.api.schemas import (
     WorkflowStatusResponse,
 )
 from forgeflow.rbac.models import UserContext
+from forgeflow.workflows.finance_recon.models import ReconciliationInput
+from forgeflow.workflows.finance_recon.pipeline import FinanceReconPipeline
 from forgeflow.workflows.sales_ops.models import LeadInput
 from forgeflow.workflows.sales_ops.pipeline import SalesOpsPipeline
+from forgeflow.workflows.support_ops.models import TicketInput
+from forgeflow.workflows.support_ops.pipeline import SupportOpsPipeline
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def _dispatch_pipeline(workflow_type: str, graph, payload: dict):
+    """Pick the right (pipeline, input_model_instance) pair for a workflow type."""
+    if workflow_type == "support_ops":
+        return SupportOpsPipeline(graph), TicketInput(**payload)
+    if workflow_type == "finance_recon":
+        return FinanceReconPipeline(graph), ReconciliationInput(**payload)
+    # default: sales_ops
+    return SalesOpsPipeline(graph), LeadInput(**payload)
+
+
 @router.post("/run", response_model=WorkflowRunResponse)
 async def run_workflow(
     request: WorkflowRunRequest,
-    graph=Depends(get_graph),
+    graphs: dict = Depends(get_graphs),
     pool: asyncpg.Pool = Depends(get_pool),
     user: UserContext = Depends(get_current_user),
 ):
     """Trigger a new workflow run. Returns run_id and thread_id for tracking."""
-    lead_input = LeadInput(
-        company_name=request.lead_data.get("company_name", "Unknown"),
-        **{k: v for k, v in request.lead_data.items() if k != "company_name"},
-    )
+    graph = graphs.get(request.workflow_type)
+    if graph is None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown workflow_type '{request.workflow_type}'",
+        )
 
-    pipeline = SalesOpsPipeline(graph)
+    try:
+        pipeline, domain_input = _dispatch_pipeline(
+            request.workflow_type, graph, request.lead_data
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid payload for workflow_type '{request.workflow_type}': {e}",
+        ) from e
+
     start = time.monotonic()
 
     try:
         workflow_id, thread_id, final_state = await pipeline.run(
-            lead_input=lead_input,
+            domain_input,
             user_id=user.user_id,
             role=user.role,
         )
@@ -111,16 +136,30 @@ async def run_workflow(
 @router.post("/stream")
 async def stream_workflow(
     request: WorkflowRunRequest,
-    graph=Depends(get_graph),
+    graphs: dict = Depends(get_graphs),
     user: UserContext = Depends(get_current_user),
 ):
     """Stream workflow events as Server-Sent Events (SSE)."""
-    lead_input = LeadInput(company_name=request.lead_data.get("company_name", "Unknown"))
-    pipeline = SalesOpsPipeline(graph)
+    graph = graphs.get(request.workflow_type)
+    if graph is None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown workflow_type '{request.workflow_type}'",
+        )
+
+    try:
+        pipeline, domain_input = _dispatch_pipeline(
+            request.workflow_type, graph, request.lead_data
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid payload for workflow_type '{request.workflow_type}': {e}",
+        ) from e
 
     async def event_generator():
         try:
-            async for event in pipeline.stream(lead_input, user.user_id, user.role):
+            async for event in pipeline.stream(domain_input, user.user_id, user.role):
                 yield f"data: {json.dumps(event)}\n\n"
         except Exception as e:
             yield f"data: {json.dumps({'event': 'error', 'message': str(e)})}\n\n"

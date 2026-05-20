@@ -47,8 +47,13 @@ class RoutingDecision(BaseModel):
 
 
 class SupervisorAgent(BaseAgent):
-    def __init__(self, model: BaseChatModel) -> None:
-        super().__init__(name="supervisor", model=model, tools=[], system_prompt=SUPERVISOR_SYSTEM)
+    def __init__(self, model: BaseChatModel, system_prompt: str | None = None) -> None:
+        super().__init__(
+            name="supervisor",
+            model=model,
+            tools=[],
+            system_prompt=system_prompt or SUPERVISOR_SYSTEM,
+        )
         # Supervisor uses structured output — no tool binding needed
         self._structured_model = model.with_structured_output(RoutingDecision)
 

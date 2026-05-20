@@ -47,9 +47,15 @@ async def lifespan(app: FastAPI):
     mcp_tools = await get_mcp_tools()
     logger.info("MCP tools loaded: %d", len(mcp_tools))
 
-    # Agent graph
-    app.state.graph = await compile_graph(mcp_tools=mcp_tools)
-    logger.info("Agent graph compiled")
+    # Agent graphs — one compiled graph per workflow_type, prompts differ per domain
+    app.state.graphs = {
+        "sales_ops": await compile_graph(mcp_tools=mcp_tools, workflow_type="sales_ops"),
+        "support_ops": await compile_graph(mcp_tools=mcp_tools, workflow_type="support_ops"),
+        "finance_recon": await compile_graph(mcp_tools=mcp_tools, workflow_type="finance_recon"),
+    }
+    # Default exposure for code paths that still expect a single graph
+    app.state.graph = app.state.graphs["sales_ops"]
+    logger.info("Agent graphs compiled | types=%s", list(app.state.graphs))
 
     # A2A registry
     register_default_agents()
