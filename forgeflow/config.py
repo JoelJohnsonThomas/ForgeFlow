@@ -138,6 +138,18 @@ class Settings(BaseSettings):
         description="HubSpot REST API base",
     )
 
+    # --- ServiceNow connector ---
+    servicenow_instance_url: str = Field(
+        "",
+        description="ServiceNow tenant URL, e.g. https://acme.service-now.com",
+    )
+    servicenow_username: str = Field(
+        "", description="Service account username for Basic auth"
+    )
+    servicenow_password: SecretStr = Field(
+        SecretStr(""), description="Service account password"
+    )
+
     # --- Salesforce connector ---
     salesforce_instance_url: str = Field(
         "",
