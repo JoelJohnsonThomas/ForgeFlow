@@ -23,6 +23,7 @@ from forgeflow.mcp.server.tools import (
     github_tools,
     hubspot_tools,
     jira_tools,
+    salesforce_tools,
     search_tools,
     slack_tools,
 )
@@ -48,6 +49,7 @@ mcp.mount(slack_tools.router, prefix="slack")
 mcp.mount(github_tools.router, prefix="github")
 mcp.mount(jira_tools.router, prefix="jira")
 mcp.mount(hubspot_tools.router, prefix="hubspot")
+mcp.mount(salesforce_tools.router, prefix="salesforce")
 
 
 if __name__ == "__main__":

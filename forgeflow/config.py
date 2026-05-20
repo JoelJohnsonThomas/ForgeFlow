@@ -138,6 +138,19 @@ class Settings(BaseSettings):
         description="HubSpot REST API base",
     )
 
+    # --- Salesforce connector ---
+    salesforce_instance_url: str = Field(
+        "",
+        description="Per-tenant instance URL, e.g. https://acme.my.salesforce.com",
+    )
+    salesforce_access_token: SecretStr = Field(
+        SecretStr(""),
+        description="OAuth bearer token (acquire via sf CLI or JWT bearer flow)",
+    )
+    salesforce_api_version: str = Field(
+        "v59.0", description="Salesforce REST API version"
+    )
+
     # --- Jira connector ---
     jira_base_url: str = Field(
         "",
