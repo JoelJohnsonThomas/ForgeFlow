@@ -26,6 +26,7 @@ from forgeflow.mcp.client.adapter import get_mcp_tools
 from forgeflow.middleware.audit import AuditMiddleware
 from forgeflow.middleware.auth import RBACMiddleware
 from forgeflow.middleware.rate_limit import RateLimitMiddleware
+from forgeflow.middleware.security import SecurityMiddleware
 
 logging.basicConfig(
     level=logging.INFO,
@@ -79,8 +80,10 @@ app.add_middleware(
 )
 
 # Middleware stack (order matters — executed bottom-up on request, top-down on response)
+# Request flow:  RBAC → Security (PII redact + prompt guard) → Audit → RateLimit → handler
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(AuditMiddleware)
+app.add_middleware(SecurityMiddleware)
 app.add_middleware(RBACMiddleware)
 
 # Routers
