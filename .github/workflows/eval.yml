@@ -1,0 +1,82 @@
+name: Evaluation
+
+# Runs the LLM-judged evaluation suite + regression check.
+# Triggers:
+#   - on every PR touching agents, prompts, workflows, or the graph
+#   - on a nightly schedule (catches model-drift / provider-side changes)
+#   - manually via workflow_dispatch
+#
+# Requires OPENAI_API_KEY_EVAL to be set in repo secrets. Without it, the job
+# skips with a clear message rather than failing the PR.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "forgeflow/agents/**"
+      - "forgeflow/graph/**"
+      - "forgeflow/workflows/**"
+      - "forgeflow/evaluation/**"
+      - "tests/eval_baseline.json"
+      - ".github/workflows/eval.yml"
+  schedule:
+    - cron: "0 7 * * *"   # 07:00 UTC daily
+  workflow_dispatch:
+    inputs:
+      n:
+        description: "Number of eval examples"
+        required: false
+        default: "5"
+
+jobs:
+  eval:
+    name: LLM Eval + Regression Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Guard on missing API key
+        id: guard
+        env:
+          OPENAI_API_KEY_EVAL: ${{ secrets.OPENAI_API_KEY_EVAL }}
+        run: |
+          if [ -z "$OPENAI_API_KEY_EVAL" ]; then
+            echo "OPENAI_API_KEY_EVAL secret is not set; skipping eval."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install dependencies
+        if: steps.guard.outputs.skip != 'true'
+        run: pip install -r requirements-dev.txt
+
+      - name: Run eval + regression check
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY_EVAL }}
+          LLM_PROVIDER: openai
+          LANGCHAIN_TRACING_V2: "false"
+          API_SECRET_KEY: "ci-eval"
+          BUDGET_LIMIT_USD: "5.0"
+          POSTGRES_URL: postgresql+asyncpg://forgeflow:forgeflow@localhost/forgeflow
+          POSTGRES_SYNC_URL: postgresql+psycopg://forgeflow:forgeflow@localhost/forgeflow
+        run: |
+          python scripts/run_eval.py \
+            --n ${{ github.event.inputs.n || '5' }} \
+            --output eval_results.json \
+            --baseline tests/eval_baseline.json
+
+      - name: Upload eval results artifact
+        if: steps.guard.outputs.skip != 'true' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: eval_results.json
+          if-no-files-found: ignore

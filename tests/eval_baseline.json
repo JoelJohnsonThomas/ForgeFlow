@@ -1,0 +1,9 @@
+{
+  "total_runs": 5,
+  "success_rate": 0.6,
+  "avg_latency_ms": 12000.0,
+  "p95_latency_ms": 18000.0,
+  "avg_cost_usd": 0.04,
+  "avg_faithfulness": 0.85,
+  "hallucination_rate": 0.1
+}

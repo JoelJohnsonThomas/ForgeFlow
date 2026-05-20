@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 
 from forgeflow.evaluation.dataset import get_dataset
 
@@ -18,7 +17,7 @@ async def main():
         score_range = f"{ex.expected_score_min:.1f} – {ex.expected_score_max:.1f}"
         print(f"{ex.id:<6} {ex.company_name:<25} {qualified_str:<20} {score_range}")
 
-    print(f"\nDataset saved. Run the full eval suite with:")
+    print("\nDataset saved. Run the full eval suite with:")
     print("  python -c \"import asyncio; from forgeflow.evaluation.runner import EvalRunner; ...\"")
 
 

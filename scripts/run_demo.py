@@ -9,9 +9,7 @@ Usage:
 from __future__ import annotations
 
 import asyncio
-import json
 import sys
-import time
 
 import httpx
 
@@ -41,7 +39,7 @@ async def run_demo(company: str = "Acme Corp", auto_approve: bool = False) -> No
         thread_id = result["thread_id"]
         status = result["status"]
 
-        print(f"✓ Run started")
+        print("✓ Run started")
         print(f"  Run ID:    {run_id}")
         print(f"  Thread ID: {thread_id}")
         print(f"  Status:    {status}")
@@ -92,12 +90,12 @@ async def run_demo(company: str = "Acme Corp", auto_approve: bool = False) -> No
         metrics_resp = await client.get(f"{API_URL}/metrics/")
         if metrics_resp.status_code == 200:
             metrics = metrics_resp.json()
-            print(f"\n📊 System Metrics:")
+            print("\n📊 System Metrics:")
             print(f"  Total runs:    {metrics.get('total_runs', 0)}")
             print(f"  Success rate:  {metrics.get('success_rate', 0):.1%}")
             print(f"  Avg cost/run:  ${metrics.get('avg_cost_usd', 0):.4f}")
 
-        print(f"\n✓ Demo complete! View dashboard at http://localhost:8501")
+        print("\n✓ Demo complete! View dashboard at http://localhost:8501")
 
 
 if __name__ == "__main__":
