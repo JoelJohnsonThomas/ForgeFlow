@@ -15,7 +15,6 @@ from __future__ import annotations
 import logging
 import os
 
-from langchain_openai import ChatOpenAI
 from langgraph.graph import END, StateGraph
 
 from forgeflow.agents.analyzer import AnalyzerAgent
@@ -33,6 +32,7 @@ from forgeflow.graph.nodes import (
     researcher_node,
     supervisor_node,
 )
+from forgeflow.models import get_model
 from forgeflow.state.workflow_state import WorkflowState
 
 logger = logging.getLogger(__name__)
@@ -58,21 +58,11 @@ async def compile_graph(mcp_tools: list | None = None, use_checkpointer: bool = 
         os.environ["LANGCHAIN_API_KEY"] = settings.langchain_api_key.get_secret_value()
         os.environ["LANGCHAIN_PROJECT"] = settings.langchain_project
 
-    openai_key = settings.openai_api_key.get_secret_value()
-
-    # Models — supervisor + judge use the strong model; workers use the cheap one
-    model_fast = ChatOpenAI(
-        model=settings.openai_model,
-        api_key=openai_key,
-        temperature=0,
-        max_retries=settings.max_retries,
-    )
-    model_strong = ChatOpenAI(
-        model=settings.openai_model_strong,
-        api_key=openai_key,
-        temperature=0,
-        max_retries=settings.max_retries,
-    )
+    # Models routed through the provider factory — swap via LLM_PROVIDER setting.
+    # Supervisor + judge use the strong model; workers use the cheap one.
+    model_fast = get_model(strong=False)
+    model_strong = get_model(strong=True)
+    logger.info("Models built via provider '%s'", settings.llm_provider)
 
     # Instantiate agents
     supervisor = SupervisorAgent(model=model_strong)

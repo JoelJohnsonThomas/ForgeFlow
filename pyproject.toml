@@ -65,6 +65,14 @@ dev = [
     "mypy>=1.13.0",
     "types-beautifulsoup4",
 ]
+# Local-first / privacy mode — run against an Ollama daemon instead of OpenAI
+ollama = [
+    "langchain-ollama>=0.2.0",
+]
+# Anthropic Claude support (bonus provider alongside OpenAI)
+anthropic = [
+    "langchain-anthropic>=0.3.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]

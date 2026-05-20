@@ -14,10 +14,37 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # --- LLM ---
-    openai_api_key: SecretStr = Field(..., description="OpenAI API key")
+    # --- LLM provider ---
+    llm_provider: str = Field(
+        "openai",
+        description="Which LLM provider to use: openai | ollama | anthropic",
+    )
+
+    # OpenAI
+    openai_api_key: SecretStr = Field(
+        SecretStr(""),
+        description="OpenAI API key (required when llm_provider=openai)",
+    )
     openai_model: str = Field("gpt-4o-mini", description="Default (cheap) model for agents")
     openai_model_strong: str = Field("gpt-4o", description="Strong model for supervisor + judge")
+
+    # Ollama (local)
+    ollama_base_url: str = Field(
+        "http://localhost:11434",
+        description="Ollama daemon URL",
+    )
+    ollama_model: str = Field("llama3.2:3b", description="Default Ollama model")
+    ollama_model_strong: str = Field("llama3.1:8b", description="Strong Ollama model")
+
+    # Anthropic
+    anthropic_api_key: SecretStr = Field(
+        SecretStr(""),
+        description="Anthropic API key (required when llm_provider=anthropic)",
+    )
+    anthropic_model: str = Field("claude-haiku-4-5", description="Default Anthropic model")
+    anthropic_model_strong: str = Field(
+        "claude-sonnet-4-5", description="Strong Anthropic model"
+    )
 
     # --- Database ---
     postgres_url: str = Field(

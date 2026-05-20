@@ -68,7 +68,10 @@ graph TB
 
 ### Prerequisites
 - Docker + Docker Compose
-- OpenAI API key
+- An LLM provider — one of:
+  - OpenAI API key (default)
+  - A local Ollama daemon (privacy mode, see below)
+  - Anthropic API key
 - (Optional) Tavily API key for real web search, LangSmith key for tracing
 
 ### 1. Clone and configure
@@ -94,6 +97,28 @@ Services:
 | Streamlit | http://localhost:8501 | Observability dashboard |
 | MCP Server | http://localhost:8001 | Tool server for agents |
 | PostgreSQL | localhost:5432 | Database + pgvector |
+
+### Local-first mode (privacy / air-gapped)
+
+ForgeFlow can run entirely against a local [Ollama](https://ollama.com) daemon — no data leaves your machine.
+
+```bash
+# 1. Install the optional extra
+pip install 'forgeflow[ollama]'
+
+# 2. Start Ollama and pull models
+ollama pull llama3.2:3b      # worker model (fast)
+ollama pull llama3.1:8b      # supervisor + judge model (stronger)
+
+# 3. Point ForgeFlow at Ollama
+echo "LLM_PROVIDER=ollama" >> .env
+echo "OLLAMA_BASE_URL=http://localhost:11434" >> .env
+
+# 4. Run as usual
+docker compose up
+```
+
+Anthropic Claude is also supported: `pip install 'forgeflow[anthropic]'` and set `LLM_PROVIDER=anthropic` plus `ANTHROPIC_API_KEY`.
 
 ### 3. Run the demo
 
