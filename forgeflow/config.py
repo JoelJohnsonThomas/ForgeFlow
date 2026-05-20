@@ -128,6 +128,16 @@ class Settings(BaseSettings):
         description="langsmith | phoenix | langfuse | none",
     )
 
+    # --- HubSpot connector ---
+    hubspot_access_token: SecretStr = Field(
+        SecretStr(""),
+        description="HubSpot Private App access token",
+    )
+    hubspot_base_url: str = Field(
+        "https://api.hubapi.com",
+        description="HubSpot REST API base",
+    )
+
     # --- Jira connector ---
     jira_base_url: str = Field(
         "",

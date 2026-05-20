@@ -21,6 +21,7 @@ from forgeflow.mcp.server.tools import (
     data_tools,
     email_tools,
     github_tools,
+    hubspot_tools,
     jira_tools,
     search_tools,
     slack_tools,
@@ -46,6 +47,7 @@ mcp.mount(data_tools.router, prefix="data")
 mcp.mount(slack_tools.router, prefix="slack")
 mcp.mount(github_tools.router, prefix="github")
 mcp.mount(jira_tools.router, prefix="jira")
+mcp.mount(hubspot_tools.router, prefix="hubspot")
 
 
 if __name__ == "__main__":
