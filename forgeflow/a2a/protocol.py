@@ -13,13 +13,13 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class TaskState(str, Enum):
+class TaskState(StrEnum):
     SUBMITTED = "submitted"
     WORKING = "working"
     COMPLETED = "completed"
@@ -27,7 +27,7 @@ class TaskState(str, Enum):
     CANCELED = "canceled"
 
 
-class ArtifactType(str, Enum):
+class ArtifactType(StrEnum):
     TEXT = "text"
     DATA = "data"
     FILE = "file"

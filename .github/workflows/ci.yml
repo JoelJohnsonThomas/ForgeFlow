@@ -22,7 +22,7 @@ jobs:
           cache: pip
 
       - name: Install linters
-        run: pip install ruff mypy types-beautifulsoup4 pydantic pydantic-settings
+        run: pip install "ruff==0.15.13" mypy types-beautifulsoup4 pydantic pydantic-settings
 
       - name: ruff check
         run: ruff check forgeflow/ dashboard/ tests/ --output-format=github
