@@ -98,3 +98,105 @@ class MetricsStore:
         except Exception as e:
             logger.error("MetricsStore.get_cost_by_agent failed: %s", e)
             return []
+
+    async def get_cost_by_workflow_type(self, days: int = 7) -> list[dict]:
+        """Cost breakdown grouped by workflow_type (sales_ops, support_ops, finance_recon).
+
+        Reads directly from workflow_runs so all costs land in the right bucket
+        even if run_metrics rows are missing for some reason.
+        """
+        try:
+            async with self.pool.acquire() as conn:
+                rows = await conn.fetch(
+                    """
+                    SELECT
+                        COALESCE(workflow_type, 'unknown')      AS workflow_type,
+                        DATE(created_at)                        AS date,
+                        SUM(total_cost_usd)::float              AS total_cost_usd,
+                        SUM(total_tokens)::bigint               AS total_tokens,
+                        COUNT(*)                                AS run_count
+                    FROM workflow_runs
+                    WHERE created_at > now() - ($1 || ' days')::INTERVAL
+                    GROUP BY 1, 2
+                    ORDER BY 2 DESC, 3 DESC
+                    """,
+                    days,
+                )
+            return [dict(r) for r in rows]
+        except Exception as e:
+            logger.error("MetricsStore.get_cost_by_workflow_type failed: %s", e)
+            return []
+
+    async def get_top_expensive_runs(self, limit: int = 10, days: int = 7) -> list[dict]:
+        """Top-cost workflow runs in the recent window — drill-down target."""
+        try:
+            async with self.pool.acquire() as conn:
+                rows = await conn.fetch(
+                    """
+                    SELECT
+                        id::text             AS run_id,
+                        workflow_type,
+                        status,
+                        total_cost_usd::float AS total_cost_usd,
+                        total_tokens,
+                        created_at
+                    FROM workflow_runs
+                    WHERE created_at > now() - ($1 || ' days')::INTERVAL
+                    ORDER BY total_cost_usd DESC NULLS LAST
+                    LIMIT $2
+                    """,
+                    days,
+                    limit,
+                )
+            return [
+                {
+                    **dict(r),
+                    "created_at": r["created_at"].isoformat() if r["created_at"] else None,
+                }
+                for r in rows
+            ]
+        except Exception as e:
+            logger.error("MetricsStore.get_top_expensive_runs failed: %s", e)
+            return []
+
+    async def get_budget_alerts(
+        self, budget_limit_usd: float, days: int = 7
+    ) -> list[dict]:
+        """Workflow runs that crossed the budget warning (>=90%) or limit (>=100%).
+
+        Used by the cost-dashboard alert strip and (separately) by the
+        operational on-call alert pipeline.
+        """
+        try:
+            async with self.pool.acquire() as conn:
+                rows = await conn.fetch(
+                    """
+                    SELECT
+                        id::text             AS run_id,
+                        workflow_type,
+                        status,
+                        total_cost_usd::float AS total_cost_usd,
+                        created_at,
+                        CASE
+                            WHEN total_cost_usd >= $1 THEN 'exceeded'
+                            ELSE 'warning'
+                        END                  AS severity
+                    FROM workflow_runs
+                    WHERE total_cost_usd >= $1 * 0.9
+                      AND created_at > now() - ($2 || ' days')::INTERVAL
+                    ORDER BY total_cost_usd DESC
+                    LIMIT 50
+                    """,
+                    budget_limit_usd,
+                    days,
+                )
+            return [
+                {
+                    **dict(r),
+                    "created_at": r["created_at"].isoformat() if r["created_at"] else None,
+                }
+                for r in rows
+            ]
+        except Exception as e:
+            logger.error("MetricsStore.get_budget_alerts failed: %s", e)
+            return []

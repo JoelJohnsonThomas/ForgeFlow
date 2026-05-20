@@ -63,6 +63,45 @@ async def get_cost_breakdown(
     return await store.get_cost_by_agent(days=days)
 
 
+@router.get("/cost/by_workflow_type")
+async def get_cost_by_workflow_type(
+    days: int = Query(7, ge=1, le=90),
+    pool: asyncpg.Pool = Depends(get_pool),
+):
+    """Cost + token breakdown by workflow_type — for multi-domain comparisons."""
+    store = MetricsStore(pool)
+    return await store.get_cost_by_workflow_type(days=days)
+
+
+@router.get("/cost/top_runs")
+async def get_top_expensive_runs(
+    days: int = Query(7, ge=1, le=90),
+    limit: int = Query(10, ge=1, le=50),
+    pool: asyncpg.Pool = Depends(get_pool),
+):
+    """Top N highest-cost workflow runs in the window — drill-down list."""
+    store = MetricsStore(pool)
+    return await store.get_top_expensive_runs(limit=limit, days=days)
+
+
+@router.get("/cost/alerts")
+async def get_budget_alerts(
+    days: int = Query(7, ge=1, le=90),
+    pool: asyncpg.Pool = Depends(get_pool),
+):
+    """Workflow runs that hit the budget warning (>=90%) or limit (>=100%).
+
+    Threshold is read from settings.budget_limit_usd at call time.
+    """
+    from forgeflow.config import get_settings
+
+    settings = get_settings()
+    store = MetricsStore(pool)
+    return await store.get_budget_alerts(
+        budget_limit_usd=settings.budget_limit_usd, days=days
+    )
+
+
 @router.get("/evaluation", response_model=EvaluationSummaryResponse)
 async def get_evaluation_summary(pool: asyncpg.Pool = Depends(get_pool)):
     """LLM-as-judge evaluation score aggregates."""
