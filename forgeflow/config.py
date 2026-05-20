@@ -176,6 +176,19 @@ class Settings(BaseSettings):
         65, description="Intuit API minor version"
     )
 
+    # --- Microsoft Graph connector ---
+    msgraph_access_token: SecretStr = Field(
+        SecretStr(""),
+        description="Azure AD OAuth bearer token (refreshed externally via MSAL)",
+    )
+    msgraph_tenant_id: str = Field(
+        "", description="Azure AD tenant ID — used by external token refresh"
+    )
+    msgraph_base_url: str = Field(
+        "https://graph.microsoft.com/v1.0",
+        description="Microsoft Graph API base URL",
+    )
+
     # --- Salesforce connector ---
     salesforce_instance_url: str = Field(
         "",

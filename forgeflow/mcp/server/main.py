@@ -23,6 +23,7 @@ from forgeflow.mcp.server.tools import (
     github_tools,
     hubspot_tools,
     jira_tools,
+    msgraph_tools,
     quickbooks_tools,
     salesforce_tools,
     sap_tools,
@@ -56,6 +57,7 @@ mcp.mount(salesforce_tools.router, prefix="salesforce")
 mcp.mount(servicenow_tools.router, prefix="servicenow")
 mcp.mount(sap_tools.router, prefix="sap")
 mcp.mount(quickbooks_tools.router, prefix="quickbooks")
+mcp.mount(msgraph_tools.router, prefix="msgraph")
 
 
 if __name__ == "__main__":
