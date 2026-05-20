@@ -104,13 +104,14 @@ app.add_middleware(SecurityMiddleware)
 app.add_middleware(RBACMiddleware)
 
 # Routers
-from forgeflow.api.routers import agents, approvals, memory, metrics, workflows
+from forgeflow.api.routers import agents, approvals, audit, memory, metrics, workflows
 
 app.include_router(workflows.router, prefix="/workflows", tags=["Workflows"])
 app.include_router(approvals.router, prefix="/approvals", tags=["Approvals"])
 app.include_router(agents.router, prefix="/agents", tags=["Agents"])
 app.include_router(memory.router, prefix="/memory", tags=["Memory"])
 app.include_router(metrics.router, prefix="/metrics", tags=["Metrics"])
+app.include_router(audit.router, prefix="/audit", tags=["Audit"])
 
 
 @app.get("/", include_in_schema=False)
