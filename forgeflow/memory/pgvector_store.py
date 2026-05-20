@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import asyncpg
@@ -47,7 +47,7 @@ class PGVectorStore:
 
         expires_at = None
         if ttl_hours:
-            expires_at = datetime.now(datetime.UTC) + timedelta(hours=ttl_hours)
+            expires_at = datetime.now(UTC) + timedelta(hours=ttl_hours)
 
         async with self.pool.acquire() as conn:
             # Register pgvector codec

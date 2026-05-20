@@ -8,7 +8,7 @@ next node. This keeps routing logic deterministic and auditable.
 from __future__ import annotations
 
 import logging
-from typing import Literal
+from typing import Literal, cast
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
@@ -83,7 +83,7 @@ class SupervisorAgent(BaseAgent):
             HumanMessage(content=f"Context:\n{context}\n\nWhat is the next routing decision?"),
         ]
 
-        decision: RoutingDecision = await self._structured_model.ainvoke(prompt)
+        decision = cast(RoutingDecision, await self._structured_model.ainvoke(prompt))
 
         logger.info(
             "Supervisor routing: %s → %s | reason: %s",

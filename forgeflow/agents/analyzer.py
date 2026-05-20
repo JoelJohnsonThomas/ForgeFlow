@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import logging
+from typing import cast
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
@@ -67,11 +68,11 @@ class AnalyzerAgent(BaseAgent):
 
         # Build research context for the analyzer
         research_text = ""
-        for result in research_results:
-            if "summary" in result:
-                research_text += f"\n\nResearch Summary:\n{result['summary']}"
-            elif "result" in result:
-                research_text += f"\n\n{result.get('tool', 'Data')}: {str(result['result'])[:500]}"
+        for item in research_results:
+            if "summary" in item:
+                research_text += f"\n\nResearch Summary:\n{item['summary']}"
+            elif "result" in item:
+                research_text += f"\n\n{item.get('tool', 'Data')}: {str(item['result'])[:500]}"
 
         prompt = [
             SystemMessage(content=self.system_prompt),
@@ -83,7 +84,8 @@ class AnalyzerAgent(BaseAgent):
             ),
         ]
 
-        result: QualificationResult = await self._structured_model.ainvoke(prompt)
+        raw = await self._structured_model.ainvoke(prompt)
+        result = cast(QualificationResult, raw)
 
         logger.info(
             "Analyzer scored lead: %.1f/10 | qualified=%s | action=%s",

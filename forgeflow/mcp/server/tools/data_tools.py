@@ -43,8 +43,9 @@ async def fetch_enrichment(company_name: str) -> dict:
     data = dict(_MOCK_ENRICHMENT["default"])
     data["company_name"] = company_name
     data["domain"] = f"{company_name.lower().replace(' ', '')}.com"
-    data["employee_count"] = random.randint(50, 5000)
-    data["annual_revenue_usd"] = data["employee_count"] * random.randint(100_000, 300_000)
+    employee_count = random.randint(50, 5000)
+    data["employee_count"] = employee_count
+    data["annual_revenue_usd"] = employee_count * random.randint(100_000, 300_000)
 
     return data
 

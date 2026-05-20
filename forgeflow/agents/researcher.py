@@ -112,7 +112,7 @@ class ResearcherAgent(BaseAgent):
         final_summary = ""
         for msg in reversed(messages):
             if isinstance(msg, AIMessage) and not msg.tool_calls:
-                final_summary = msg.content
+                final_summary = str(msg.content)
                 break
 
         self._log_finish(total_tokens, 0.0)

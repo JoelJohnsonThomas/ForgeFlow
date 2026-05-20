@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from typing import cast
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
@@ -104,7 +105,7 @@ class ExecutorAgent(BaseAgent):
             ),
         ]
 
-        proposal: ProposalContent = await self._proposal_model.ainvoke(prompt)
+        proposal = cast(ProposalContent, await self._proposal_model.ainvoke(prompt))
 
         proposal_dict = proposal.model_dump()
         proposal_dict["lead_id"] = state.get("lead_id")
