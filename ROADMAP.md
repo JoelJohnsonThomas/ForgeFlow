@@ -54,20 +54,22 @@ Closed the gap between "architectural scaffolding exists" and "production-useful
 | Workflow simulation / dry-run | _shipped_ | `dry_run: true` skips CRM writes, emails, Slack pings while still running the LLM plan |
 | Approval escalation rules | _shipped_ | Background task ratchets stale approvals through level 1 → 2 → auto-rejected with Slack pings |
 
-## Phase 4 — Connector Library
+## Phase 4 — Connector Library _(4 shipped, 4 pending)_
 
-Real (non-mock) integrations via MCP tools. Each is a separate issue.
+Real (non-mock) integrations via MCP tools. All connectors built on
+[`forgeflow/connectors/base.py`](forgeflow/connectors/base.py) — graceful
+degradation when credentials are missing.
 
-| Connector | Use case |
-|-----------|----------|
-| Salesforce | Lead and opportunity sync |
-| HubSpot | Marketing contact and pipeline sync |
-| Jira | Ticket creation from support workflows |
-| ServiceNow | Incident management |
-| SAP S/4HANA | ERP order and invoice operations |
-| QuickBooks | SMB finance reconciliation |
-| Microsoft Graph (Teams, Outlook) | Notifications and email drafting |
-| GitHub | Repo operations and PR review automation |
+| Connector | Status | Pairs with |
+|-----------|--------|-----------|
+| GitHub | _shipped_ | DevOps / PR-review workflows |
+| Jira | _shipped_ | support_ops (ticket creation + transitions) |
+| HubSpot | _shipped_ | sales_ops (contacts + deals + notes) |
+| Salesforce | _shipped_ | sales_ops (leads + opportunities + SOQL) |
+| ServiceNow | _pending_ | Incident management workflow |
+| SAP S/4HANA | _pending_ | ERP order + invoice operations |
+| QuickBooks | _pending_ | finance_recon real ledger reads |
+| Microsoft Graph (Teams, Outlook) | _pending_ | HITL approvals (Slack alternative) |
 
 ## Phase 5 — Deployment & Platform
 
