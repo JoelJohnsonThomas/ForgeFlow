@@ -21,6 +21,7 @@ from forgeflow.mcp.server.tools import (
     data_tools,
     email_tools,
     search_tools,
+    slack_tools,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -40,6 +41,7 @@ mcp.mount(search_tools.router, prefix="search")
 mcp.mount(crm_tools.router, prefix="crm")
 mcp.mount(email_tools.router, prefix="email")
 mcp.mount(data_tools.router, prefix="data")
+mcp.mount(slack_tools.router, prefix="slack")
 
 
 if __name__ == "__main__":

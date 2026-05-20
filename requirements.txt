@@ -25,3 +25,4 @@ python-dotenv>=1.0.0
 tavily-python>=0.5.0
 python-multipart>=0.0.12
 pandas>=2.2.0
+slack-sdk>=3.30.0

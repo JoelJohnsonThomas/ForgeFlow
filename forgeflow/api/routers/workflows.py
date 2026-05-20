@@ -18,6 +18,7 @@ from forgeflow.api.schemas import (
     WorkflowRunResponse,
     WorkflowStatusResponse,
 )
+from forgeflow.notifications.slack import notify_approval_request
 from forgeflow.rbac.models import UserContext
 from forgeflow.workflows.finance_recon.models import ReconciliationInput
 from forgeflow.workflows.finance_recon.pipeline import FinanceReconPipeline
@@ -109,6 +110,7 @@ async def run_workflow(
     # If the workflow suspended for human approval, create approval request
     if stage == "approve" or final_state.get("approval_token"):
         token = final_state.get("approval_token") or str(uuid.uuid4())
+        proposal_payload = final_state.get("proposal") or {}
         try:
             async with pool.acquire() as conn:
                 await conn.execute(
@@ -120,10 +122,31 @@ async def run_workflow(
                     uuid.UUID(workflow_id),
                     uuid.UUID(token),
                     "propose",
-                    final_state.get("proposal") or {},
+                    proposal_payload,
                 )
         except Exception as e:
             logger.error("Failed to create approval request: %s", e)
+
+        # Fire-and-forget Slack notification — no-op when Slack isn't configured
+        try:
+            company = (
+                proposal_payload.get("company")
+                or request.lead_data.get("company_name")
+                or request.lead_data.get("ticket_id")
+                or request.lead_data.get("period_label")
+                or "(unknown)"
+            )
+            summary = (
+                f"workflow_type={request.workflow_type} | "
+                f"subject={company} | run_id={workflow_id}"
+            )
+            await notify_approval_request(
+                approval_token=token,
+                summary=summary,
+                payload=proposal_payload,
+            )
+        except Exception as e:
+            logger.warning("Slack approval notification failed: %s", e)
 
     return WorkflowRunResponse(
         run_id=workflow_id,

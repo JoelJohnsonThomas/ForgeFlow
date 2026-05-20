@@ -84,6 +84,20 @@ class Settings(BaseSettings):
     # --- Search ---
     tavily_api_key: SecretStr = Field(SecretStr(""), description="Tavily search API key")
 
+    # --- Slack (for HITL approval notifications) ---
+    slack_bot_token: SecretStr = Field(
+        SecretStr(""),
+        description="Slack bot user OAuth token (xoxb-...)",
+    )
+    slack_default_channel: str = Field(
+        "",
+        description="Default Slack channel for posts (e.g. #forgeflow or C0123456)",
+    )
+    api_public_url: str = Field(
+        "http://localhost:8000",
+        description="Externally-reachable API base URL — used for approval deep-links in Slack",
+    )
+
     # --- Dashboard ---
     api_url: str = Field("http://localhost:8000", description="Used by Streamlit to call the API")
 
@@ -94,6 +108,10 @@ class Settings(BaseSettings):
     def is_tavily_enabled(self) -> bool:
         key = self.tavily_api_key.get_secret_value()
         return bool(key and key != "")
+
+    def is_slack_enabled(self) -> bool:
+        key = self.slack_bot_token.get_secret_value()
+        return bool(key and key.startswith("xoxb-"))
 
 
 @lru_cache(maxsize=1)

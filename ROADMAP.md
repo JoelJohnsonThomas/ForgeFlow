@@ -19,18 +19,18 @@ The initial build (commits `9f035bb` through `e70ee90`):
 
 ---
 
-## Phase 1 — OSS Expansion _(in progress)_
+## Phase 1 — OSS Expansion _(shipped)_
 
-Closing the gap between "architectural scaffolding exists" and "production-useful tool". See the [Phase 1 plan](https://github.com/JoelJohnsonThomas/ForgeFlow/pulls) for full details.
+Closed the gap between "architectural scaffolding exists" and "production-useful tool".
 
 | Track | Status | Description |
 |-------|--------|-------------|
-| **A** Cost tracking wiring | _planned_ | Wire `CostTracker` + `BudgetGuard` into agent nodes so `total_cost_usd` stops being zero |
-| **B** OSS basics | _shipping_ | LICENSE (Apache 2.0), CONTRIBUTING, CODE_OF_CONDUCT, ROADMAP, issue/PR templates |
-| **C** Security middleware | _planned_ | PII redaction + prompt-injection guard at the API boundary |
-| **D** Multi-domain workflows | _planned_ | Add `support_ops` and `finance_recon` templates alongside `sales_ops` |
-| **E** Real Slack connector | _planned_ | Replace mock email/SMTP with Slack notifications for HITL approvals |
-| **F** Model-provider abstraction | _planned_ | Support Ollama (local) and Anthropic alongside OpenAI |
+| **A** Cost tracking wiring | _shipped_ | `CostTracker` + `BudgetGuard` now run in every worker node; `total_cost_usd` reflects real spend |
+| **B** OSS basics | _shipped_ | LICENSE (Apache 2.0), CONTRIBUTING, CODE_OF_CONDUCT, ROADMAP, issue/PR templates |
+| **C** Security middleware | _shipped_ | PII redactor + prompt-injection guard at the API boundary |
+| **D** Multi-domain workflows | _shipped_ | `support_ops` and `finance_recon` templates alongside `sales_ops` |
+| **E** Real Slack connector | _shipped_ | HITL approvals post a Slack card with approve/reject deep-link buttons |
+| **F** Model-provider abstraction | _shipped_ | OpenAI (default), Ollama (local), Anthropic — switch via `LLM_PROVIDER` |
 
 ---
 
