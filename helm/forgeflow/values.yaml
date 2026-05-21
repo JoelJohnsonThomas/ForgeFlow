@@ -1,0 +1,181 @@
+# ForgeFlow Helm values.
+# Override any of these with `helm install ... --set` or `-f my-values.yaml`.
+
+# ----------------------------------------------------------------------
+# Image registry. Override `registry` and `tag` to point at your build.
+# ----------------------------------------------------------------------
+image:
+  registry: ghcr.io/joeljohnsonthomas/forgeflow
+  pullPolicy: IfNotPresent
+  tag: latest
+  pullSecrets: []   # [{name: my-registry-creds}]
+
+# ----------------------------------------------------------------------
+# Non-secret runtime configuration. Becomes the forgeflow-config ConfigMap.
+# ----------------------------------------------------------------------
+config:
+  llmProvider: openai
+  openaiModel: gpt-4o-mini
+  openaiModelStrong: gpt-4o
+
+  # In-cluster Postgres by default; point elsewhere for managed RDS / Cloud SQL.
+  postgresUrl: "postgresql+asyncpg://forgeflow:CHANGE_ME@forgeflow-postgres:5432/forgeflow"
+  postgresSyncUrl: "postgresql+psycopg://forgeflow:CHANGE_ME@forgeflow-postgres:5432/forgeflow"
+
+  budgetLimitUsd: "5.0"
+  maxRetries: "3"
+  circuitBreakerThreshold: "5"
+
+  langchainTracingV2: "false"
+  langchainProject: forgeflow
+
+  approval:
+    intervalSeconds: "300"
+    firstEscalationMinutes: "30"
+    secondEscalationMinutes: "120"
+    autoRejectMinutes: "1440"
+
+  a2aDispatchEnabled: "true"
+
+  otel:
+    enabled: "false"
+    serviceName: forgeflow-api
+    environment: development
+    exporterEndpoint: "http://localhost:4318/v1/traces"
+  tracingProvider: langsmith
+
+# ----------------------------------------------------------------------
+# Secrets. By default the chart creates a Secret from inline values
+# (suitable for dev / demos). Set `existingSecret` to skip Secret creation
+# and reference an external one (sealed-secrets / external-secrets-operator).
+# ----------------------------------------------------------------------
+secrets:
+  existingSecret: ""   # if set, the chart skips Secret creation
+  values:
+    OPENAI_API_KEY: "sk-replace-me"
+    API_SECRET_KEY: "generate-with-openssl-rand-hex-32"
+    POSTGRES_PASSWORD: "generate-a-strong-password"
+    TAVILY_API_KEY: ""
+    LANGCHAIN_API_KEY: ""
+    SLACK_BOT_TOKEN: ""
+    GITHUB_TOKEN: ""
+    JIRA_API_TOKEN: ""
+    HUBSPOT_ACCESS_TOKEN: ""
+    SALESFORCE_ACCESS_TOKEN: ""
+    SERVICENOW_PASSWORD: ""
+    SAP_PASSWORD: ""
+    QUICKBOOKS_ACCESS_TOKEN: ""
+    MSGRAPH_ACCESS_TOKEN: ""
+    ANTHROPIC_API_KEY: ""
+
+# ----------------------------------------------------------------------
+# Postgres (in-cluster StatefulSet). Disable when using managed DB.
+# ----------------------------------------------------------------------
+postgres:
+  enabled: true
+  image: pgvector/pgvector:pg16
+  storage:
+    size: 20Gi
+    storageClass: ""   # leave blank to use cluster default
+  resources:
+    requests: { cpu: 200m, memory: 512Mi }
+    limits:   { cpu: 1000m, memory: 2Gi }
+
+# ----------------------------------------------------------------------
+# Migrate job (alembic upgrade head). Set runOnInstall=false if you
+# manage migrations out of band.
+# ----------------------------------------------------------------------
+migrate:
+  runOnInstall: true
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits:   { cpu: 500m, memory: 512Mi }
+
+# ----------------------------------------------------------------------
+# MCP tool server
+# ----------------------------------------------------------------------
+mcp:
+  enabled: true
+  replicas: 1
+  resources:
+    requests: { cpu: 200m, memory: 512Mi }
+    limits:   { cpu: 1000m, memory: 1Gi }
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 75
+
+# ----------------------------------------------------------------------
+# FastAPI control plane
+# ----------------------------------------------------------------------
+api:
+  replicas: 2
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits:   { cpu: 1000m, memory: 1Gi }
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  prometheusScrape: true
+  terminationGracePeriodSeconds: 60
+  apiPublicUrl: ""   # leave blank to default to the in-cluster API service
+
+# ----------------------------------------------------------------------
+# Streamlit dashboard
+# ----------------------------------------------------------------------
+dashboard:
+  enabled: true
+  replicas: 1
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits:   { cpu: 500m, memory: 512Mi }
+
+# ----------------------------------------------------------------------
+# Ingress
+# ----------------------------------------------------------------------
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+  hosts:
+    api: forgeflow.example.com
+    dashboard: dashboard.forgeflow.example.com
+  tls:
+    enabled: false
+    secretName: forgeflow-tls
+
+# ----------------------------------------------------------------------
+# Pod security defaults — applied to every workload.
+# ----------------------------------------------------------------------
+security:
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: [ALL]
+
+# ----------------------------------------------------------------------
+# NetworkPolicies — set to false on clusters without a CNI that
+# enforces them (e.g. some k3s flavors).
+# ----------------------------------------------------------------------
+networkPolicy:
+  enabled: true
+
+# ----------------------------------------------------------------------
+# Pod placement
+# ----------------------------------------------------------------------
+nodeSelector: {}
+tolerations: []
+affinity: {}

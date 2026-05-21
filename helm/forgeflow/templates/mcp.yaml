@@ -1,0 +1,107 @@
+{{- if .Values.mcp.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-mcp
+  labels:
+    {{- include "forgeflow.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mcp
+spec:
+  {{- if not .Values.mcp.autoscaling.enabled }}
+  replicas: {{ .Values.mcp.replicas }}
+  {{- end }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      {{- include "forgeflow.selectorLabels" (dict "Chart" .Chart "Release" .Release "component" "mcp") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "forgeflow.labels" . | nindent 8 }}
+        app.kubernetes.io/component: mcp
+    spec:
+      securityContext:
+        {{- toYaml .Values.security.podSecurityContext | nindent 8 }}
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: mcp
+          image: {{ include "forgeflow.image" (dict "Values" .Values "component" "mcp") }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["python", "-m", "forgeflow.mcp.server.main", "http"]
+          ports:
+            - name: http
+              containerPort: 8001
+          envFrom:
+            - configMapRef:
+                name: {{ include "forgeflow.configName" . }}
+            - secretRef:
+                name: {{ include "forgeflow.secretName" . }}
+          resources:
+            {{- toYaml .Values.mcp.resources | nindent 12 }}
+          readinessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          securityContext:
+            {{- toYaml .Values.security.containerSecurityContext | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity: {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-mcp
+  labels:
+    {{- include "forgeflow.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mcp
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "forgeflow.selectorLabels" (dict "Chart" .Chart "Release" .Release "component" "mcp") | nindent 4 }}
+  ports:
+    - name: http
+      port: 8001
+      targetPort: http
+{{- if .Values.mcp.autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Release.Name }}-mcp
+  labels:
+    {{- include "forgeflow.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mcp
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Release.Name }}-mcp
+  minReplicas: {{ .Values.mcp.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.mcp.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.mcp.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,19 @@
+# Patterns excluded from `helm package`. Mirrors Kubernetes' .helmignore defaults
+# with a few project-specific additions.
+.DS_Store
+.git/
+.gitignore
+.idea/
+.vscode/
+*.tmproj
+*.swp
+*.bak
+*.tmp
+*.orig
+*.pyc
+__pycache__/
+.pytest_cache/
+
+# Sensitive — never package
+secrets.yaml
+*.local.yaml

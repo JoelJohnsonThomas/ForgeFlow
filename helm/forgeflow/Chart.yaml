@@ -1,0 +1,28 @@
+apiVersion: v2
+name: forgeflow
+description: |
+  Multi-Agent Enterprise Workflow Orchestrator — LangGraph + MCP + A2A.
+  Deploys the FastAPI control plane, FastMCP tool server, Streamlit dashboard,
+  and pgvector-extended PostgreSQL as a complete stack on any conformant
+  Kubernetes cluster.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.27.0"
+keywords:
+  - agents
+  - langgraph
+  - mcp
+  - a2a
+  - workflow
+  - orchestration
+home: https://github.com/JoelJohnsonThomas/ForgeFlow
+sources:
+  - https://github.com/JoelJohnsonThomas/ForgeFlow
+maintainers:
+  - name: Joel Johnson Thomas
+    email: joeljoanna1234@gmail.com
+icon: https://raw.githubusercontent.com/JoelJohnsonThomas/ForgeFlow/main/docs/logo.png
+annotations:
+  category: AI
+  licenses: Apache-2.0

@@ -1,0 +1,66 @@
+{{- if .Values.dashboard.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-dashboard
+  labels:
+    {{- include "forgeflow.labels" . | nindent 4 }}
+    app.kubernetes.io/component: dashboard
+spec:
+  replicas: {{ .Values.dashboard.replicas }}
+  selector:
+    matchLabels:
+      {{- include "forgeflow.selectorLabels" (dict "Chart" .Chart "Release" .Release "component" "dashboard") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "forgeflow.labels" . | nindent 8 }}
+        app.kubernetes.io/component: dashboard
+    spec:
+      securityContext:
+        {{- toYaml .Values.security.podSecurityContext | nindent 8 }}
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: dashboard
+          image: {{ include "forgeflow.image" (dict "Values" .Values "component" "dashboard") }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8501
+          env:
+            - name: API_URL
+              value: "http://{{ .Release.Name }}-api:8000"
+          resources:
+            {{- toYaml .Values.dashboard.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          securityContext:
+            {{- toYaml .Values.security.containerSecurityContext | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-dashboard
+  labels:
+    {{- include "forgeflow.labels" . | nindent 4 }}
+    app.kubernetes.io/component: dashboard
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "forgeflow.selectorLabels" (dict "Chart" .Chart "Release" .Release "component" "dashboard") | nindent 4 }}
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+  ports:
+    - name: http
+      port: 8501
+      targetPort: http
+{{- end }}
