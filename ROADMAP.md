@@ -71,14 +71,16 @@ degradation when credentials are missing.
 | QuickBooks Online | _shipped_ | finance_recon ledger + journal entries |
 | Microsoft Graph (Teams, Outlook) | _shipped_ | HITL approvals (Slack alternative) |
 
-## Phase 5 — Deployment & Platform
+## Phase 5 — Deployment & Platform _(shipped)_
 
-| Item | Rationale |
-|------|-----------|
-| Kubernetes manifests + Helm chart | Standard enterprise deployment target |
-| Terraform module (AWS / GCP / Azure) | Infrastructure-as-code for cloud teams |
-| Air-gapped deployment guide | Privacy-sensitive industries (healthcare, finance, government) |
-| Horizontal autoscaling | API and MCP server scaling under load |
+| Item | Status | Description |
+|------|--------|-------------|
+| Kubernetes manifests | _shipped_ | Plain YAML in [k8s/](k8s/) — StatefulSet + Deployments + HPAs + NetworkPolicies + Ingress |
+| Helm chart | _shipped_ | Templated equivalent in [helm/forgeflow/](helm/forgeflow/) with values.yaml + alembic pre-upgrade hook |
+| Terraform module (AWS) | _shipped_ | [terraform/aws/](terraform/aws/) — VPC + EKS + RDS PG16 with pgvector + Secrets Manager + ECR + IRSA |
+| Terraform modules (GCP / Azure) | _pending_ | Same pattern, different provider — next session |
+| Air-gapped deployment guide | _shipped_ | [docs/deployment/AIRGAPPED.md](docs/deployment/AIRGAPPED.md) + [scripts/build_offline_bundle.sh](scripts/build_offline_bundle.sh) |
+| Horizontal autoscaling | _shipped_ | HPA v2 resources for api (2→10) and mcp (1→5) with CPU + memory targets and fast-up / slow-down policies |
 
 ## Phase 6 — Community & Ecosystem
 
