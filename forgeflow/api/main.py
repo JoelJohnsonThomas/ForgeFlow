@@ -14,14 +14,16 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from forgeflow.a2a.registry import register_default_agents
-from forgeflow.config import get_settings
+from forgeflow.config import Settings, get_settings
 from forgeflow.database import close_pool, init_pool
+from forgeflow.events.dispatcher import EventDispatcher
 from forgeflow.graph.builder import compile_graph
 from forgeflow.jobs.escalation import ApprovalEscalationJob, EscalationThresholds
 from forgeflow.mcp.client.adapter import get_mcp_tools
@@ -86,13 +88,58 @@ async def lifespan(app: FastAPI):
     escalation_job.start()
     app.state.escalation_job = escalation_job
 
+    # Optional event-driven consumer (Redis Streams or Kafka)
+    app.state.event_consumer = None
+    if settings.events_provider in ("redis", "kafka"):
+        dispatcher = EventDispatcher(graphs=app.state.graphs)
+        try:
+            app.state.event_consumer = await _build_event_consumer(settings, dispatcher)
+            await app.state.event_consumer.start()
+        except Exception as exc:
+            logger.warning(
+                "Event consumer (%s) failed to start; continuing without it: %s",
+                settings.events_provider,
+                exc,
+            )
+            app.state.event_consumer = None
+
     logger.info("ForgeFlow API ready")
     yield
 
     logger.info("ForgeFlow API shutting down...")
+    if getattr(app.state, "event_consumer", None):
+        await app.state.event_consumer.stop()
     if getattr(app.state, "escalation_job", None):
         await app.state.escalation_job.stop()
     await close_pool()
+
+
+async def _build_event_consumer(settings: Settings, dispatcher: EventDispatcher) -> Any:
+    """Construct the configured event consumer. Kept out of lifespan body
+    so the lazy imports don't fire when events_provider=none.
+
+    Return type is Any because the concrete class depends on which optional
+    extra is installed; both consumers expose the same start()/stop() shape."""
+    if settings.events_provider == "redis":
+        from forgeflow.events.redis_consumer import RedisStreamsConsumer
+
+        return RedisStreamsConsumer(
+            dispatcher=dispatcher,
+            redis_url=settings.events_redis_url,
+            stream=settings.events_redis_stream,
+            group=settings.events_redis_group,
+            consumer_name=settings.events_redis_consumer,
+        )
+    if settings.events_provider == "kafka":
+        from forgeflow.events.kafka_consumer import KafkaConsumer
+
+        return KafkaConsumer(
+            dispatcher=dispatcher,
+            bootstrap_servers=settings.events_kafka_bootstrap_servers,
+            topic=settings.events_kafka_topic,
+            group_id=settings.events_kafka_group_id,
+        )
+    raise ValueError(f"unknown events_provider: {settings.events_provider}")
 
 
 app = FastAPI(

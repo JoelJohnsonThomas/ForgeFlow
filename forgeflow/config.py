@@ -189,6 +189,34 @@ class Settings(BaseSettings):
         description="Microsoft Graph API base URL",
     )
 
+    # --- Event-driven mode ---
+    events_provider: str = Field(
+        "none",
+        description="Event consumer to start at boot: none | redis | kafka",
+    )
+    events_redis_url: str = Field(
+        "redis://localhost:6379/0",
+        description="Redis connection URL (when events_provider=redis)",
+    )
+    events_redis_stream: str = Field(
+        "forgeflow:workflows", description="Stream name to consume from"
+    )
+    events_redis_group: str = Field(
+        "forgeflow", description="Consumer group name"
+    )
+    events_redis_consumer: str = Field(
+        "forgeflow-api", description="Consumer name within the group"
+    )
+    events_kafka_bootstrap_servers: str = Field(
+        "localhost:9092", description="Comma-separated Kafka bootstrap servers"
+    )
+    events_kafka_topic: str = Field(
+        "forgeflow.workflows", description="Topic to consume from"
+    )
+    events_kafka_group_id: str = Field(
+        "forgeflow", description="Kafka consumer group id"
+    )
+
     # --- Salesforce connector ---
     salesforce_instance_url: str = Field(
         "",

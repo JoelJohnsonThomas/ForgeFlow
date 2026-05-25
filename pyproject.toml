@@ -90,6 +90,14 @@ otel = [
 multimodal = [
     "pypdf>=4.3.0",
 ]
+# Redis Streams event consumer
+events = [
+    "redis>=5.0.0",
+]
+# Kafka event consumer
+events-kafka = [
+    "aiokafka>=0.11.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]
