@@ -1,0 +1,34 @@
+name: finance_recon
+version: "1.0.0"
+description: >-
+  Two-ledger reconciliation — pairs entries between source ledgers (e.g. bank
+  + ERP) for a period, flags material variances, and posts adjusting entries
+  after human approval.
+domain: finance_recon
+author: ForgeFlow
+homepage: https://github.com/JoelJohnsonThomas/ForgeFlow
+license: Apache-2.0
+tags:
+  - finance
+  - reconciliation
+  - audit
+  - ledger
+stages:
+  - ingest
+  - match
+  - flag_variance
+  - approve
+  - post
+input_schema:
+  period_label: { type: string, required: true }
+  source_a: { type: string, required: true, enum: [bank, erp, payment_processor, general_ledger, subledger] }
+  source_b: { type: string, required: true, enum: [bank, erp, payment_processor, general_ledger, subledger] }
+  period_start: { type: string, format: date, required: true }
+  period_end: { type: string, format: date, required: true }
+  materiality_threshold_usd: { type: number, required: false }
+  entity: { type: string, required: false }
+requires_connectors: []
+# Optional connectors:
+#   - quickbooks    # post journal entries
+#   - sap           # supplier invoice reads
+requires_extras: []

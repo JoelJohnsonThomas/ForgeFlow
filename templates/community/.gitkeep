@@ -1,0 +1,2 @@
+Community-contributed templates live here. Drop a directory with a
+manifest.yaml at the root and the registry will pick it up on next scan.

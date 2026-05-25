@@ -1,0 +1,35 @@
+name: sales_ops
+version: "1.0.0"
+description: >-
+  Sales operations workflow — qualifies an inbound lead through web research,
+  AI-driven ICP scoring, proposal drafting, human approval, and CRM execution.
+domain: sales_ops
+author: ForgeFlow
+homepage: https://github.com/JoelJohnsonThomas/ForgeFlow
+license: Apache-2.0
+tags:
+  - sales
+  - lead-qualification
+  - crm
+  - icp
+stages:
+  - qualify
+  - research
+  - analyze
+  - propose
+  - approve
+  - execute
+input_schema:
+  company_name: { type: string, required: true }
+  contact_name: { type: string, required: false }
+  contact_email: { type: string, required: false }
+  industry: { type: string, required: false }
+  known_budget_usd: { type: integer, required: false }
+  additional_context: { type: string, required: false }
+requires_connectors:
+  - search          # Tavily or equivalent web search
+  - email           # SMTP or transactional email provider
+  # Optional — pick one CRM:
+  # - salesforce
+  # - hubspot
+requires_extras: []

@@ -28,8 +28,12 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
     "viewer": {
         "read:metrics",
         "read:workflows",
+        "read:marketplace",
     },
-    "anonymous": set(),
+    "anonymous": {
+        # Marketplace listing is intentionally public — discovery is the point.
+        "read:marketplace",
+    },
 }
 
 # Maps HTTP (method, path prefix) → (action, resource)
@@ -48,4 +52,5 @@ ROUTE_PERMISSION_MAP: dict[tuple[str, str], tuple[str, str]] = {
     ("GET",  "/audit"):                  ("read",    "audit"),
     ("GET",  "/workspaces"):             ("read",    "workspaces"),
     ("POST", "/workspaces"):             ("write",   "workspaces"),
+    ("GET",  "/marketplace"):            ("read",    "marketplace"),
 }

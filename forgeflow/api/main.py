@@ -130,6 +130,7 @@ from forgeflow.api.routers import (
     approvals,
     audit,
     auth,
+    marketplace,
     memory,
     metrics,
     workflows,
@@ -137,6 +138,7 @@ from forgeflow.api.routers import (
 )
 
 app.include_router(auth.router, prefix="/auth", tags=["Auth"])
+app.include_router(marketplace.router, prefix="/marketplace", tags=["Marketplace"])
 app.include_router(workspaces.router, prefix="/workspaces", tags=["Workspaces"])
 app.include_router(workflows.router, prefix="/workflows", tags=["Workflows"])
 app.include_router(approvals.router, prefix="/approvals", tags=["Approvals"])
