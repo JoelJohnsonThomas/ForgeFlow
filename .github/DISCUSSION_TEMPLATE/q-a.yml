@@ -1,0 +1,55 @@
+title: "[Q&A] "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for asking. To give you a quick answer, please fill in
+        the boxes below — the more specific, the faster.
+  - type: textarea
+    id: what-trying-to-do
+    attributes:
+      label: What are you trying to do?
+      description: |
+        Describe the goal in one or two sentences. Avoid jumping straight
+        to the symptom — the goal often points to a simpler answer.
+      placeholder: |
+        "I want to run support_ops against an on-prem Ollama and have it
+        post approval requests to Microsoft Teams."
+    validations:
+      required: true
+  - type: textarea
+    id: what-tried
+    attributes:
+      label: What have you tried so far?
+      description: |
+        Configs, env vars, commands — anything that helps reproduce.
+        Use code fences for snippets.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: What happens vs. what you expected
+      placeholder: "Expected … but got …"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: ForgeFlow version
+      placeholder: "0.1.0 or commit SHA"
+    validations:
+      required: false
+  - type: dropdown
+    id: provider
+    attributes:
+      label: LLM provider
+      options:
+        - openai
+        - ollama
+        - anthropic
+        - other
+    validations:
+      required: false

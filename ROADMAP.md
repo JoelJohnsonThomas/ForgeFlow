@@ -82,15 +82,16 @@ degradation when credentials are missing.
 | Air-gapped deployment guide | _shipped_ | [docs/deployment/AIRGAPPED.md](docs/deployment/AIRGAPPED.md) + [scripts/build_offline_bundle.sh](scripts/build_offline_bundle.sh) |
 | Horizontal autoscaling | _shipped_ | HPA v2 resources for api (2→10) and mcp (1→5) with CPU + memory targets and fast-up / slow-down policies |
 
-## Phase 6 — Community & Ecosystem
+## Phase 6 — Community & Ecosystem _(shipped)_
 
-| Item | Rationale |
-|------|-----------|
-| Agent / template marketplace | Discoverability of community-contributed workflows |
-| Multi-modal input (PDF, images, voice) | Document-heavy enterprise workflows |
-| Event-driven mode (Kafka, Redis Streams) | Real-time pipelines vs. request/response |
-| Discord + GitHub Discussions | Community Q&A and showcase space |
-| Anonymous usage telemetry (opt-in) | Adoption signals to guide roadmap |
+| Item | Status | Description |
+|------|--------|-------------|
+| Workflow template marketplace | _shipped_ | File-based registry in [templates/](templates/), `/marketplace/templates` API, dashboard page, CLI validator |
+| Multi-modal input (PDF + images) | _shipped_ | [forgeflow/multimodal/](forgeflow/multimodal/) — pypdf-based text extraction + vision-LLM image description |
+| Multi-modal input (voice / Whisper) | _pending_ | Deferred — needs an audio-file pipeline + transcription model in its own session |
+| Event-driven mode | _shipped_ | Redis Streams + Kafka consumers in [forgeflow/events/](forgeflow/events/) feeding a shared `EventDispatcher` |
+| Discord + GitHub Discussions | _shipped_ | [COMMUNITY.md](COMMUNITY.md) + discussion templates in [.github/DISCUSSION_TEMPLATE/](.github/DISCUSSION_TEMPLATE/) |
+| Anonymous usage telemetry | _shipped_ | Opt-in webhook emitter in [forgeflow/telemetry/](forgeflow/telemetry/) with PII-clean allowlist |
 
 ---
 

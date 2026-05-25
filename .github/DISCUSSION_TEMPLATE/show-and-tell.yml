@@ -1,0 +1,44 @@
+title: "[Showcase] "
+labels: ["showcase"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Show off what you built with ForgeFlow. Workflows, custom connectors,
+        deployments, talks, blog posts — all welcome.
+  - type: input
+    id: what
+    attributes:
+      label: What did you build?
+      placeholder: "Custom finance_recon variant against Snowflake + NetSuite."
+    validations:
+      required: true
+  - type: textarea
+    id: how
+    attributes:
+      label: How did you build it?
+      description: |
+        High-level architecture. Which templates / connectors / providers
+        did you use? Any custom MCP tools?
+    validations:
+      required: true
+  - type: textarea
+    id: results
+    attributes:
+      label: Results so far
+      placeholder: "Closes 80% of monthly recs without human review; ~$0.03 per close."
+    validations:
+      required: false
+  - type: input
+    id: link
+    attributes:
+      label: Link to repo / blog / video (optional)
+    validations:
+      required: false
+  - type: checkboxes
+    id: share-license
+    attributes:
+      label: Sharing license
+      description: "Tick if you're OK with the maintainer linking to this from README."
+      options:
+        - label: I'm OK with this being highlighted in ForgeFlow's README.

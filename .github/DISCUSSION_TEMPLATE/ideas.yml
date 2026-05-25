@@ -1,0 +1,40 @@
+title: "[Idea] "
+labels: ["idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the proposal. This template is for half-formed ideas;
+        once an idea hardens, it can be promoted to a Feature Request issue.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What user-facing pain or missing capability are you trying to address?
+      placeholder: "Approvals can pile up unseen when the Slack channel is muted."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Rough proposal
+      description: One paragraph. APIs can be hand-wavy at this stage.
+      placeholder: |
+        "Add an email-fallback approval channel so reviewers still get
+        notified even when Slack is muted or the bot token rotated."
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      placeholder: "Polling /approvals/pending from a separate cron; SMS via Twilio."
+    validations:
+      required: false
+  - type: input
+    id: roadmap
+    attributes:
+      label: Does this fit an existing roadmap phase?
+      description: "If yes, name the phase from ROADMAP.md."
+    validations:
+      required: false
