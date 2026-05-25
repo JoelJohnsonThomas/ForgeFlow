@@ -19,6 +19,18 @@ pytest tests/unit -v
 
 Open a [GitHub issue](https://github.com/JoelJohnsonThomas/ForgeFlow/issues) before starting non-trivial work. See [ROADMAP.md](ROADMAP.md) for planned features — issues tagged `help wanted` and `good first issue` are open for community pickup.
 
+### Carryover from Phases 1-6 — open for pickup
+
+Four well-scoped tasks have an existing extension point + reference implementation, making them ideal first contributions. See [ROADMAP.md → Carryover](ROADMAP.md#carryover--remaining-work-from-phases-3-6) for the full description of each, including the file to copy the pattern from.
+
+| Task | Scope | Pattern to copy |
+|------|-------|-----------------|
+| Apply `workspace_id` filter to remaining endpoints | ~12 queries | `search_audit_log` in `forgeflow/api/routers/audit.py` |
+| Embeddings provider abstraction (Ollama / others) | 3 files + tests | `forgeflow/models/provider.py` |
+| Terraform module — GCP | ~700 LOC | `terraform/aws/main.tf` |
+| Terraform module — Azure | ~700 LOC | `terraform/aws/main.tf` |
+| Voice / Whisper transcription | 1 module + MCP tool + tests | `forgeflow/multimodal/images.py` |
+
 ## Pull request process
 
 1. **Fork & branch** off `main`. Use a descriptive branch name (`feat/slack-notifications`, `fix/budget-guard-rounding`).
