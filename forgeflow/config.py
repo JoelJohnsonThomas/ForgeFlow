@@ -189,6 +189,23 @@ class Settings(BaseSettings):
         description="Microsoft Graph API base URL",
     )
 
+    # --- Anonymous telemetry (opt-in) ---
+    telemetry_enabled: bool = Field(
+        False,
+        description="Send anonymous event counts to telemetry_webhook_url. OFF by default.",
+    )
+    telemetry_webhook_url: str = Field(
+        "",
+        description="HTTP endpoint receiving JSON events (PostHog, Mixpanel, custom).",
+    )
+    telemetry_install_id: str = Field(
+        "",
+        description="Anonymous installation UUID. Empty means generate one at first emit.",
+    )
+    telemetry_version: str = Field(
+        "0.1.0", description="Reported ForgeFlow version in every event"
+    )
+
     # --- Event-driven mode ---
     events_provider: str = Field(
         "none",
