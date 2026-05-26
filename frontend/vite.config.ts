@@ -5,4 +5,12 @@ export default defineConfig({
   plugins: [react()],
   server: {
     allowedHosts: ['localhost', '127.0.0.1', 'host.docker.internal'],
-    prox
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
+  },
+})

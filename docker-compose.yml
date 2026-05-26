@@ -101,18 +101,21 @@ services:
     restart: unless-stopped
 
   # ----------------------------------------------------------------
-  # Streamlit Observability Dashboard
+  # React + nginx Console (replaces the legacy Streamlit dashboard)
+  # Serves the built SPA on :8501 and reverse-proxies /api → api:8000
+  # so the browser hits a single origin.
   # ----------------------------------------------------------------
-  dashboard:
+  frontend:
     build:
-      context: .
+      context: ./frontend
       dockerfile: Dockerfile
-      target: dashboard
     environment:
-      API_URL: http://api:8000
-      PYTHONPATH: /app
+      # Forwarded to nginx envsubst so the proxy injects the service token
+      # on every /api/* request. Replace with per-user JWT auth in production.
+      API_SECRET_KEY: ${API_SECRET_KEY:-dev-secret-change-in-prod}
+      NGINX_ENVSUBST_TEMPLATE_DIR: /etc/nginx/templates
     ports:
-      - "8501:8501"
+      - "8501:80"
     depends_on:
       - api
     restart: unless-stopped

@@ -1,16 +1,11 @@
-type Props = {
-  title: string
-  sub?: string
-}
-
-export function PlaceholderView({ title, sub }: Props) {
+export function MarketplaceView() {
   return (
-    <section className="view active">
+    <section className="view active" data-screen-label="Marketplace">
       <div className="page-head">
         <div className="row">
           <div>
-            <h1>{title}</h1>
-            {sub && <p className="sub">{sub}</p>}
+            <h1>Marketplace</h1>
+            <p className="sub">Community workflow templates · /marketplace/templates</p>
           </div>
         </div>
       </div>
@@ -18,11 +13,11 @@ export function PlaceholderView({ title, sub }: Props) {
         <div className="panel">
           <div className="panel-body" style={{ padding: 64, textAlign: 'center', color: 'var(--fg-muted)' }}>
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.12em', textTransform: 'uppercase' }}>
-              Phase 2 ·  pending
+              Coming soon
             </p>
             <p style={{ marginTop: 12, fontSize: 13 }}>
-              This view ports cleanly from the design but isn't built yet. The Overview view shows what the
-              finished components look like.
+              Backend lists installed templates at <code style={{ color: 'var(--blue-4)' }}>/marketplace/templates</code>.
+              A browse + install flow ships in the next iteration.
             </p>
           </div>
         </div>

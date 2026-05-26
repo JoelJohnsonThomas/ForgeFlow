@@ -7,7 +7,18 @@ import {
 } from '@tanstack/react-router'
 import { AppShell } from './components/AppShell'
 import { OverviewView } from './views/OverviewView'
-import { PlaceholderView } from './views/PlaceholderView'
+import { LiveRunsView } from './views/LiveRunsView'
+import { ApprovalsView } from './views/ApprovalsView'
+import { AgentsView } from './views/AgentsView'
+import { CostView } from './views/CostView'
+import { AuditView } from './views/AuditView'
+import { MemoryView } from './views/MemoryView'
+import { EvaluationsView } from './views/EvaluationsView'
+import { WorkflowsView } from './views/WorkflowsView'
+import { ClustersView } from './views/ClustersView'
+import { ToolsView } from './views/ToolsView'
+import { MarketplaceView } from './views/MarketplaceView'
+import { RbacView } from './views/RbacView'
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -17,33 +28,24 @@ const rootRoute = createRootRoute({
   ),
 })
 
-const overviewRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/',
-  component: OverviewView,
-})
-
-const placeholder = (path: string, title: string, sub?: string) =>
-  createRoute({
-    getParentRoute: () => rootRoute,
-    path,
-    component: () => <PlaceholderView title={title} sub={sub} />,
-  })
+function route(path: string, Component: () => React.ReactElement) {
+  return createRoute({ getParentRoute: () => rootRoute, path, component: Component })
+}
 
 const routeTree = rootRoute.addChildren([
-  overviewRoute,
-  placeholder('/runs', 'Live runs', '12 active · Gantt + event stream coming in Phase 3'),
-  placeholder('/approvals', 'Approvals', '4 awaiting decision'),
-  placeholder('/agents', 'Agents', 'Topology + per-agent metrics'),
-  placeholder('/memory', 'Memory', 'pgvector recall · namespaces · TTL'),
-  placeholder('/cost', 'Cost & spend', 'per-workflow burn · budget alerts'),
-  placeholder('/evals', 'Evaluations', 'LLM-as-judge · regression checks'),
-  placeholder('/workflows', 'Workflows', 'Builder · templates · versions'),
-  placeholder('/tools', 'Tools · MCP', '14 registered tools · 4 providers'),
-  placeholder('/marketplace', 'Marketplace', 'Community workflow templates'),
-  placeholder('/audit', 'Audit log', 'Compliance · search · exports'),
-  placeholder('/clusters', 'Clusters', 'Pod health across regions'),
-  placeholder('/rbac', 'RBAC & secrets', 'Roles · policy bundles · secret rotation'),
+  route('/', OverviewView),
+  route('/runs', LiveRunsView),
+  route('/approvals', ApprovalsView),
+  route('/agents', AgentsView),
+  route('/memory', MemoryView),
+  route('/cost', CostView),
+  route('/evals', EvaluationsView),
+  route('/workflows', WorkflowsView),
+  route('/tools', ToolsView),
+  route('/marketplace', MarketplaceView),
+  route('/audit', AuditView),
+  route('/clusters', ClustersView),
+  route('/rbac', RbacView),
 ])
 
 export const router = createRouter({ routeTree })

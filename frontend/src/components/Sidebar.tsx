@@ -48,7 +48,7 @@ const BUILD: NavItem[] = [
 const OPERATE: NavItem[] = [
   { id: 'clusters', label: 'Clusters', icon: <IconAgents /> },
   { id: 'audit', label: 'Audit log', icon: <IconShield /> },
-  { id: 'rbac', label: 'RBAC & secrets', icon: <IconShield /> },
+  { id: 'rbac', label: 'RBAC & secrets', icon: <IconCheck /> },
 ]
 
 type SidebarProps = {

@@ -308,4 +308,26 @@ function RecentRunsTable() {
           <tbody>
             {runs.length === 0 && !runsQ.isLoading && (
               <tr>
-                <td colSpan={6} style={{ textAlign: 'cente
+                <td colSpan={6} style={{ textAlign: 'center', padding: 32, color: 'var(--fg-muted)' }}>
+                  No runs yet. POST to /workflows/run to kick one off.
+                </td>
+              </tr>
+            )}
+            {runs.map((r) => (
+              <tr key={r.run_id}>
+                <td>
+                  <span className="id">{shortRunId(r)}</span>
+                </td>
+                <td>{r.workflow_type}</td>
+                <td>{statusBadge(r.status)}</td>
+                <td className="num">${r.total_cost_usd.toFixed(3)}</td>
+                <td className="num">{r.total_tokens.toLocaleString()}</td>
+                <td className="num text-mono text-muted">{relativeTime(r.created_at)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
