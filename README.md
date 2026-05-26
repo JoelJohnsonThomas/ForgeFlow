@@ -52,8 +52,9 @@ graph TB
     Researcher -->|semantic recall| PostgreSQL
     Executor -->|structured write| PostgreSQL
 
-    API --> Dashboard["📊 Streamlit :8501<br/>Traces • Cost • Eval"]
-    Dashboard --> LangSmith["LangSmith<br/>Traces + Evals"]
+    API --> Frontend["⚡ React Console :8501<br/>Landing · 13 views · Architecture"]
+    Frontend -.->|nginx proxy /api/*| API
+    Frontend --> LangSmith["LangSmith<br/>Traces + Evals"]
 ```
 
 ---
@@ -100,10 +101,12 @@ docker compose up
 Services:
 | Service | URL | Description |
 |---------|-----|-------------|
+| React Console | http://localhost:8501 | Landing page, 13-view console, architecture page (nginx + proxied `/api/*`) |
 | FastAPI | http://localhost:8000/docs | REST API + OpenAPI UI |
-| Streamlit | http://localhost:8501 | Observability dashboard |
 | MCP Server | http://localhost:8001 | Tool server for agents |
 | PostgreSQL | localhost:5432 | Database + pgvector |
+
+The Console is a React 19 + Vite SPA served by nginx (Dockerfile in [frontend/](frontend/)). It reverse-proxies `/api/*` → the FastAPI service so the browser hits a single origin. The earlier Streamlit dashboard has been replaced and removed from `docker compose`.
 
 ### Local-first mode (privacy / air-gapped)
 
@@ -140,13 +143,23 @@ curl -X POST http://localhost:8000/workflows/run \
 python scripts/run_demo.py "Stripe" approve
 ```
 
-### 4. Open the dashboard
+### 4. Open the console
 
-Navigate to **http://localhost:8501** to see:
-- Real-time KPIs (runs, success rate, cost)
-- Agent execution Gantt chart
-- Cost breakdown by agent
-- LLM evaluation scores
+Navigate to **http://localhost:8501** for the marketing landing page.
+From there:
+
+| Route | What |
+|---|---|
+| `/` | Landing page — hero, architecture diagram, feature grid, observability preview, developer code sample, enterprise/security grid, CTA |
+| `/console` | Operations overview — KPI strip, recent-runs table wired to `/metrics/`, `/metrics/evaluation`, `/metrics/runs` |
+| `/console/runs` | Live run showcase — Gantt timeline, event stream, tool trace tree, approval card, memory recall, state diff |
+| `/console/approvals` | Approval queue — POST approve/reject mutations |
+| `/console/agents` | Agent topology + registry table |
+| `/console/cost` | Cost breakdowns by agent + workflow + top runs |
+| `/console/audit` | Audit log with action filters |
+| `/console/memory` | Semantic memory search (cosine) |
+| `/console/evals` `/workflows` `/tools` `/marketplace` `/clusters` `/rbac` | The remaining sidebar views |
+| `/architecture` | 8-section system deep-dive with diagrams (supervisor, A2A, MCP, memory graph, checkpointing, event pipeline, k8s, multi-region) |
 
 ---
 
@@ -164,9 +177,10 @@ Navigate to **http://localhost:8501** to see:
 | Cost tracking | [forgeflow/observability/cost_tracker.py](forgeflow/observability/cost_tracker.py) | tiktoken, model cost table, per-agent breakdown |
 | Circuit breaker | [forgeflow/resilience/circuit_breaker.py](forgeflow/resilience/circuit_breaker.py) | CLOSED/OPEN/HALF_OPEN state machine |
 | Budget guard | [forgeflow/resilience/budget_guard.py](forgeflow/resilience/budget_guard.py) | Halts workflow before exceeding $limit |
-| Simulated RBAC | [forgeflow/rbac/](forgeflow/rbac/) | Role → permission policies, middleware enforcement |
+| JWT + RBAC | [forgeflow/middleware/auth.py](forgeflow/middleware/auth.py) | HS256 bearer tokens + role → permission map; service-token wildcard for SPAs |
 | Immutable audit log | [forgeflow/middleware/audit.py](forgeflow/middleware/audit.py) | Partitioned table, every request logged |
 | SSE streaming | [forgeflow/api/routers/workflows.py](forgeflow/api/routers/workflows.py) | `astream()` + FastAPI `StreamingResponse` |
+| React console | [frontend/src/views/](frontend/src/views/) | 13 dashboard views + landing + architecture page; TanStack Query for data, hand-authored CSS with oklch tokens |
 
 ---
 
@@ -188,10 +202,18 @@ GET   /agents/{id}/status       Agent health + run count
 POST  /memory/store             Store semantic memory
 GET   /memory/search?q=         Cosine similarity search
 
-GET   /metrics                  System-wide KPIs
-GET   /metrics/cost             Cost by agent + day
+GET   /metrics/                 System-wide KPIs (total_runs, success_rate, avg_cost_usd…)
+GET   /metrics/cost             Cost by agent
+GET   /metrics/cost/by_workflow_type   Cost by workflow type
+GET   /metrics/cost/top_runs    Top N most expensive runs in window
 GET   /metrics/evaluation       LLM judge score aggregates
 GET   /metrics/runs             Recent run history
+
+GET   /audit/search             Filterable audit log (paginated)
+GET   /audit/stats              Audit aggregates for last N days
+
+POST  /auth/login               Issue a JWT (replace demo user table for prod)
+POST  /auth/introspect          Decode + validate a JWT
 ```
 
 ---
@@ -255,16 +277,27 @@ forgeflow/
 ├── memory/           # PGVector semantic store + relational store
 ├── workflows/        # Sales ops pipeline, stages, prompts, models
 ├── api/              # FastAPI app, routers, schemas, dependencies
-├── middleware/        # RBAC, audit log, rate limiter
+├── middleware/       # RBAC + JWT, audit log, rate limiter, security
+├── auth/             # JWT issuance + verification (HS256)
 ├── rbac/             # Role policies + enforcer
 ├── observability/    # LangSmith tracer, cost tracker, metrics store
 ├── resilience/       # Retry (tenacity), circuit breaker, budget guard
 └── evaluation/       # LLM judge, metrics, dataset, eval runner
 
-dashboard/            # Streamlit 4-page observability dashboard
-tests/                # unit/ + integration/
+frontend/             # React 19 + Vite SPA
+├── src/
+│   ├── views/        # 13 console views + LandingPage + ArchitecturePage
+│   ├── components/   # AppShell, Topbar, Sidebar, icons
+│   ├── api/          # Typed fetch client + TanStack Query hooks
+│   ├── styles/       # tokens.css (oklch design tokens) + per-page CSS
+│   └── router.tsx    # TanStack Router code-based routes
+├── Dockerfile        # Multi-stage: node 20-alpine build → nginx 1.27-alpine
+└── nginx.conf.template  # Reverse-proxies /api/* → api:8000 with injected JWT
+
+dashboard/            # Legacy Streamlit dashboard — kept for reference, no longer built
+tests/                # unit/ + integration/ (301 tests)
 scripts/              # seed_db, run_demo, generate_eval_dataset
-alembic/              # 3 database migrations (schema + pgvector + RBAC)
+alembic/              # 5 database migrations (schema + pgvector + RBAC + escalation + multi-tenant)
 ```
 
 ---
@@ -282,6 +315,8 @@ alembic/              # 3 database migrations (schema + pgvector + RBAC)
 **Cost control**: `BudgetGuard` raises before each LLM call if projected spend exceeds `BUDGET_LIMIT_USD`. Set per-workflow or globally.
 
 **Tracing**: Set `LANGCHAIN_TRACING_V2=true` + `LANGCHAIN_API_KEY` for automatic LangSmith traces of every agent invocation, tool call, and retry.
+
+**Frontend auth**: nginx currently injects `Authorization: Bearer ${API_SECRET_KEY}` on every proxied request so the SPA inherits the `admin` service role ([frontend/nginx.conf.template](frontend/nginx.conf.template)). For production, remove that header and ship a real login flow — the backend's `/auth/login` and `RBACMiddleware` already accept per-user JWTs. See [forgeflow/middleware/auth.py](forgeflow/middleware/auth.py) for the JWT-vs-service-token logic.
 
 ---
 
@@ -303,8 +338,9 @@ docker compose up postgres
 # Run API locally (hot-reload)
 uvicorn forgeflow.api.main:app --reload
 
-# Run dashboard locally
-streamlit run dashboard/app.py
+# Run the React console locally (Vite dev server with HMR; proxies /api → :8000)
+cd frontend && npm install && npm run dev
+# → http://localhost:5173
 ```
 
 ---

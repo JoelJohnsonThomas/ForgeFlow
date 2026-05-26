@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-router'
 import { AppShell } from './components/AppShell'
 import { LandingPage } from './views/LandingPage'
+import { ArchitecturePage } from './views/ArchitecturePage'
 import { OverviewView } from './views/OverviewView'
 import { LiveRunsView } from './views/LiveRunsView'
 import { ApprovalsView } from './views/ApprovalsView'
@@ -31,6 +32,12 @@ const landingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
   component: LandingPage,
+})
+
+const architectureRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/architecture',
+  component: ArchitecturePage,
 })
 
 // Console layout — every child gets the topbar + sidebar shell.
@@ -66,6 +73,7 @@ const consoleChildren = [
 
 const routeTree = rootRoute.addChildren([
   landingRoute,
+  architectureRoute,
   consoleLayoutRoute.addChildren(consoleChildren),
 ])
 
