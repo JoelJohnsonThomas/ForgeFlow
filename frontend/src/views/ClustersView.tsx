@@ -49,8 +49,75 @@ export function ClustersView() {
             <ClusterCard key={c.name} cluster={c} />
           ))}
         </div>
+        <DeploysTable />
       </div>
     </section>
+  )
+}
+
+type Deploy = {
+  version: string
+  cluster: string
+  author: string
+  strategy: string
+  status: 'healthy' | 'air-gapped' | 'rolled-back'
+  statusLabel: string
+  duration: string
+  when: string
+}
+
+const DEPLOYS: Deploy[] = [
+  { version: 'v3.4.1', cluster: 'prod-us-east-1', author: 'k.miller', strategy: 'canary 10→100', status: 'healthy', statusLabel: '● healthy', duration: '12m 41s', when: '2h ago' },
+  { version: 'v3.4.1', cluster: 'prod-eu-west-2', author: 'k.miller', strategy: 'blue-green', status: 'healthy', statusLabel: '● healthy', duration: '9m 12s', when: '2h ago' },
+  { version: 'v3.4.1', cluster: 'stg-us-east-1', author: 'k.miller', strategy: 'rolling', status: 'healthy', statusLabel: '● healthy', duration: '3m 21s', when: '3h ago' },
+  { version: 'v3.4.0', cluster: 'prod-airgap-gov', author: 'offline.bundle', strategy: 'signed-bundle', status: 'air-gapped', statusLabel: '● air-gapped', duration: '—', when: '14d ago' },
+  { version: 'v3.3.9', cluster: 'prod-us-east-1', author: 'k.miller', strategy: 'canary 10→25', status: 'rolled-back', statusLabel: '● rolled back · p99 spike', duration: '4m 02s', when: '5d ago' },
+]
+
+function deployBadge(d: Deploy) {
+  if (d.status === 'healthy') return <span className="badge emerald">{d.statusLabel}</span>
+  if (d.status === 'air-gapped') return <span className="badge purple">{d.statusLabel}</span>
+  return <span className="badge red">{d.statusLabel}</span>
+}
+
+function DeploysTable() {
+  return (
+    <div className="panel" style={{ marginTop: 16 }}>
+      <div className="panel-head">
+        <div className="title">Recent deploys</div>
+        <div className="actions">
+          <span>auto-rollback armed</span>
+        </div>
+      </div>
+      <div className="panel-body flush">
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th>Version</th>
+              <th>Cluster</th>
+              <th>Author</th>
+              <th>Strategy</th>
+              <th>Status</th>
+              <th className="num">Duration</th>
+              <th>When</th>
+            </tr>
+          </thead>
+          <tbody>
+            {DEPLOYS.map((d, i) => (
+              <tr key={`${d.version}-${d.cluster}-${i}`}>
+                <td className="mono">{d.version}</td>
+                <td>{d.cluster}</td>
+                <td>{d.author}</td>
+                <td>{d.strategy}</td>
+                <td>{deployBadge(d)}</td>
+                <td className="num">{d.duration}</td>
+                <td className="text-muted text-mono">{d.when}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   )
 }
 

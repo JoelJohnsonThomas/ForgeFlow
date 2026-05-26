@@ -90,11 +90,40 @@ export function EvaluationsView() {
                 <FailBar label="budget guard halt" pct={11} count={12} color="var(--blue-3)" />
                 <FailBar label="schema mismatch" pct={6} count={6} color="var(--emerald-3)" />
               </div>
+              <ForgeRootCause />
             </div>
           </div>
         </div>
       </div>
     </section>
+  )
+}
+
+function ForgeRootCause() {
+  return (
+    <div
+      style={{
+        marginTop: 18,
+        padding: 12,
+        background: 'var(--bg-inset)',
+        borderRadius: 6,
+        borderLeft: '2px solid var(--blue-4)',
+        fontSize: 12.5,
+        color: 'var(--fg-secondary)',
+      }}
+    >
+      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--blue-4)', letterSpacing: '.12em', textTransform: 'uppercase' }}>
+        FORGE · ROOT CAUSE
+      </span>
+      <br />
+      <span style={{ color: 'var(--fg-primary)' }}>42</span> hallucinations cluster on prompts where{' '}
+      <span style={{ color: 'var(--fg-primary)' }}>researcher</span> scraped pages &gt;9KB. Truncating to 6KB cuts
+      hallucination rate to{' '}
+      <span className="mono" style={{ color: 'var(--emerald-4)' }}>~0.03%</span> at no judge cost.
+      <div style={{ marginTop: 8 }}>
+        <button className="btn sm primary">Apply fix →</button>
+      </div>
+    </div>
   )
 }
 

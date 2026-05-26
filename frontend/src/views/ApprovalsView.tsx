@@ -36,8 +36,71 @@ export function ApprovalsView() {
             ))}
           </div>
         )}
+        <ActivityTable />
       </div>
     </section>
+  )
+}
+
+type ActivityRow = {
+  token: string
+  action: string
+  reviewer: string
+  decision: 'approved' | 'rejected' | 'sent_back'
+  decisionLabel: string
+  latency: string
+  when: string
+}
+
+const ACTIVITY: ActivityRow[] = [
+  { token: 'apr_jK02p', action: 'Send proposal — Vercel · $96K', reviewer: 's.chen', decision: 'approved', decisionLabel: 'approved', latency: '2m 41s', when: '14m ago' },
+  { token: 'apr_mL18p', action: 'Refund — Quanta · $1,820', reviewer: 'j.kim', decision: 'approved', decisionLabel: 'approved', latency: '4m 12s', when: '38m ago' },
+  { token: 'apr_yT72k', action: 'Send proposal — Northwind · $260K', reviewer: 'v.lopez', decision: 'rejected', decisionLabel: 'rejected · ICP miss', latency: '8m 04s', when: '1h ago' },
+  { token: 'apr_dW91x', action: 'Q1 journal posting', reviewer: 't.alvarez', decision: 'sent_back', decisionLabel: 'sent back · variance > 5%', latency: '12m 18s', when: '2h ago' },
+]
+
+function decisionBadge(d: ActivityRow['decision'], label: string) {
+  if (d === 'approved') return <span className="badge emerald">{label}</span>
+  if (d === 'rejected') return <span className="badge red">{label}</span>
+  return <span className="badge amber">{label}</span>
+}
+
+function ActivityTable() {
+  return (
+    <div className="panel" style={{ marginTop: 16 }}>
+      <div className="panel-head">
+        <div className="title">Approval activity · last 7d</div>
+        <div className="actions">
+          <span>p50 review: 6m 12s</span>
+        </div>
+      </div>
+      <div className="panel-body flush">
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Action</th>
+              <th>Reviewer</th>
+              <th>Decision</th>
+              <th className="num">Latency</th>
+              <th>When</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ACTIVITY.map((r) => (
+              <tr key={r.token}>
+                <td><span className="id">{r.token}</span></td>
+                <td>{r.action}</td>
+                <td>{r.reviewer}</td>
+                <td>{decisionBadge(r.decision, r.decisionLabel)}</td>
+                <td className="num">{r.latency}</td>
+                <td className="text-mono text-muted">{r.when}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   )
 }
 

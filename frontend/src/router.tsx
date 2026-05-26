@@ -8,6 +8,8 @@ import {
 import { AppShell } from './components/AppShell'
 import { LandingPage } from './views/LandingPage'
 import { ArchitecturePage } from './views/ArchitecturePage'
+import { DesignHubPage } from './views/DesignHubPage'
+import { DesignSystemPage } from './views/DesignSystemPage'
 import { OverviewView } from './views/OverviewView'
 import { LiveRunsView } from './views/LiveRunsView'
 import { ApprovalsView } from './views/ApprovalsView'
@@ -38,6 +40,18 @@ const architectureRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/architecture',
   component: ArchitecturePage,
+})
+
+const designHubRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/design-hub',
+  component: DesignHubPage,
+})
+
+const designSystemRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/design-system',
+  component: DesignSystemPage,
 })
 
 // Console layout — every child gets the topbar + sidebar shell.
@@ -74,6 +88,8 @@ const consoleChildren = [
 const routeTree = rootRoute.addChildren([
   landingRoute,
   architectureRoute,
+  designHubRoute,
+  designSystemRoute,
   consoleLayoutRoute.addChildren(consoleChildren),
 ])
 

@@ -63,7 +63,7 @@ export function AuditView() {
               <span>ACTOR</span>
               <span>ACTION</span>
               <span>SCOPE</span>
-              <span>OUTCOME</span>
+              <span style={{ textAlign: 'right' }}>IP</span>
             </div>
             {search.isLoading && (
               <div style={{ padding: 24, textAlign: 'center', color: 'var(--fg-muted)' }}>loading…</div>
@@ -98,15 +98,8 @@ function actionColor(action: string | null): string {
   return 'var(--fg-primary)'
 }
 
-function outcomeBadge(outcome: string | null) {
-  if (!outcome) return <span className="badge">—</span>
-  if (outcome === 'allowed' || outcome === 'ok') return <span className="badge emerald">{outcome}</span>
-  if (outcome === 'denied') return <span className="badge red">{outcome}</span>
-  if (outcome === 'error') return <span className="badge red">{outcome}</span>
-  return <span className="badge">{outcome}</span>
-}
-
 function AuditRowEl({ row }: { row: AuditRow }) {
+  const ip = (row.metadata?.client_ip as string | undefined) ?? '—'
   return (
     <div className="audit-row">
       <span className="when">{timeOnly(row.timestamp)}</span>
@@ -116,7 +109,7 @@ function AuditRowEl({ row }: { row: AuditRow }) {
         {row.resource ?? '—'}
       </span>
       <span className="scope">{row.role ?? ''}</span>
-      <span>{outcomeBadge(row.outcome)}</span>
+      <span className="ip">{ip}</span>
     </div>
   )
 }

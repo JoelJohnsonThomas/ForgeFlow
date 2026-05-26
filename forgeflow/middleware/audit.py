@@ -69,6 +69,10 @@ class AuditMiddleware(BaseHTTPMiddleware):
                             "latency_ms": round(latency_ms, 1),
                             "user_agent": request.headers.get("user-agent", ""),
                             "user_id_str": str(user_id),
+                            "client_ip": (
+                                request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+                                or (request.client.host if request.client else None)
+                            ),
                         },
                     )
         except Exception as e:
