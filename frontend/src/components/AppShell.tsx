@@ -4,19 +4,19 @@ import { Topbar } from './Topbar'
 import { Sidebar, type ViewId } from './Sidebar'
 
 const VIEW_PATHS: Record<ViewId, string> = {
-  overview: '/',
-  runs: '/runs',
-  approvals: '/approvals',
-  agents: '/agents',
-  memory: '/memory',
-  cost: '/cost',
-  evals: '/evals',
-  workflows: '/workflows',
-  tools: '/tools',
-  marketplace: '/marketplace',
-  audit: '/audit',
-  clusters: '/clusters',
-  rbac: '/rbac',
+  overview: '/console',
+  runs: '/console/runs',
+  approvals: '/console/approvals',
+  agents: '/console/agents',
+  memory: '/console/memory',
+  cost: '/console/cost',
+  evals: '/console/evals',
+  workflows: '/console/workflows',
+  tools: '/console/tools',
+  marketplace: '/console/marketplace',
+  audit: '/console/audit',
+  clusters: '/console/clusters',
+  rbac: '/console/rbac',
 }
 
 function useActiveView(): ViewId {

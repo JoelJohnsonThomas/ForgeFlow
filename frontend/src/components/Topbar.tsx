@@ -1,12 +1,13 @@
+import { Link } from '@tanstack/react-router'
 import { IconBell, IconChevronDown, IconHelp, IconSearch } from './icons'
 
 export function Topbar() {
   return (
     <header className="topbar">
-      <a className="brand" href="/" aria-label="ForgeFlow home">
+      <Link to="/" className="brand" aria-label="ForgeFlow landing">
         <span className="brand-mark" />
         <span className="brand-name">ForgeFlow</span>
-      </a>
+      </Link>
       <div className="org-pill" title="Switch workspace">
         <span className="logo" />
         <span>Acme · Sales Ops</span>
