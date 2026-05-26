@@ -1,0 +1,43 @@
+# Fly.io deploy manifest for the MCP tool server.
+#
+# Provisioning:
+#   fly apps create forgeflow-mcp
+#   fly secrets set -a forgeflow-mcp \
+#       OPENAI_API_KEY=sk-... \
+#       HUBSPOT_ACCESS_TOKEN=pat-na1-... \
+#       TAVILY_API_KEY=tvly-...
+#   fly deploy -a forgeflow-mcp -c fly/mcp.toml
+#
+# The MCP server isn't exposed publicly — only the API container talks to it
+# via 6PN private networking (forgeflow-mcp.internal:8001). Don't add a
+# [http_service] block; the [services] one below binds the internal port only.
+
+app = "forgeflow-mcp"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+  build-target = "mcp"
+
+[env]
+  MCP_SERVER_HOST = "0.0.0.0"
+  MCP_SERVER_PORT = "8001"
+
+[processes]
+  app = "python -m forgeflow.mcp.server.main http"
+
+# Internal-only service — exposed on the 6PN network as forgeflow-mcp.internal:8001.
+# No public HTTPS, no force_https, no public anycast IP needed.
+[[services]]
+  protocol = "tcp"
+  internal_port = 8001
+  processes = ["app"]
+
+  [[services.ports]]
+    port = 8001
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
+  processes = ["app"]

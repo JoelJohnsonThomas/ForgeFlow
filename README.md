@@ -13,11 +13,16 @@
 ForgeFlow orchestrates a **team of specialized AI agents** across multiple business domains — sales lead qualification, customer support triage, and finance reconciliation — all with human-in-the-loop approvals, full observability, and enterprise-grade reliability.
 
 **Workflow templates shipped:**
-- `sales_ops` — qualify → research → analyze → propose → approve → execute
-- `support_ops` — triage → investigate → respond → escalate → resolve
-- `finance_recon` — ingest → match → flag_variance → approve → post
 
-Pick a workflow with `workflow_type: "..."` on `POST /workflows/run`. See [forgeflow/workflows/](forgeflow/workflows/) for each domain's prompt + state shape.
+| Template | Status | Connector | Production-ready? |
+|---|---|---|---|
+| `sales_ops` — qualify → research → analyze → propose → approve → execute | ✅ **production** | HubSpot CRM (upsert-by-email, idempotent deals, 429 backoff) | Yes — see [docs/sales-ops-production.md](docs/sales-ops-production.md) |
+| `support_ops` — triage → investigate → respond → escalate → resolve | ⚠ template scaffold | none wired | No — needs a ticketing connector (Zendesk / Intercom / Freshdesk) |
+| `finance_recon` — ingest → match → flag_variance → approve → post | ⚠ template scaffold | none wired | No — needs a bank/ERP source + journal-posting tool with double-entry validation |
+
+`support_ops` and `finance_recon` raise on `.run()` unless `dry_run=True` or `FORGEFLOW_ALLOW_TEMPLATE_WORKFLOWS=1` is set; the React Workflows view labels them honestly. Three named templates ≠ three production workflows.
+
+Pick a workflow with `workflow_type: "..."` on `POST /workflows/run`. See [forgeflow/workflows/](forgeflow/workflows/) for each domain's prompt + state shape. For `sales_ops` against a real HubSpot account on Fly.io in under an hour, follow [docs/sales-ops-production.md](docs/sales-ops-production.md).
 
 ---
 
@@ -74,6 +79,8 @@ graph TB
 
 ## Quickstart
 
+> **For a real HubSpot pipeline on Fly.io, jump to [docs/sales-ops-production.md](docs/sales-ops-production.md).** The runbook below this is for local evaluation.
+
 ### Prerequisites
 - Docker + Docker Compose
 - An LLM provider — one of:
@@ -81,6 +88,7 @@ graph TB
   - A local Ollama daemon (privacy mode, see below)
   - Anthropic API key
 - (Optional) Tavily API key for real web search, LangSmith key for tracing
+- (Optional, for sales_ops production path) HubSpot Private App token with the 6 CRM scopes listed in the [production runbook](docs/sales-ops-production.md#prereqs-10-min-one-time)
 
 ### 1. Clone and configure
 
@@ -167,6 +175,10 @@ From there:
 
 | Pattern | File | Description |
 |---------|------|-------------|
+| Real CRM connector (HubSpot) | [forgeflow/connectors/hubspot.py](forgeflow/connectors/hubspot.py) | Upsert-by-email contacts, search-then-PATCH companies, `forgeflow_run_id` idempotent deals |
+| Retry-with-backoff | [forgeflow/connectors/base.py](forgeflow/connectors/base.py) | 429 honors Retry-After; 502/503/504 exponential + jitter; `RetryableError` vs `PermanentError` |
+| HubSpot pre-flight validation | [scripts/validate_hubspot.py](scripts/validate_hubspot.py) | End-to-end probe against your real HubSpot before deploy |
+| Fly.io deploy | [fly/api.toml](fly/api.toml) + [fly/mcp.toml](fly/mcp.toml) + [fly/frontend.toml](fly/frontend.toml) + [scripts/deploy_fly.sh](scripts/deploy_fly.sh) | 3 apps + managed Postgres + 6PN internal networking |
 | Supervisor multi-agent | [forgeflow/graph/builder.py](forgeflow/graph/builder.py) | Hub-and-spoke routing with LangGraph |
 | PostgreSQL checkpointing | [forgeflow/graph/checkpointer.py](forgeflow/graph/checkpointer.py) | Every node persisted; any worker can resume any run |
 | MCP tool server | [forgeflow/mcp/server/main.py](forgeflow/mcp/server/main.py) | FastMCP HTTP server with 8 registered tools |

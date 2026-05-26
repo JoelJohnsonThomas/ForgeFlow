@@ -1,0 +1,34 @@
+# nginx config used on Fly.io — proxies /api/* to the internal API app.
+# Symlink or COPY this in place of frontend/nginx.conf.template when building
+# the frontend image for Fly, OR overlay it via a Fly volume / build arg.
+#
+# Difference from the docker-compose template: upstream is the Fly internal
+# DNS name (forgeflow-api.internal) instead of the compose service name (api).
+
+server {
+  listen 80;
+  server_name _;
+  root /usr/share/nginx/html;
+  index index.html;
+
+  location / {
+    try_files $uri $uri/ /index.html;
+  }
+
+  location /assets/ {
+    expires 1y;
+    add_header Cache-Control "public, immutable";
+  }
+
+  location /api/ {
+    proxy_pass http://forgeflow-api.internal:8000/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Authorization "Bearer ${API_SECRET_KEY}";
+    proxy_buffering off;
+    proxy_read_timeout 1h;
+  }
+}

@@ -21,6 +21,7 @@ export function LandingPage() {
       <ObservabilityPreview />
       <Developers />
       <Enterprise />
+      <Docs />
       <CallToAction />
       <Footer />
     </>
@@ -737,6 +738,521 @@ function TrustItem({ title, body, badges }: { title: string; body: string; badge
         ))}
       </div>
     </div>
+  )
+}
+
+function Docs() {
+  return (
+    <section id="docs">
+      <div className="wrap">
+        <div className="section-eyebrow">Documentation · v3.4.1</div>
+        <h2>Everything to ship, operate, and extend ForgeFlow.</h2>
+        <p className="sub">
+          Quickstart in three commands. Full REST + SDK reference. Production playbooks the on-call team
+          actually uses. Searchable from any page in the console.
+        </p>
+
+        <DocSearch />
+        <QuickstartAndChangelog />
+        <BrowseBySurface />
+        <DeveloperReference />
+      </div>
+    </section>
+  )
+}
+
+function DocSearch() {
+  return (
+    <div
+      style={{
+        marginTop: 40,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '12px 18px',
+        background: 'var(--bg-canvas)',
+        border: '1px solid var(--border-default)',
+        borderRadius: 'var(--r-3)',
+        boxShadow: 'var(--shadow-sm)',
+        maxWidth: 720,
+      }}
+    >
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ color: 'var(--fg-muted)', flexShrink: 0 }}>
+        <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.4" />
+        <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      </svg>
+      <span style={{ flex: 1, color: 'var(--fg-muted)', fontSize: 14 }}>
+        Search 248 docs — guides, API, SDK, recipes…
+      </span>
+      <span className="badge mono" style={{ fontSize: 10 }}>powered by /api/docs</span>
+      <span className="kbd">⌘K</span>
+    </div>
+  )
+}
+
+function QuickstartAndChangelog() {
+  return (
+    <div style={{ marginTop: 40, display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 24 }}>
+      <Quickstart />
+      <Changelog />
+    </div>
+  )
+}
+
+function Quickstart() {
+  const code = `# 1. clone + configure
+$ git clone github.com/forgeflow/forgeflow
+$ cp .env.example .env  # set OPENAI_API_KEY
+
+# 2. boot the stack
+$ docker compose --profile migration run --rm migrate
+$ docker compose up -d
+
+# 3. trigger your first workflow
+$ curl -X POST http://localhost:8501/api/workflows/run \\
+    -H "Content-Type: application/json" \\
+    -d '{"workflow_type":"sales_ops","lead_data":{"company_name":"Stripe"}}'`
+
+  return (
+    <div
+      style={{
+        background: 'var(--bg-canvas)',
+        border: '1px solid var(--border-subtle)',
+        borderRadius: 'var(--r-4)',
+        padding: 24,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        <span
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 10,
+            letterSpacing: '.14em',
+            textTransform: 'uppercase',
+            color: 'var(--blue-4)',
+          }}
+        >
+          QUICKSTART · 5 MIN
+        </span>
+        <span className="badge emerald" style={{ fontSize: 10 }}>
+          <span className="dot live" /> all systems normal
+        </span>
+      </div>
+      <h3 style={{ margin: '0 0 14px', fontSize: 22, fontWeight: 500, letterSpacing: 'var(--tracking-tight)' }}>
+        From <span className="mono" style={{ color: 'var(--blue-4)' }}>git clone</span> to a streaming workflow in three commands.
+      </h3>
+      <pre className="code" style={{ margin: 0, fontSize: 12.5 }}>{code}</pre>
+      <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
+        <a href="/architecture" className="btn primary sm">
+          Open quickstart →
+        </a>
+        <a href="/api/docs" target="_blank" rel="noopener noreferrer" className="btn sm">
+          REST reference
+        </a>
+        <a href="https://github.com/JoelJohnsonThomas/forgeflow" target="_blank" rel="noopener noreferrer" className="btn ghost sm">
+          GitHub ↗
+        </a>
+      </div>
+    </div>
+  )
+}
+
+type ChangelogEntry = {
+  version: string
+  date: string
+  tag: 'release' | 'security' | 'fix'
+  title: string
+}
+
+const CHANGELOG: ChangelogEntry[] = [
+  { version: 'v3.4.1', date: '2026-05-26', tag: 'release', title: 'React console + nginx replaces Streamlit dashboard' },
+  { version: 'v3.4.0', date: '2026-05-21', tag: 'release', title: 'Multi-region checkpoint replication · RPO 5s' },
+  { version: 'v3.3.9', date: '2026-05-12', tag: 'security', title: 'JWT auth + service-token wildcard for SPA → API' },
+  { version: 'v3.3.8', date: '2026-05-04', tag: 'fix', title: 'PII redactor: phone regex no longer eats CC digits' },
+  { version: 'v3.3.7', date: '2026-04-28', tag: 'release', title: 'Air-gapped Ollama bundle (signed, 4.2 GB)' },
+]
+
+function tagBadge(tag: ChangelogEntry['tag']) {
+  if (tag === 'release') return <span className="badge blue" style={{ fontSize: 9 }}>RELEASE</span>
+  if (tag === 'security') return <span className="badge red" style={{ fontSize: 9 }}>SECURITY</span>
+  return <span className="badge amber" style={{ fontSize: 9 }}>FIX</span>
+}
+
+function Changelog() {
+  return (
+    <div
+      style={{
+        background: 'var(--bg-canvas)',
+        border: '1px solid var(--border-subtle)',
+        borderRadius: 'var(--r-4)',
+        padding: 24,
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <div
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: 10,
+          letterSpacing: '.14em',
+          textTransform: 'uppercase',
+          color: 'var(--fg-muted)',
+          marginBottom: 14,
+        }}
+      >
+        WHAT'S NEW · LAST 30 DAYS
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {CHANGELOG.map((c, i) => (
+          <div
+            key={c.version}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '70px 1fr auto',
+              gap: 10,
+              alignItems: 'baseline',
+              padding: '10px 0',
+              borderTop: i === 0 ? 'none' : '1px dashed var(--border-subtle)',
+            }}
+          >
+            <span className="mono" style={{ fontSize: 11, color: 'var(--blue-4)' }}>{c.version}</span>
+            <span style={{ fontSize: 12.5, color: 'var(--fg-secondary)', lineHeight: 1.5 }}>{c.title}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {tagBadge(c.tag)}
+              <span className="mono" style={{ fontSize: 10, color: 'var(--fg-muted)' }}>{c.date}</span>
+            </span>
+          </div>
+        ))}
+      </div>
+      <a
+        href="#"
+        style={{ marginTop: 'auto', paddingTop: 14, fontSize: 12, color: 'var(--blue-4)', textDecoration: 'none' }}
+      >
+        Full changelog →
+      </a>
+    </div>
+  )
+}
+
+type Surface = {
+  num: string
+  name: string
+  count: number
+  icon: React.ReactNode
+  href: string
+  articles: string[]
+}
+
+const SURFACES: Surface[] = [
+  {
+    num: '01',
+    name: 'Quickstart & concepts',
+    count: 12,
+    icon: <PlayIcon />,
+    href: '/architecture',
+    articles: [
+      'Five-minute install with Docker',
+      'Your first workflow: sales_ops',
+      'Mental model: supervisor + workers',
+      'Where state lives: checkpointing',
+    ],
+  },
+  {
+    num: '02',
+    name: 'REST API',
+    count: 38,
+    icon: <ApiIcon />,
+    href: '/api/docs',
+    articles: [
+      'POST /workflows/run — trigger a run',
+      'POST /workflows/stream — SSE timeline',
+      'GET /approvals/pending — review queue',
+      'POST /auth/login — issue a JWT',
+    ],
+  },
+  {
+    num: '03',
+    name: 'Python SDK',
+    count: 24,
+    icon: <CodeIcon />,
+    href: '/api/docs',
+    articles: [
+      'pip install forgeflow',
+      'Workflow + Supervisor + Agent classes',
+      'Typed state with Pydantic',
+      'Async streaming via wf.stream()',
+    ],
+  },
+  {
+    num: '04',
+    name: 'Operations playbooks',
+    count: 41,
+    icon: <BookIcon />,
+    href: '/architecture',
+    articles: [
+      'On-call runbook: stuck workflow',
+      'Capacity planning: RPS to pod count',
+      'Cost guardrails: BudgetGuard tuning',
+      'Replay a checkpoint after incident',
+    ],
+  },
+  {
+    num: '05',
+    name: 'Security & compliance',
+    count: 19,
+    icon: <ShieldIcon />,
+    href: '/architecture',
+    articles: [
+      'SAML + SCIM provisioning',
+      'OPA policy bundle authoring',
+      'PII redactor & prompt-injection guard',
+      'Audit log retention & SIEM export',
+    ],
+  },
+  {
+    num: '06',
+    name: 'Design system',
+    count: 60,
+    icon: <PaintIcon />,
+    href: '/design-system',
+    articles: [
+      'Tokens · oklch color, type, space',
+      'Component gallery',
+      'Motion principles',
+      'Agent avatars + workflow nodes',
+    ],
+  },
+]
+
+function BrowseBySurface() {
+  return (
+    <div style={{ marginTop: 56 }}>
+      <div
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: 11,
+          letterSpacing: '.14em',
+          textTransform: 'uppercase',
+          color: 'var(--fg-muted)',
+          marginBottom: 18,
+        }}
+      >
+        BROWSE BY SURFACE
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+        {SURFACES.map((s) => (
+          <SurfaceCard key={s.num} surface={s} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function SurfaceCard({ surface }: { surface: Surface }) {
+  return (
+    <div
+      style={{
+        background: 'var(--bg-canvas)',
+        border: '1px solid var(--border-subtle)',
+        borderRadius: 'var(--r-4)',
+        padding: 22,
+        display: 'flex',
+        flexDirection: 'column',
+        transition: 'border-color 180ms',
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--border-default)' }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-subtle)' }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div
+          style={{
+            width: 32, height: 32, borderRadius: 8,
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--border-default)',
+            display: 'grid', placeItems: 'center',
+            color: 'var(--blue-4)',
+          }}
+        >
+          {surface.icon}
+        </div>
+        <span className="mono" style={{ fontSize: 10, color: 'var(--fg-muted)', letterSpacing: '.12em' }}>
+          {surface.num} · {surface.count} ARTICLES
+        </span>
+      </div>
+      <h4
+        style={{
+          margin: '0 0 12px',
+          fontSize: 15,
+          fontWeight: 500,
+          letterSpacing: 'var(--tracking-tight)',
+          color: 'var(--fg-primary)',
+        }}
+      >
+        {surface.name}
+      </h4>
+      <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {surface.articles.map((a) => (
+          <li
+            key={a}
+            style={{
+              fontSize: 12.5,
+              color: 'var(--fg-secondary)',
+              paddingLeft: 14,
+              position: 'relative',
+              lineHeight: 1.5,
+            }}
+          >
+            <span
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 9,
+                width: 6,
+                height: 1,
+                background: 'var(--fg-faint)',
+              }}
+            />
+            {a}
+          </li>
+        ))}
+      </ul>
+      <a
+        href={surface.href}
+        target={surface.href.startsWith('/api') ? '_blank' : undefined}
+        rel={surface.href.startsWith('/api') ? 'noopener noreferrer' : undefined}
+        style={{ marginTop: 'auto', fontSize: 12, color: 'var(--blue-4)', textDecoration: 'none', fontWeight: 500 }}
+      >
+        View all {surface.count} →
+      </a>
+    </div>
+  )
+}
+
+type RefItem = {
+  label: string
+  sublabel: string
+  href: string
+  external?: boolean
+}
+
+const REFERENCES: RefItem[] = [
+  { label: 'CLI', sublabel: 'forgeflow --help', href: '/architecture' },
+  { label: 'Python SDK', sublabel: 'pip install forgeflow', href: '/api/docs', external: true },
+  { label: 'TypeScript SDK', sublabel: '@forgeflow/sdk · planned', href: '#' },
+  { label: 'OpenAPI', sublabel: '/api/openapi.json', href: '/api/openapi.json', external: true },
+  { label: 'Postman collection', sublabel: '.json export', href: '/api/openapi.json', external: true },
+  { label: 'Status page', sublabel: 'all systems normal', href: '#' },
+]
+
+function DeveloperReference() {
+  return (
+    <div
+      style={{
+        marginTop: 56,
+        background: 'var(--bg-canvas)',
+        border: '1px solid var(--border-subtle)',
+        borderRadius: 'var(--r-4)',
+        overflow: 'hidden',
+      }}
+    >
+      <div
+        style={{
+          padding: '14px 24px',
+          borderBottom: '1px solid var(--border-subtle)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          background: 'var(--bg-page)',
+        }}
+      >
+        <span
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 10,
+            letterSpacing: '.14em',
+            textTransform: 'uppercase',
+            color: 'var(--fg-muted)',
+          }}
+        >
+          DEVELOPER REFERENCE
+        </span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-muted)' }}>
+          v3.4.1 · OpenAPI 3.1 · Apache 2.0
+        </span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
+        {REFERENCES.map((r, i) => (
+          <a
+            key={r.label}
+            href={r.href}
+            target={r.external ? '_blank' : undefined}
+            rel={r.external ? 'noopener noreferrer' : undefined}
+            style={{
+              padding: 18,
+              borderLeft: i === 0 ? 'none' : '1px solid var(--border-subtle)',
+              textDecoration: 'none',
+              color: 'inherit',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+              transition: 'background 120ms',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-elevated)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+          >
+            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--fg-primary)' }}>{r.label}</span>
+            <span className="mono" style={{ fontSize: 11, color: 'var(--fg-muted)' }}>{r.sublabel}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function PlayIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M4 3v8l6-4-6-4z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function ApiIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M2 4h10M2 7h6M2 10h8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  )
+}
+function CodeIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M5 4L2 7l3 3M9 4l3 3-3 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function BookIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M2 3a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3z" stroke="currentColor" strokeWidth="1.2" />
+      <path d="M7 2v10" stroke="currentColor" strokeWidth="1.2" />
+    </svg>
+  )
+}
+function ShieldIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M7 1.5L2 3.5v4c0 3 2.2 5 5 5.5 2.8-.5 5-2.5 5-5.5v-4L7 1.5z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function PaintIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.2" />
+      <circle cx="4.5" cy="6" r="0.8" fill="currentColor" />
+      <circle cx="9.5" cy="6" r="0.8" fill="currentColor" />
+      <circle cx="7" cy="9" r="0.8" fill="currentColor" />
+    </svg>
   )
 }
 

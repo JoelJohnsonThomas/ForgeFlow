@@ -1,8 +1,26 @@
-"""FinanceReconPipeline — orchestration helper for two-ledger reconciliation workflows."""
+"""FinanceReconPipeline — orchestration helper for two-ledger reconciliation workflows.
+
+⚠ TEMPLATE SCAFFOLD — NOT PRODUCTION-READY
+
+The graph + stages + models are real, but no bank/ERP connector is wired
+into the workflow. forgeflow/connectors/ ships QuickBooks + SAP clients
+but neither is hooked up here; you'd also need a bank/processor data
+source (Plaid? CSV import? S3 drop?) and a journal-posting tool with
+double-entry validation.
+
+Finance also has regulatory edges (immutable audit trail, signed entries,
+materiality thresholds per entity, period locks) that demos skip and
+production teams cannot. Treat this as a starting point, not a deliverable.
+
+Calling .run() or .stream() raises unless dry_run=True. Set
+FORGEFLOW_ALLOW_TEMPLATE_WORKFLOWS=1 to override (e.g. for integration
+tests that mock the graph).
+"""
 
 from __future__ import annotations
 
 import logging
+import os
 import uuid
 from collections.abc import AsyncIterator
 from typing import Any
@@ -11,6 +29,21 @@ from forgeflow.state.workflow_state import WorkflowState
 from forgeflow.workflows.finance_recon.models import ReconciliationInput
 
 logger = logging.getLogger(__name__)
+
+TEMPLATE_ONLY = True
+
+
+def _guard_template(dry_run: bool) -> None:
+    if dry_run:
+        return
+    if os.environ.get("FORGEFLOW_ALLOW_TEMPLATE_WORKFLOWS") == "1":
+        return
+    raise RuntimeError(
+        "finance_recon is a template scaffold — no bank/ERP connector is wired "
+        "and no journal-posting tool is registered. Use dry_run=True for "
+        "evaluation, or wire QuickBooks/SAP and remove TEMPLATE_ONLY in "
+        "pipeline.py. See docs/sales-ops-production.md for the reference pattern."
+    )
 
 
 class FinanceReconPipeline:
@@ -74,6 +107,7 @@ class FinanceReconPipeline:
         role: str = "accountant",
         dry_run: bool = False,
     ) -> tuple[str, str, WorkflowState]:
+        _guard_template(dry_run)
         state = self._build_initial_state(recon_input, user_id, role, dry_run)
         thread_id = state["thread_id"]
         config = {
@@ -98,6 +132,7 @@ class FinanceReconPipeline:
         role: str = "accountant",
         dry_run: bool = False,
     ) -> AsyncIterator[dict]:
+        _guard_template(dry_run)
         state = self._build_initial_state(recon_input, user_id, role, dry_run)
         thread_id = state["thread_id"]
         config = {

@@ -1,34 +1,69 @@
-const TEMPLATES = [
+type Status = 'production' | 'scaffold'
+
+type Template = {
+  name: string
+  title: string
+  desc: string
+  color: 'blue' | 'emerald' | 'amber'
+  status: Status
+  ctaPrimary: string
+  connector?: string
+  missingPieces?: string[]
+}
+
+const TEMPLATES: Template[] = [
   {
     name: 'sales_ops',
     title: 'Sales lead qualification',
     desc: 'qualify → research → analyze → propose → approve → execute',
     color: 'blue',
+    status: 'production',
+    ctaPrimary: 'Run →',
+    connector: 'HubSpot CRM · upsert-by-email + idempotent deals',
   },
   {
     name: 'support_ops',
     title: 'Customer support triage',
     desc: 'triage → investigate → respond → escalate → resolve',
     color: 'emerald',
+    status: 'scaffold',
+    ctaPrimary: 'Dry-run only',
+    missingPieces: [
+      'No ticketing connector wired (Zendesk / Intercom / Freshdesk)',
+      'No knowledge-base search tool',
+      'No idempotent ticket reply path',
+    ],
   },
   {
     name: 'finance_recon',
     title: 'Finance reconciliation',
     desc: 'ingest → match → flag_variance → approve → post',
     color: 'amber',
+    status: 'scaffold',
+    ctaPrimary: 'Dry-run only',
+    missingPieces: [
+      'No bank/ERP data source wired (QuickBooks + SAP exist but unconnected)',
+      'No journal-posting tool with double-entry validation',
+      'No regulatory audit trail (period locks, signed entries)',
+    ],
   },
 ]
 
 export function WorkflowsView() {
+  const productionCount = TEMPLATES.filter((t) => t.status === 'production').length
+  const scaffoldCount = TEMPLATES.filter((t) => t.status === 'scaffold').length
   return (
     <section className="view active" data-screen-label="Workflows">
       <div className="page-head">
         <div className="row">
           <div>
             <h1>Workflows</h1>
-            <p className="sub">3 built-in templates · POST /workflows/run to trigger</p>
+            <p className="sub">
+              {productionCount} production · {scaffoldCount} template scaffold · POST /workflows/run to trigger
+            </p>
           </div>
           <div className="actions">
+            <button className="btn sm">View docs</button>
             <button className="btn sm primary">+ Build new</button>
           </div>
         </div>
@@ -36,22 +71,145 @@ export function WorkflowsView() {
       <div className="page-body">
         <div className="grid-3">
           {TEMPLATES.map((t) => (
-            <div key={t.name} className="card" style={{ padding: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                <span className={`badge ${t.color}`}>{t.name}</span>
-              </div>
-              <h3 style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 500, letterSpacing: 'var(--tracking-tight)' }}>
-                {t.title}
-              </h3>
-              <p style={{ margin: 0, color: 'var(--fg-secondary)', fontSize: 13, lineHeight: 1.5 }}>{t.desc}</p>
-              <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-                <button className="btn sm primary">Run →</button>
-                <button className="btn sm">View graph</button>
-              </div>
+            <TemplateCard key={t.name} t={t} />
+          ))}
+        </div>
+        <FootnoteBanner />
+      </div>
+    </section>
+  )
+}
+
+function TemplateCard({ t }: { t: Template }) {
+  const isProduction = t.status === 'production'
+  return (
+    <div className="card" style={{ padding: 20, display: 'flex', flexDirection: 'column', minHeight: 280 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+        <span className={`badge ${t.color}`}>{t.name}</span>
+        {isProduction ? (
+          <span className="badge emerald">
+            <span className="dot live" /> production
+          </span>
+        ) : (
+          <span className="badge amber">⚠ template scaffold</span>
+        )}
+      </div>
+      <h3
+        style={{
+          margin: '0 0 6px',
+          fontSize: 17,
+          fontWeight: 500,
+          letterSpacing: 'var(--tracking-tight)',
+        }}
+      >
+        {t.title}
+      </h3>
+      <p style={{ margin: 0, color: 'var(--fg-secondary)', fontSize: 13, lineHeight: 1.5 }}>{t.desc}</p>
+
+      {isProduction && t.connector && (
+        <div
+          style={{
+            marginTop: 14,
+            padding: '8px 12px',
+            background: 'var(--bg-inset)',
+            borderRadius: 6,
+            borderLeft: '2px solid var(--emerald-4)',
+            fontSize: 12,
+            color: 'var(--fg-secondary)',
+            fontFamily: 'var(--font-mono)',
+          }}
+        >
+          {t.connector}
+        </div>
+      )}
+
+      {!isProduction && t.missingPieces && (
+        <div
+          style={{
+            marginTop: 14,
+            padding: '10px 12px',
+            background: 'var(--bg-inset)',
+            borderRadius: 6,
+            borderLeft: '2px solid var(--amber-4)',
+            fontSize: 12,
+            color: 'var(--fg-secondary)',
+            lineHeight: 1.5,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 10,
+              letterSpacing: '.12em',
+              textTransform: 'uppercase',
+              color: 'var(--amber-4)',
+              marginBottom: 6,
+            }}
+          >
+            Missing for production
+          </div>
+          {t.missingPieces.map((m) => (
+            <div key={m} style={{ paddingLeft: 12, position: 'relative', marginTop: 3 }}>
+              <span
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 7,
+                  width: 4,
+                  height: 4,
+                  background: 'var(--fg-faint)',
+                  borderRadius: '50%',
+                }}
+              />
+              {m}
             </div>
           ))}
         </div>
+      )}
+
+      <div style={{ marginTop: 'auto', paddingTop: 16, display: 'flex', gap: 8 }}>
+        <button className={isProduction ? 'btn sm primary' : 'btn sm'} disabled={!isProduction}>
+          {t.ctaPrimary}
+        </button>
+        <button className="btn sm">View graph</button>
       </div>
-    </section>
+    </div>
+  )
+}
+
+function FootnoteBanner() {
+  return (
+    <div
+      style={{
+        marginTop: 20,
+        padding: '14px 18px',
+        background: 'var(--bg-canvas)',
+        border: '1px solid var(--border-subtle)',
+        borderLeft: '2px solid var(--blue-4)',
+        borderRadius: 'var(--r-3)',
+        fontSize: 12.5,
+        color: 'var(--fg-secondary)',
+        lineHeight: 1.55,
+      }}
+    >
+      <div
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: 10,
+          letterSpacing: '.12em',
+          textTransform: 'uppercase',
+          color: 'var(--blue-4)',
+          marginBottom: 6,
+        }}
+      >
+        Honest signal
+      </div>
+      Three named templates ≠ three production workflows. Today only{' '}
+      <span className="mono" style={{ color: 'var(--fg-primary)' }}>sales_ops</span> ships with a real connector
+      (HubSpot), idempotency on retries, retry-with-backoff, an end-to-end validation script, and a Fly.io deploy
+      story. The other two are graph + prompt scaffolds — calling them from the API raises unless{' '}
+      <span className="mono" style={{ color: 'var(--fg-primary)' }}>dry_run=true</span>. See{' '}
+      <code style={{ color: 'var(--blue-4)' }}>docs/sales-ops-production.md</code> for the reference pattern.
+    </div>
   )
 }

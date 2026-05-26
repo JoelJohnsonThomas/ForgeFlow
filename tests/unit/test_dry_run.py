@@ -27,8 +27,9 @@ def _fake_tool(name: str):
 class TestExecutorDryRun:
     @pytest.mark.asyncio
     async def test_dry_run_skips_crm_and_email_calls(self):
-        crm = _fake_tool("update_lead")
-        email = _fake_tool("send_email")
+        # Tool names match what FastMCP exposes after .mount(prefix=...).
+        crm = _fake_tool("crm_update_lead")
+        email = _fake_tool("email_send_email")
 
         executor = ExecutorAgent(model=_fake_model(), tools=[crm, email])
 
@@ -54,8 +55,8 @@ class TestExecutorDryRun:
 
     @pytest.mark.asyncio
     async def test_normal_run_invokes_tools(self):
-        crm = _fake_tool("update_lead")
-        email = _fake_tool("send_email")
+        crm = _fake_tool("crm_update_lead")
+        email = _fake_tool("email_send_email")
 
         executor = ExecutorAgent(model=_fake_model(), tools=[crm, email])
 
@@ -78,13 +79,15 @@ class TestExecutorDryRun:
     @pytest.mark.asyncio
     async def test_dry_run_default_is_false(self):
         """A state with no dry_run key still hits the real tool path."""
-        crm = _fake_tool("update_lead")
-        email = _fake_tool("send_email")
+        crm = _fake_tool("crm_update_lead")
+        email = _fake_tool("email_send_email")
 
         executor = ExecutorAgent(model=_fake_model(), tools=[crm, email])
 
+        # contact_email is required for the email path now — the old "synthesize
+        # contact@<slug>.com" fallback was a footgun in production.
         state = {
-            "lead_data": {"company_name": "Acme"},
+            "lead_data": {"company_name": "Acme", "contact_email": "ops@acme.example"},
             "proposal": {"executive_summary": "x", "estimated_deal_value_usd": 1},
             "lead_id": "lead-1",
             "current_stage": "execute",

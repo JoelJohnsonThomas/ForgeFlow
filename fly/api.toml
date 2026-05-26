@@ -1,0 +1,70 @@
+# Fly.io deploy manifest for the FastAPI service.
+#
+# Provisioning notes:
+#   fly apps create forgeflow-api
+#   fly postgres create --name forgeflow-pg --region iad --vm-size shared-cpu-1x --volume-size 10
+#   fly postgres attach -a forgeflow-api forgeflow-pg
+#   fly secrets set -a forgeflow-api \
+#       OPENAI_API_KEY=sk-... \
+#       HUBSPOT_ACCESS_TOKEN=pat-na1-... \
+#       API_SECRET_KEY=$(openssl rand -hex 32) \
+#       LANGCHAIN_TRACING_V2=false
+#   # Postgres attach above sets DATABASE_URL. Mirror it into the two DSN
+#   # forms forgeflow expects:
+#   fly ssh console -a forgeflow-api -C "printenv DATABASE_URL"
+#   fly secrets set -a forgeflow-api \
+#       POSTGRES_URL=postgresql+asyncpg://<from-database-url> \
+#       POSTGRES_SYNC_URL=postgresql+psycopg://<from-database-url>
+#   fly deploy -a forgeflow-api -c fly/api.toml
+#
+# Migrations run on each deploy (release_command below).
+
+app = "forgeflow-api"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+  build-target = "api"
+
+[deploy]
+  release_command = "alembic upgrade head"
+  strategy = "rolling"
+
+[env]
+  PORT = "8000"
+  API_PORT = "8000"
+  API_HOST = "0.0.0.0"
+  MCP_SERVER_HOST = "forgeflow-mcp.internal"
+  MCP_SERVER_PORT = "8001"
+  OPENAI_MODEL = "gpt-4o-mini"
+  OPENAI_MODEL_STRONG = "gpt-4o"
+  LANGCHAIN_PROJECT = "forgeflow-prod"
+
+[processes]
+  app = "uvicorn forgeflow.api.main:app --host 0.0.0.0 --port 8000"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 50
+    hard_limit = 80
+
+[[http_service.checks]]
+  grace_period = "30s"
+  interval = "15s"
+  method = "GET"
+  timeout = "5s"
+  path = "/health"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 1024
+  processes = ["app"]

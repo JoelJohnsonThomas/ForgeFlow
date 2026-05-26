@@ -15,6 +15,10 @@ os.environ.setdefault("POSTGRES_SYNC_URL", "postgresql+psycopg://forgeflow:testp
 os.environ.setdefault("LANGCHAIN_TRACING_V2", "false")
 os.environ.setdefault("API_SECRET_KEY", "test-secret")
 os.environ.setdefault("BUDGET_LIMIT_USD", "10.0")
+# support_ops + finance_recon are template scaffolds — their .run() raises in
+# production unless dry_run=True. Tests bypass the guard via this opt-in flag
+# (also documented in the pipelines' module docstrings).
+os.environ.setdefault("FORGEFLOW_ALLOW_TEMPLATE_WORKFLOWS", "1")
 
 
 @pytest.fixture

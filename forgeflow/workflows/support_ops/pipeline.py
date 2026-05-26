@@ -1,8 +1,28 @@
-"""SupportOpsPipeline — orchestration helper for support ticket workflows."""
+"""SupportOpsPipeline — orchestration helper for support ticket workflows.
+
+⚠ TEMPLATE SCAFFOLD — NOT PRODUCTION-READY
+
+This workflow has the full LangGraph + supervisor + worker shape, but no
+ticketing connector is wired (Zendesk, Intercom, Freshdesk, Linear, Front
+are all unwired). Real production use requires:
+
+  1. A ticketing connector in forgeflow/connectors/ (none exists yet)
+  2. MCP tools that wrap it (knowledge base search, ticket update, reply send)
+  3. Idempotency on ticket replies (don't double-send)
+  4. The runbook + Fly.io deployment treatment that sales_ops has
+
+Calling .run() or .stream() raises unless dry_run=True. Set
+FORGEFLOW_ALLOW_TEMPLATE_WORKFLOWS=1 to override (e.g. for integration
+tests that mock the graph). Don't override in production.
+
+See docs/sales-ops-production.md for what "production-ready" actually
+means and forgeflow/workflows/sales_ops/ for the reference implementation.
+"""
 
 from __future__ import annotations
 
 import logging
+import os
 import uuid
 from collections.abc import AsyncIterator
 from typing import Any
@@ -11,6 +31,26 @@ from forgeflow.state.workflow_state import WorkflowState
 from forgeflow.workflows.support_ops.models import TicketInput
 
 logger = logging.getLogger(__name__)
+
+TEMPLATE_ONLY = True
+
+
+def _guard_template(dry_run: bool) -> None:
+    """Raise unless the caller is in dry_run or has explicitly opted in.
+
+    The opt-in env flag exists so integration tests + the React app's
+    'send a sample run' path keep working without spraying half-implemented
+    side effects at a real customer."""
+    if dry_run:
+        return
+    if os.environ.get("FORGEFLOW_ALLOW_TEMPLATE_WORKFLOWS") == "1":
+        return
+    raise RuntimeError(
+        "support_ops is a template scaffold — no ticketing connector is wired. "
+        "Use dry_run=True for evaluation, or wire a Zendesk/Intercom/Freshdesk "
+        "connector and remove TEMPLATE_ONLY in pipeline.py. "
+        "See docs/sales-ops-production.md for the reference pattern."
+    )
 
 
 class SupportOpsPipeline:
@@ -70,6 +110,7 @@ class SupportOpsPipeline:
         role: str = "support_rep",
         dry_run: bool = False,
     ) -> tuple[str, str, WorkflowState]:
+        _guard_template(dry_run)
         state = self._build_initial_state(ticket_input, user_id, role, dry_run)
         thread_id = state["thread_id"]
 
@@ -95,6 +136,7 @@ class SupportOpsPipeline:
         role: str = "support_rep",
         dry_run: bool = False,
     ) -> AsyncIterator[dict]:
+        _guard_template(dry_run)
         state = self._build_initial_state(ticket_input, user_id, role, dry_run)
         thread_id = state["thread_id"]
         config = {

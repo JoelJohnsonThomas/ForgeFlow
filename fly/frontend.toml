@@ -1,0 +1,54 @@
+# Fly.io deploy manifest for the React + nginx console.
+#
+# Provisioning:
+#   fly apps create forgeflow-console
+#   fly secrets set -a forgeflow-console API_SECRET_KEY=$(fly ssh console -a forgeflow-api -C "printenv API_SECRET_KEY")
+#   fly deploy -a forgeflow-console -c fly/frontend.toml
+#
+# Nginx proxies /api/* to the API app via 6PN private networking. The
+# Authorization header it injects is read from API_SECRET_KEY at container
+# start (the official nginx image's envsubst runs against our template).
+#
+# Custom domain + TLS:
+#   fly certs add -a forgeflow-console console.yourdomain.com
+#   # then add an A or CNAME record at your DNS provider pointing at the
+#   # IP shown by `fly ips list -a forgeflow-console`.
+
+app = "forgeflow-console"
+primary_region = "iad"
+
+[build]
+  dockerfile = "frontend/Dockerfile"
+  # Build context defaults to the dockerfile's parent dir; override to repo root
+  # so the multi-stage build can COPY frontend/* relative paths.
+
+[env]
+  NGINX_ENVSUBST_TEMPLATE_DIR = "/etc/nginx/templates"
+  # Override the nginx.conf.template upstream to point at Fly's internal DNS.
+  # The template references ${API_SECRET_KEY} only; the proxy_pass target is
+  # hardcoded in the .template file — see deploy note in
+  # docs/sales-ops-production.md if you need to point at a different upstream.
+
+[http_service]
+  internal_port = 80
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 200
+    hard_limit = 400
+
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "15s"
+  method = "GET"
+  timeout = "3s"
+  path = "/"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 256
