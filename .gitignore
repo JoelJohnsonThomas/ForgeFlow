@@ -67,3 +67,4 @@ alembic/versions/__pycache__/
 *.key
 *.p12
 secrets/
+Design/
