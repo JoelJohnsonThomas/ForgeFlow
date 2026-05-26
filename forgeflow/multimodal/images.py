@@ -148,7 +148,7 @@ def _extract_objects(text: str) -> list[str]:
     import re
 
     for pattern in (
-        r"(?:I\s+(?:can\s+)?see|contains|including|features)[:\s]+([^.]+)",
+        r"(?:I\s+(?:can\s+)?see|contains?|includes?|including|features?|shows?)[:\s]+([^.]+)",
         r"objects?[:\s]+([^.]+)",
     ):
         m = re.search(pattern, text, re.IGNORECASE)

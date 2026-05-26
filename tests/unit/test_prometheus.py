@@ -72,9 +72,9 @@ class TestRefreshFromDB:
         body, _ = render(registry)
         text = body.decode("utf-8")
 
-        # Run counters populated
-        assert 'workflow_type="sales_ops",status="done"' in text
-        assert 'workflow_type="support_ops",status="running"' in text
+        # Run counters populated (prometheus_client sorts labels alphabetically)
+        assert 'status="done",workflow_type="sales_ops"' in text
+        assert 'status="running",workflow_type="support_ops"' in text
         # Approvals gauge populated
         assert "forgeflow_approvals_pending 4.0" in text
 

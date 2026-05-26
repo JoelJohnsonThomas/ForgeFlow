@@ -58,9 +58,21 @@ def extract_pdf_text(
         PDFDocument with text, per-page text, metadata, and page_count.
 
     Raises:
+        ValueError when the source type is unsupported or the PDF can't be parsed
         ImportError when pypdf isn't installed
-        ValueError when the input isn't a parseable PDF
     """
+    # Validate the source type before the optional pypdf import so callers
+    # passing a bogus type get ValueError even when the extra isn't installed.
+    import io
+    from contextlib import nullcontext
+
+    if isinstance(source, (str, Path)):
+        pass  # opened below, after pypdf import succeeds
+    elif isinstance(source, bytes):
+        pass
+    else:
+        raise ValueError(f"unsupported PDF source type: {type(source).__name__}")
+
     try:
         import pypdf
     except ImportError as exc:
@@ -69,17 +81,10 @@ def extract_pdf_text(
             "Install with: pip install 'forgeflow[multimodal]'"
         ) from exc
 
-    # Resolve source -> file-like. Use a context-managed open() for paths;
-    # bytes get a nullcontext around a BytesIO that doesn't need closing.
-    import io
-    from contextlib import nullcontext
-
     if isinstance(source, (str, Path)):
         ctx: Any = open(source, "rb")  # noqa: SIM115  managed by the `with` below
-    elif isinstance(source, bytes):
-        ctx = nullcontext(io.BytesIO(source))
     else:
-        raise ValueError(f"unsupported PDF source type: {type(source).__name__}")
+        ctx = nullcontext(io.BytesIO(source))
 
     with ctx as fh:
         try:

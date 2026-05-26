@@ -15,17 +15,23 @@ from forgeflow.config import get_settings
 logger = logging.getLogger(__name__)
 
 _checkpointer: AsyncPostgresSaver | None = None
+_cm = None  # keeps the from_conn_string() context manager alive for the process lifetime
 
 
 async def get_checkpointer() -> AsyncPostgresSaver:
-    global _checkpointer
+    global _checkpointer, _cm
     if _checkpointer is not None:
         return _checkpointer
 
     settings = get_settings()
     logger.info("Initialising PostgreSQL checkpointer...")
 
-    _checkpointer = AsyncPostgresSaver.from_conn_string(settings.postgres_sync_url)
+    # from_conn_string is @asynccontextmanager — must __aenter__ to get the saver,
+    # and the CM must outlive the saver or the underlying connection closes.
+    # psycopg needs a plain libpq URL; SQLAlchemy's "+psycopg" driver suffix is rejected.
+    conn_url = settings.postgres_sync_url.replace("postgresql+psycopg://", "postgresql://", 1)
+    _cm = AsyncPostgresSaver.from_conn_string(conn_url)
+    _checkpointer = await _cm.__aenter__()
     # Creates langgraph_checkpoints and langgraph_writes tables if they don't exist
     await _checkpointer.setup()
     logger.info("Checkpointer ready")

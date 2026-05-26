@@ -23,7 +23,7 @@ _EMAIL_RE = re.compile(
     r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"
 )
 _PHONE_RE = re.compile(
-    r"(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b"
+    r"(?<!\d)(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}(?!\d)"
 )
 _SSN_RE = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
 _CREDIT_CARD_RE = re.compile(r"\b(?:\d[ -]*?){13,19}\b")
@@ -72,11 +72,13 @@ def redact(text: str) -> tuple[str, list[RedactionMatch]]:
 
     patterns = [
         ("email", _EMAIL_RE),
+        # api_key first — its alphanumeric runs often contain digit substrings
+        # that the phone regex would otherwise eat.
+        ("api_key", _API_KEY_RE),
         ("phone", _PHONE_RE),
         ("ssn", _SSN_RE),
         ("ipv6", _IPV6_RE),
         ("ipv4", _IPV4_RE),
-        ("api_key", _API_KEY_RE),
     ]
 
     # Apply non-credit-card categories first (cheap, no validation step)

@@ -15,10 +15,10 @@ def render_sidebar() -> dict:
         st.divider()
 
         st.markdown("### Navigation")
-        st.page_link("dashboard/app.py", label="Overview", icon="📊")
-        st.page_link("dashboard/pages/2_traces.py", label="Agent Traces", icon="🔍")
-        st.page_link("dashboard/pages/3_cost.py", label="Cost Analysis", icon="💰")
-        st.page_link("dashboard/pages/4_evaluation.py", label="Evaluation", icon="🧪")
+        st.page_link("app.py", label="Overview", icon="📊")
+        st.page_link("pages/2_traces.py", label="Agent Traces", icon="🔍")
+        st.page_link("pages/3_cost.py", label="Cost Analysis", icon="💰")
+        st.page_link("pages/4_evaluation.py", label="Evaluation", icon="🧪")
 
         st.divider()
         st.markdown("### Filters")

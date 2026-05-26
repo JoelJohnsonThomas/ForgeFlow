@@ -22,25 +22,28 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/search")
 async def search_audit_log(
-    user_id: str | None = Query(None, description="Exact user_id match"),
-    role: str | None = Query(None, description="Exact role match"),
-    action: str | None = Query(None, description="HTTP method filter (GET, POST, ...)"),
-    resource: str | None = Query(None, description="Substring match on URL path"),
-    outcome: str | None = Query(None, description="allowed | denied | error"),
-    since: datetime | None = Query(None, description="Start of time window (ISO-8601)"),
-    until: datetime | None = Query(None, description="End of time window (ISO-8601)"),
-    limit: int = Query(50, ge=1, le=500),
-    offset: int = Query(0, ge=0),
-    pool: asyncpg.Pool = Depends(get_pool),
-    workspace_id: str | None = Depends(get_workspace_id),
+    *,
+    pool: asyncpg.Pool,
+    user_id: str | None = None,
+    role: str | None = None,
+    action: str | None = None,
+    resource: str | None = None,
+    outcome: str | None = None,
+    since: datetime | None = None,
+    until: datetime | None = None,
+    limit: int = 50,
+    offset: int = 0,
+    workspace_id: str | None = None,
 ) -> dict:
     """Search the audit log. Returns {total, items, limit, offset}.
 
     Tenant-scoped via workspace_id: a caller with a workspace claim only
     sees their own audit entries. Calls without workspace_id see only
     rows where workspace_id IS NULL (legacy / global).
+
+    Plain async callable so unit tests can invoke it directly without
+    FastAPI dependency resolution. The HTTP route wrapper is below.
     """
 
     clauses: list[str] = ["1=1"]
@@ -128,6 +131,35 @@ async def search_audit_log(
         "limit": limit,
         "offset": offset,
     }
+
+
+@router.get("/search")
+async def search_audit_log_route(
+    user_id: str | None = Query(None, description="Exact user_id match"),
+    role: str | None = Query(None, description="Exact role match"),
+    action: str | None = Query(None, description="HTTP method filter (GET, POST, ...)"),
+    resource: str | None = Query(None, description="Substring match on URL path"),
+    outcome: str | None = Query(None, description="allowed | denied | error"),
+    since: datetime | None = Query(None, description="Start of time window (ISO-8601)"),
+    until: datetime | None = Query(None, description="End of time window (ISO-8601)"),
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    pool: asyncpg.Pool = Depends(get_pool),
+    workspace_id: str | None = Depends(get_workspace_id),
+) -> dict:
+    return await search_audit_log(
+        pool=pool,
+        user_id=user_id,
+        role=role,
+        action=action,
+        resource=resource,
+        outcome=outcome,
+        since=since,
+        until=until,
+        limit=limit,
+        offset=offset,
+        workspace_id=workspace_id,
+    )
 
 
 @router.get("/stats")
