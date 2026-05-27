@@ -38,7 +38,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: api
-          image: ghcr.io/joeljohnsonthomas/forgeflow/api:latest
+          image: ghcr.io/joeljohnsonthomas/forgeflow/api:${IMAGE_TAG}  # set by CD; never :latest with IMMUTABLE ECR
           imagePullPolicy: IfNotPresent
           command: ["uvicorn", "forgeflow.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
           ports:
@@ -72,6 +72,7 @@ spec:
             failureThreshold: 5
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
             capabilities:
               drop: ["ALL"]
       # Graceful shutdown: give the API time to drain in-flight requests +

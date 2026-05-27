@@ -15,9 +15,20 @@ export function MemoryView() {
             <p className="sub">pgvector · 1.4M embeddings · 9 namespaces · ivfflat · cosine</p>
           </div>
           <div className="actions">
-            <button className="btn sm">Namespace: sales/* ▾</button>
-            <button className="btn sm">Embed model: text-embed-3-large ▾</button>
-            <button className="btn sm primary">+ Store</button>
+            <button className="btn sm" disabled title="Namespace filter — /memory/search supports it, picker UI pending">
+              Namespace: sales/* ▾
+            </button>
+            <button className="btn sm" disabled title="Embed model is configured server-side">
+              Embed model: text-embed-3-large ▾
+            </button>
+            <a
+              href="https://github.com/JoelJohnsonThomas/forgeflow/blob/main/forgeflow/api/routers/memory.py"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn sm primary"
+            >
+              + Store (docs) →
+            </a>
           </div>
         </div>
       </div>

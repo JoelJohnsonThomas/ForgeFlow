@@ -16,6 +16,12 @@ from dashboard.components.sidebar import render_sidebar
 
 API_URL = os.environ.get("API_URL", "http://localhost:8000")
 
+# The dashboard authenticates with a per-deployment service JWT, fetched
+# from FORGEFLOW_TOKEN. The legacy X-Role header path was removed when
+# SECURITY_AUDIT.md C-2/C-3 closed the wildcard-admin holes.
+_TOKEN = os.environ.get("FORGEFLOW_TOKEN", "")
+AUTH_HEADERS = {"Authorization": f"Bearer {_TOKEN}"} if _TOKEN else {}
+
 st.set_page_config(
     page_title="ForgeFlow — AI Observability",
     page_icon="⚡",
@@ -85,7 +91,7 @@ with col2:
                     resp = httpx.post(
                         f"{API_URL}/workflows/run",
                         json={"lead_data": {"company_name": company}},
-                        headers={"X-Role": "sales_rep", "X-User-Id": "dashboard"},
+                        headers=AUTH_HEADERS,
                         timeout=120,
                     )
                     result = resp.json()
@@ -100,7 +106,7 @@ with col2:
     try:
         pending = httpx.get(
             f"{API_URL}/approvals/pending",
-            headers={"X-Role": "manager"},
+            headers=AUTH_HEADERS,
             timeout=5,
         ).json()
         if pending:
@@ -112,7 +118,7 @@ with col2:
                         httpx.post(
                             f"{API_URL}/approvals/{token}/approve",
                             json={"note": "Approved via dashboard"},
-                            headers={"X-Role": "manager"},
+                            headers=AUTH_HEADERS,
                             timeout=10,
                         )
                         st.rerun()

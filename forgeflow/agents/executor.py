@@ -149,13 +149,28 @@ class ExecutorAgent(BaseAgent):
 
         actions: list[str] = []
 
+        # Cap deal value — LLM-controlled "estimated_deal_value_usd" can be
+        # nudged through prompt injection. Workspace-level override lives in
+        # workspaces.settings.max_deal_value_usd; we fall back to $1M.
+        ws_settings = state.get("workspace_settings") or {}
+        max_deal = float(ws_settings.get("max_deal_value_usd", 1_000_000))
+        dv = proposal.get("estimated_deal_value_usd")
+        if isinstance(dv, (int, float)) and dv > max_deal:
+            logger.warning("Capping deal_value | requested=%s cap=%s", dv, max_deal)
+            proposal["estimated_deal_value_usd"] = max_deal
+
+        allowed_domains = list(ws_settings.get("email_allowed_domains") or [])
+
         if dry_run:
-            # Side-effecting tools are skipped — log what we would have done
             actions = ["crm_updated_dry_run", "email_sent_dry_run"]
             logger.info("Executor DRY-RUN — skipped CRM + email side effects for %s", company)
         else:
             actions.extend(await self._sync_to_crm(state, lead_data, proposal, company, workflow_id))
-            actions.extend(await self._send_proposal_email(lead_data, proposal, company))
+            actions.extend(
+                await self._send_proposal_email(
+                    lead_data, proposal, company, allowed_domains=allowed_domains
+                )
+            )
             if not actions:
                 # Last-resort: nothing was configured. Mark as mock so audit is honest.
                 actions = ["crm_updated_mock", "email_sent_mock"]
@@ -285,10 +300,20 @@ class ExecutorAgent(BaseAgent):
                 logger.error("Mock CRM update failed: %s", e)
         return actions
 
-    async def _send_proposal_email(self, lead_data: dict, proposal: dict, company: str) -> list[str]:
-        """Send the proposal email. Skipped entirely if no contact email is
-        present — we'd rather record 'email_skipped_no_address' than blast a
-        synthesized address (the old behavior would email contact@<guess>.com).
+    async def _send_proposal_email(
+        self,
+        lead_data: dict,
+        proposal: dict,
+        company: str,
+        allowed_domains: list[str] | None = None,
+    ) -> list[str]:
+        """Send the proposal email.
+
+        Recipient is taken from lead_data only — never from LLM output. The
+        per-workspace `allowed_domains` allowlist (SECURITY_AUDIT.md C-5)
+        defaults to the recipient's own domain when no workspace policy is
+        configured, so a misconfigured tenant still can't blast unrelated
+        addresses.
         """
         actions: list[str] = []
         email_tool = self._tool_map.get("email_send_email")
@@ -301,11 +326,17 @@ class ExecutorAgent(BaseAgent):
         if not email_tool:
             return actions
 
+        # Default allowlist = the recipient's own domain. Tightens the blast
+        # radius even when the tenant hasn't set an explicit allowlist.
+        domain = to_address.rsplit("@", 1)[-1] if "@" in to_address else ""
+        domains = list(allowed_domains or ([domain] if domain else []))
+
         try:
             await email_tool.ainvoke({
                 "to": to_address,
                 "subject": f"ForgeFlow Enterprise AI Proposal — {company}",
                 "body": proposal.get("executive_summary", "Please review our proposal."),
+                "allowed_domains": domains,
             })
             actions.append("email_sent")
         except Exception as e:

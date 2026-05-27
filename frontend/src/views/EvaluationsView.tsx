@@ -121,7 +121,14 @@ function ForgeRootCause() {
       hallucination rate to{' '}
       <span className="mono" style={{ color: 'var(--emerald-4)' }}>~0.03%</span> at no judge cost.
       <div style={{ marginTop: 8 }}>
-        <button className="btn sm primary">Apply fix →</button>
+        <a
+          href="https://github.com/JoelJohnsonThomas/forgeflow/discussions/categories/ideas"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn sm primary"
+        >
+          Discuss this fix →
+        </a>
       </div>
     </div>
   )

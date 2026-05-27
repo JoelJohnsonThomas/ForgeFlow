@@ -60,9 +60,12 @@ spec:
     - Ingress
     - Egress
   ingress:
-    # Allow Ingress controller (commonly in ingress-nginx namespace)
+    # Allow only the ingress-nginx controller, not every namespace.
+    # Adjust the namespace label if your controller lives elsewhere.
     - from:
-        - namespaceSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
       ports:
         - protocol: TCP
           port: 8000
@@ -160,7 +163,9 @@ spec:
     - Egress
   ingress:
     - from:
-        - namespaceSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
       ports:
         - protocol: TCP
           port: 8501

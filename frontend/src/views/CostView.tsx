@@ -10,9 +10,16 @@ export function CostView() {
             <p className="sub">Acme · all workflows · MTD $4,148.20 · budget $6,000 · forecast on track</p>
           </div>
           <div className="actions">
-            <button className="btn sm">Group by: agent ▾</button>
-            <button className="btn sm">Last 30d ▾</button>
-            <button className="btn sm">Export CSV</button>
+            <button className="btn sm" disabled title="Filter UI — selector not yet wired">Group by: agent ▾</button>
+            <button className="btn sm" disabled title="Filter UI — selector not yet wired">Last 30d ▾</button>
+            <a
+              href="/api/metrics/cost?days=30"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn sm"
+            >
+              JSON →
+            </a>
           </div>
         </div>
       </div>
@@ -197,8 +204,23 @@ function ForgeSuggestion() {
       <span style={{ color: 'var(--emerald-4)', fontFamily: 'var(--font-mono)' }}>~$412/mo</span> with judge delta of{' '}
       <span style={{ color: 'var(--emerald-4)', fontFamily: 'var(--font-mono)' }}>-0.08</span>.
       <div style={{ marginTop: 8 }}>
-        <button className="btn sm primary">Apply policy →</button>
-        <button className="btn sm" style={{ marginLeft: 6 }}>Simulate first</button>
+        <a
+          href="https://github.com/JoelJohnsonThomas/forgeflow/discussions/categories/ideas"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn sm primary"
+        >
+          Vote for policy automation →
+        </a>
+        <a
+          href="https://github.com/JoelJohnsonThomas/forgeflow/discussions/categories/ideas"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn sm"
+          style={{ marginLeft: 6 }}
+        >
+          Discuss
+        </a>
       </div>
     </div>
   )

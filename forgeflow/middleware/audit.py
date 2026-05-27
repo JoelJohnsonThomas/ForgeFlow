@@ -26,6 +26,23 @@ def _is_uuid(value: str) -> bool:
         return False
 
 
+def _client_ip(request: Request) -> str | None:
+    """Return the client IP from X-Forwarded-For only when proxy hops are
+    configured. Otherwise the socket peer wins. Closes the audit attribution
+    spoofing called out in SECURITY_AUDIT.md §6.
+    """
+    from forgeflow.config import get_settings
+
+    hops = get_settings().trusted_proxy_count
+    if hops > 0:
+        xff = request.headers.get("x-forwarded-for", "")
+        parts = [p.strip() for p in xff.split(",") if p.strip()]
+        idx = -hops
+        if -idx <= len(parts):
+            return parts[idx]
+    return request.client.host if request.client else None
+
+
 class AuditMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         if request.url.path in _SKIP_AUDIT:
@@ -44,7 +61,9 @@ class AuditMiddleware(BaseHTTPMiddleware):
             "denied" if response.status_code == 403 else "error"
         )
 
-        # Write to audit log (best-effort — don't fail the request if DB is down)
+        # Write to audit log. Persistent failure surfaces via the metric +
+        # logged ERROR so an outage doesn't silently drop the immutable
+        # record SECURITY_AUDIT.md §6 demands.
         try:
             pool = getattr(request.app.state, "pool", None)
             if pool:
@@ -67,16 +86,15 @@ class AuditMiddleware(BaseHTTPMiddleware):
                         {
                             "status_code": response.status_code,
                             "latency_ms": round(latency_ms, 1),
-                            "user_agent": request.headers.get("user-agent", ""),
+                            "user_agent": request.headers.get("user-agent", "")[:512],
                             "user_id_str": str(user_id),
-                            "client_ip": (
-                                request.headers.get("x-forwarded-for", "").split(",")[0].strip()
-                                or (request.client.host if request.client else None)
-                            ),
+                            "client_ip": _client_ip(request),
                         },
                     )
         except Exception as e:
-            logger.error("Audit log write failed: %s", e)
+            # Best-effort by design — never fail the request because audit
+            # is down. The ERROR log line is the alerting hook.
+            logger.error("AUDIT_WRITE_FAILED request_id=%s: %s", request_id, e)
 
         response.headers["X-Request-Id"] = request_id
         return response

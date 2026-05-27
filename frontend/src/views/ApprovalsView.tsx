@@ -18,9 +18,13 @@ export function ApprovalsView() {
             </p>
           </div>
           <div className="actions">
-            <button className="btn sm">Assigned to me</button>
-            <button className="btn sm">All</button>
-            <button className="btn sm primary" disabled={pending.length === 0}>
+            <button className="btn sm" disabled title="Assignee filter — wire when /approvals exposes assignee">
+              Assigned to me
+            </button>
+            <button className="btn sm" disabled title="Default — current view shows all pending">
+              All
+            </button>
+            <button className="btn sm primary" disabled title="Bulk approve endpoint not implemented yet">
               Bulk approve · {pending.length}
             </button>
           </div>

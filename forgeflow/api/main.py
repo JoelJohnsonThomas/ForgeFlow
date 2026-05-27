@@ -142,33 +142,44 @@ async def _build_event_consumer(settings: Settings, dispatcher: EventDispatcher)
     raise ValueError(f"unknown events_provider: {settings.events_provider}")
 
 
+_settings_for_app = get_settings()
 app = FastAPI(
     title="ForgeFlow API",
     description="Multi-Agent Enterprise Workflow Orchestrator — LangGraph + MCP + A2A",
     version="0.1.0",
     lifespan=lifespan,
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url="/docs" if _settings_for_app.docs_enabled else None,
+    redoc_url="/redoc" if _settings_for_app.docs_enabled else None,
+    openapi_url="/openapi.json" if _settings_for_app.docs_enabled else None,
 )
+if not _settings_for_app.dev_login_enabled:
+    logger.info("DEV_LOGIN_ENABLED=false — /auth/login will return 404")
+if not _settings_for_app.docs_enabled:
+    logger.info("DOCS_ENABLED=false — /docs and /redoc disabled")
 
 # Pick the tracing backend (phoenix / langfuse / langsmith / none), then wire
 # OTel instrumentation if the selected backend uses OTLP.
 configure_tracing_provider()
 init_tracing(app)
 
-# CORS — restrict in production
+# CORS — explicit origin allowlist from config. NEVER use "*" with credentials.
+_cors_origins = get_settings().cors_origins()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_cors_origins or [],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-Id"],
+    max_age=600,
 )
 
-# Middleware stack (order matters — executed bottom-up on request, top-down on response)
-# Request flow:  RBAC → Security (PII redact + prompt guard) → Audit → RateLimit → handler
-app.add_middleware(RateLimitMiddleware)
+# Middleware stack — Starlette runs add_middleware bottom-up on the request
+# path. We want request flow: RBAC → RateLimit → Security → Audit → handler
+# (so the limiter sees the verified user_id and audits record every attempt).
+# That means registering in reverse: Audit, Security, RateLimit, RBAC.
 app.add_middleware(AuditMiddleware)
 app.add_middleware(SecurityMiddleware)
+app.add_middleware(RateLimitMiddleware)
 app.add_middleware(RBACMiddleware)
 
 # Routers

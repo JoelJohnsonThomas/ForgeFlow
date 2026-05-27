@@ -25,9 +25,18 @@ class BaseAgent(ABC):
         tools: list[BaseTool] | None = None,
         system_prompt: str = "",
     ) -> None:
+        from forgeflow.security.tool_output_guard import SYSTEM_HARDENING_NOTE
+
         self.name = name
         self.tools = tools or []
-        self.system_prompt = system_prompt
+        # Every agent inherits the indirect-PI hardening clause. Without it
+        # tool outputs wrapped by tool_output_guard still flow in, but the
+        # model has no policy telling it those tags are data only.
+        self.system_prompt = (
+            f"{system_prompt.rstrip()}\n\n{SYSTEM_HARDENING_NOTE}"
+            if system_prompt
+            else SYSTEM_HARDENING_NOTE
+        )
         self._circuit_breaker = CircuitBreaker(name=name, failure_threshold=5, recovery_timeout=30.0)
 
         # Capture the underlying model identifier for cost-tracking lookups.

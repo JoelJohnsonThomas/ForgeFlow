@@ -273,14 +273,41 @@ async def get_workflow(
 async def get_trace(
     run_id: str,
     pool: asyncpg.Pool = Depends(get_pool),
+    workspace_id: str | None = Depends(get_workspace_id),
 ):
-    """Get per-agent execution traces for a workflow run."""
+    """Get per-agent execution traces for a workflow run.
+
+    Tenant-scoped: we first verify the run belongs to the caller's workspace
+    (or is a legacy NULL-workspace row when the caller has no workspace
+    claim) before returning trace data.
+    """
+    try:
+        run_uuid = uuid.UUID(run_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="invalid run_id") from exc
+
     try:
         async with pool.acquire() as conn:
+            if workspace_id:
+                owner = await conn.fetchrow(
+                    "SELECT 1 FROM workflow_runs WHERE id = $1 AND workspace_id = $2",
+                    run_uuid,
+                    uuid.UUID(workspace_id),
+                )
+            else:
+                owner = await conn.fetchrow(
+                    "SELECT 1 FROM workflow_runs WHERE id = $1 AND workspace_id IS NULL",
+                    run_uuid,
+                )
+            if owner is None:
+                raise HTTPException(status_code=404, detail="Workflow run not found")
+
             rows = await conn.fetch(
                 "SELECT * FROM agent_traces WHERE run_id = $1 ORDER BY started_at",
-                uuid.UUID(run_id),
+                run_uuid,
             )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 

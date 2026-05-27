@@ -9,19 +9,28 @@ metadata:
     # NGINX Ingress example. Swap annotations for AWS ALB, GCP, Azure
     # Application Gateway, etc. as appropriate.
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
-    # Streamlit WebSocket support
+    # WebSocket / SSE — long timeout so /workflows/stream stays open.
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-    # cert-manager — uncomment if installed
-    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # cert-manager — flip this on once you've installed cert-manager + the
+    # letsencrypt-prod ClusterIssuer.
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # Security headers at the edge (in addition to the ones nginx sets in
+    # the SPA container). Belt + suspenders.
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
 spec:
   ingressClassName: nginx
-  # tls:
-  #   - hosts:
-  #       - forgeflow.example.com
-  #       - dashboard.forgeflow.example.com
-  #     secretName: forgeflow-tls
+  tls:
+    - hosts:
+        - forgeflow.example.com
+        - dashboard.forgeflow.example.com
+      secretName: forgeflow-tls
   rules:
     - host: forgeflow.example.com
       http:

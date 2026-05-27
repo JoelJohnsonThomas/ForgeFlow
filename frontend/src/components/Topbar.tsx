@@ -1,42 +1,92 @@
-import { Link } from '@tanstack/react-router'
+import { useMatchRoute } from '@tanstack/react-router'
 import { IconBell, IconChevronDown, IconHelp, IconSearch } from './icons'
 
+// Map console routes → breadcrumb segments. The last entry is the
+// "current page" (rendered with .cur styling). Keeps crumbs honest
+// instead of lying with the hardcoded wf_8K42n placeholder.
+const CRUMBS: { match: string; segments: string[] }[] = [
+  { match: '/console/runs', segments: ['console', 'live runs'] },
+  { match: '/console/approvals', segments: ['console', 'approvals'] },
+  { match: '/console/agents', segments: ['console', 'agents'] },
+  { match: '/console/memory', segments: ['console', 'memory'] },
+  { match: '/console/cost', segments: ['console', 'cost'] },
+  { match: '/console/audit', segments: ['console', 'audit log'] },
+  { match: '/console/evals', segments: ['console', 'evaluations'] },
+  { match: '/console/workflows', segments: ['console', 'workflows'] },
+  { match: '/console/tools', segments: ['console', 'tools'] },
+  { match: '/console/marketplace', segments: ['console', 'marketplace'] },
+  { match: '/console/clusters', segments: ['console', 'clusters'] },
+  { match: '/console/rbac', segments: ['console', 'rbac & secrets'] },
+  { match: '/console', segments: ['console', 'overview'] },
+]
+
+function useCrumbs(): string[] {
+  const match = useMatchRoute()
+  for (const c of CRUMBS) {
+    if (match({ to: c.match, fuzzy: false })) return c.segments
+  }
+  return ['console']
+}
+
 export function Topbar() {
+  const crumbs = useCrumbs()
   return (
     <header className="topbar">
-      <Link to="/" className="brand" aria-label="ForgeFlow landing">
+      <a href="/" className="brand" aria-label="ForgeFlow landing">
         <span className="brand-mark" />
         <span className="brand-name">ForgeFlow</span>
-      </Link>
-      <div className="org-pill" title="Switch workspace">
+      </a>
+      <div className="org-pill" title="Workspace switcher — wire to /workspaces when multi-tenant lands">
         <span className="logo" />
         <span>Acme · Sales Ops</span>
         <span className="env">prod-us-east-1</span>
         <IconChevronDown style={{ color: 'var(--fg-muted)', marginLeft: 2 }} />
       </div>
-      <div className="crumbs">
-        <span>workflows</span>
-        <span className="sep">/</span>
-        <span>sales_ops</span>
-        <span className="sep">/</span>
-        <span className="cur">wf_8K42n</span>
-      </div>
-      <div className="search">
+      <nav className="crumbs" aria-label="Breadcrumbs">
+        {crumbs.map((seg, i) => {
+          const isLast = i === crumbs.length - 1
+          return (
+            <span key={`${seg}-${i}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              {i > 0 && <span className="sep">/</span>}
+              <span className={isLast ? 'cur' : undefined}>{seg}</span>
+            </span>
+          )
+        })}
+      </nav>
+      <a
+        href="/console/audit"
+        className="search"
+        title="Searches the audit log today; full ⌘K palette is on the roadmap"
+        style={{ textDecoration: 'none' }}
+      >
         <IconSearch />
         <span className="placeholder">Search runs, agents, audit, memory…</span>
         <span className="kbd">⌘K</span>
-      </div>
+      </a>
       <div className="right">
-        <span className="status-bar">
-          <span className="dot live" /> 12 runs · 1.8k events/s
-        </span>
-        <button className="btn ghost icon-only" title="Notifications">
+        <a
+          href="/api/health"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="status-bar"
+          title="API health endpoint"
+          style={{ textDecoration: 'none' }}
+        >
+          <span className="dot live" /> live · /api/health
+        </a>
+        <a href="/console/approvals" className="btn ghost icon-only" title="Pending approvals">
           <IconBell />
-        </button>
-        <button className="btn ghost icon-only" title="Help">
+        </a>
+        <a
+          href="https://github.com/JoelJohnsonThomas/forgeflow/blob/main/docs/sales-ops-production.md"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn ghost icon-only"
+          title="Production runbook + docs"
+        >
           <IconHelp />
-        </button>
-        <span className="avatar">JJ</span>
+        </a>
+        <span className="avatar" title="JoelJohnsonThomas (service token mode)">JJ</span>
       </div>
     </header>
   )

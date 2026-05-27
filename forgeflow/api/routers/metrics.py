@@ -6,7 +6,7 @@ import asyncpg
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import Response
 
-from forgeflow.api.dependencies import get_pool
+from forgeflow.api.dependencies import get_pool, get_workspace_id
 from forgeflow.api.schemas import EvaluationSummaryResponse, MetricsSummaryResponse
 from forgeflow.observability.metrics_store import MetricsStore
 from forgeflow.observability.prometheus import refresh_from_db, render
@@ -143,19 +143,37 @@ async def get_evaluation_summary(pool: asyncpg.Pool = Depends(get_pool)):
 async def list_recent_runs(
     limit: int = Query(20, ge=1, le=100),
     pool: asyncpg.Pool = Depends(get_pool),
+    workspace_id: str | None = Depends(get_workspace_id),
 ):
-    """Recent workflow runs for the dashboard table."""
+    """Recent workflow runs for the dashboard table — tenant-scoped."""
+    import uuid as _uuid
+
     async with pool.acquire() as conn:
-        rows = await conn.fetch(
-            """
-            SELECT id, thread_id, workflow_type, status, created_at, completed_at,
-                   total_tokens, total_cost_usd, metadata
-            FROM workflow_runs
-            ORDER BY created_at DESC
-            LIMIT $1
-            """,
-            limit,
-        )
+        if workspace_id:
+            rows = await conn.fetch(
+                """
+                SELECT id, thread_id, workflow_type, status, created_at, completed_at,
+                       total_tokens, total_cost_usd, metadata
+                FROM workflow_runs
+                WHERE workspace_id = $1
+                ORDER BY created_at DESC
+                LIMIT $2
+                """,
+                _uuid.UUID(workspace_id),
+                limit,
+            )
+        else:
+            rows = await conn.fetch(
+                """
+                SELECT id, thread_id, workflow_type, status, created_at, completed_at,
+                       total_tokens, total_cost_usd, metadata
+                FROM workflow_runs
+                WHERE workspace_id IS NULL
+                ORDER BY created_at DESC
+                LIMIT $1
+                """,
+                limit,
+            )
     return [
         {
             "run_id": str(r["id"]),

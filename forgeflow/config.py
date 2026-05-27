@@ -73,7 +73,48 @@ class Settings(BaseSettings):
     api_port: int = Field(8000)
     api_secret_key: SecretStr = Field(
         SecretStr("change-me-in-production"),
-        description="Secret key for signing tokens",
+        description="Secret key for signing JWTs. MUST be replaced in prod.",
+    )
+
+    # --- Auth — dev / OSS preview only ---
+    # Set DEV_LOGIN_ENABLED=false in production. When true, /auth/login is the
+    # demo-user issuer behind a shared password. When false, the route 404s
+    # and you must integrate an OIDC IdP (see SECURITY_AUDIT.md C-3).
+    dev_login_enabled: bool = Field(
+        True,
+        description="Expose /auth/login dev path. Set false once OIDC is wired.",
+    )
+    dev_login_password: SecretStr = Field(
+        SecretStr(""),
+        description=(
+            "Shared dev password gating /auth/login. Required when "
+            "dev_login_enabled=true; the route refuses to mint tokens "
+            "without it set so accidental prod exposure fails closed."
+        ),
+    )
+
+    # --- API surface toggles ---
+    docs_enabled: bool = Field(
+        True,
+        description="Serve /docs and /redoc. Disable in production.",
+    )
+
+    # --- CORS allowlist ---
+    cors_allow_origins: str = Field(
+        "http://localhost:5173,http://localhost:8501",
+        description="Comma-separated origins allowed by CORS. Use exact origins, never '*'.",
+    )
+
+    # --- Trust boundary for proxy headers ---
+    trusted_proxy_count: int = Field(
+        0,
+        ge=0,
+        le=10,
+        description=(
+            "Number of trusted reverse-proxy hops in front of the API. "
+            "Determines how many X-Forwarded-For entries to trust; 0 means "
+            "we ignore the header and use request.client.host."
+        ),
     )
 
     # --- Resilience ---
@@ -291,6 +332,10 @@ class Settings(BaseSettings):
 
     # --- Dashboard ---
     api_url: str = Field("http://localhost:8000", description="Used by Streamlit to call the API")
+
+    def cors_origins(self) -> list[str]:
+        """Parsed CORS allowlist. Empty list ⇒ no cross-origin requests allowed."""
+        return [o.strip() for o in self.cors_allow_origins.split(",") if o.strip()]
 
     def is_langsmith_enabled(self) -> bool:
         key = self.langchain_api_key.get_secret_value()

@@ -67,28 +67,40 @@ async def send_email(
     to: str,
     subject: str,
     body: str,
+    allowed_domains: list[str],
     cc: list[str] | None = None,
 ) -> dict:
-    """Send an email to a prospect (simulated — logs to in-memory store).
+    """Send an email — requires an explicit recipient-domain allowlist.
 
-    In production, replace with SendGrid, AWS SES, or Gmail API.
+    The orchestrator (Executor agent) must supply `allowed_domains` from the
+    workspace settings. We refuse the send if `to` (or any cc) doesn't match
+    the list. This closes the LLM-controlled exfil channel called out in
+    SECURITY_AUDIT.md C-5.
 
     Args:
         to: Primary recipient email
         subject: Email subject line
         body: Full email body text
+        allowed_domains: fnmatch patterns the recipient must satisfy
         cc: Optional CC recipients
-
-    Returns:
-        Send confirmation with message ID
     """
+    from forgeflow.security.email_allowlist import EmailNotAllowed, require_allowed
+
+    recipients = [to] + list(cc or [])
+    try:
+        for r in recipients:
+            require_allowed(r, allowed_domains)
+    except EmailNotAllowed as exc:
+        logger.warning("Refusing send_email: %s", exc)
+        return {"success": False, "error": str(exc)}
+
     message_id = str(uuid.uuid4())
     record = {
         "message_id": message_id,
         "to": to,
         "cc": cc or [],
         "subject": subject,
-        "body": body[:200] + "...",  # truncate for logging
+        "body": body[:200] + "...",
         "sent_at": datetime.now(UTC).isoformat(),
         "status": "sent",
     }

@@ -11,9 +11,21 @@ export function OverviewView() {
             <p className="sub">Acme · sales_ops · prod-us-east-1 · last 24h</p>
           </div>
           <div className="actions">
-            <button className="btn sm">Last 24h ▾</button>
-            <button className="btn sm">Export</button>
-            <button className="btn sm primary">+ New workflow</button>
+            <button className="btn sm" disabled title="Time-window selector — wire to /metrics/* days param">
+              Last 24h ▾
+            </button>
+            <a
+              href="/api/metrics/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn sm"
+              title="Open raw JSON in a new tab"
+            >
+              JSON →
+            </a>
+            <a href="/console/workflows" className="btn sm primary">
+              + New workflow
+            </a>
           </div>
         </div>
       </div>

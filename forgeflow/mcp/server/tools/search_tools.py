@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 
-import httpx
 from bs4 import BeautifulSoup
 from fastmcp import FastMCP
 
@@ -61,31 +60,31 @@ async def web_search(query: str, max_results: int = 5) -> list[dict]:
 async def scrape_url(url: str) -> str:
     """Fetch and extract clean text content from a URL.
 
+    SSRF-hardened: rejects private/loopback/link-local hosts (incl. IMDS),
+    non-HTTP schemes, userinfo URLs, and re-validates every redirect.
+    See forgeflow/security/ssrf_guard.py.
+
     Args:
-        url: Fully-qualified URL to fetch
-
+        url: Fully-qualified public URL to fetch
     Returns:
-        Cleaned plain text (up to 5000 chars)
+        Cleaned plain text (up to 5000 chars), or an error message.
     """
+    from forgeflow.security.ssrf_guard import SSRFBlocked, safe_get
+
     try:
-        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
-            headers = {
-                "User-Agent": "Mozilla/5.0 (compatible; ForgeFlow/1.0; research-agent)"
-            }
-            response = await client.get(url, headers=headers)
-            response.raise_for_status()
-
-        soup = BeautifulSoup(response.text, "html.parser")
-
-        # Remove noise elements
-        for tag in soup(["script", "style", "nav", "footer", "header", "aside"]):
-            tag.decompose()
-
-        text = soup.get_text(separator="\n", strip=True)
-        # Collapse excessive whitespace
-        lines = [line.strip() for line in text.splitlines() if line.strip()]
-        return "\n".join(lines)[:5000]
-
+        response = await safe_get(url)
+        response.raise_for_status()
+    except SSRFBlocked as e:
+        logger.warning("SSRF-blocked scrape | url=%s reason=%s", url, e)
+        return f"Refused to fetch {url}: {e}"
     except Exception as e:
         logger.error("URL scrape failed for %s: %s", url, e)
         return f"Error fetching {url}: {e}"
+
+    soup = BeautifulSoup(response.text, "html.parser")
+    for tag in soup(["script", "style", "nav", "footer", "header", "aside"]):
+        tag.decompose()
+
+    text = soup.get_text(separator="\n", strip=True)
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    return "\n".join(lines)[:5000]

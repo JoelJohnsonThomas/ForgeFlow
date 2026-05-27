@@ -655,8 +655,8 @@ async for event in wf.stream({"company": "Stripe"}):
               frontend team can actually generate clients against.
             </p>
             <div className="hero-cta" style={{ marginTop: 28 }}>
-              <a href="#" className="btn primary">Read the docs →</a>
-              <a href="#" className="btn">SDK reference</a>
+              <a href="#docs" className="btn primary">Read the docs →</a>
+              <a href="/api/docs" target="_blank" rel="noopener noreferrer" className="btn">SDK reference</a>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginTop: 36 }}>
@@ -925,10 +925,12 @@ function Changelog() {
         ))}
       </div>
       <a
-        href="#"
+        href="https://github.com/JoelJohnsonThomas/forgeflow/releases"
+        target="_blank"
+        rel="noopener noreferrer"
         style={{ marginTop: 'auto', paddingTop: 14, fontSize: 12, color: 'var(--blue-4)', textDecoration: 'none' }}
       >
-        Full changelog →
+        Full changelog on GitHub →
       </a>
     </div>
   )
@@ -1283,7 +1285,9 @@ $ docker compose up
               <a href={CONSOLE_HREF} className="btn primary">
                 Open the console →
               </a>
-              <a href="#" className="btn">Talk to engineering</a>
+              <a href="https://github.com/JoelJohnsonThomas/forgeflow/discussions" target="_blank" rel="noopener noreferrer" className="btn">
+                Talk to engineering →
+              </a>
             </div>
           </div>
           <pre className="code" style={{ background: 'oklch(0.125 0.010 250 / 0.6)' }}>{cliBlock}</pre>
@@ -1292,6 +1296,52 @@ $ docker compose up
     </section>
   )
 }
+
+const GITHUB_REPO = 'https://github.com/JoelJohnsonThomas/forgeflow'
+
+type FooterLink = { label: string; href: string; external?: boolean }
+
+const FOOTER_COLUMNS: { title: string; items: FooterLink[] }[] = [
+  {
+    title: 'Console',
+    items: [
+      { label: 'Live console', href: '/console' },
+      { label: 'Live runs', href: '/console/runs' },
+      { label: 'Approvals', href: '/console/approvals' },
+      { label: 'Cost & spend', href: '/console/cost' },
+      { label: 'Audit log', href: '/console/audit' },
+    ],
+  },
+  {
+    title: 'Developers',
+    items: [
+      { label: 'Docs', href: '/#docs' },
+      { label: 'REST API · Swagger', href: '/api/docs', external: true },
+      { label: 'OpenAPI spec', href: '/api/openapi.json', external: true },
+      { label: 'GitHub repo', href: GITHUB_REPO, external: true },
+      { label: 'Roadmap', href: `${GITHUB_REPO}/blob/main/ROADMAP.md`, external: true },
+    ],
+  },
+  {
+    title: 'Operations',
+    items: [
+      { label: 'Sales ops production runbook', href: `${GITHUB_REPO}/blob/main/docs/sales-ops-production.md`, external: true },
+      { label: 'Architecture deep-dive', href: '/architecture' },
+      { label: 'Design system', href: '/design-system' },
+      { label: 'Status', href: '/api/health', external: true },
+    ],
+  },
+  {
+    title: 'Project',
+    items: [
+      { label: 'README', href: `${GITHUB_REPO}/blob/main/README.md`, external: true },
+      { label: 'Contributing', href: `${GITHUB_REPO}/blob/main/CONTRIBUTING.md`, external: true },
+      { label: 'Security policy', href: `${GITHUB_REPO}/blob/main/SECURITY_AUDIT.md`, external: true },
+      { label: 'License · Apache 2.0', href: `${GITHUB_REPO}/blob/main/LICENSE`, external: true },
+      { label: 'Code of conduct', href: `${GITHUB_REPO}/blob/main/CODE_OF_CONDUCT.md`, external: true },
+    ],
+  },
+]
 
 function Footer() {
   return (
@@ -1306,37 +1356,50 @@ function Footer() {
             <p style={{ marginTop: 14, maxWidth: '32ch' }}>
               The operating system for production AI agents. Open-core, Apache 2.0.
             </p>
-            <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-              <span className="badge">Apache 2.0</span>
-              <span className="badge">v3.4.1</span>
-              <span className="badge emerald">
-                <span className="dot live" /> All systems normal
-              </span>
+            <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
+              <a href={`${GITHUB_REPO}/blob/main/LICENSE`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                <span className="badge">Apache 2.0</span>
+              </a>
+              <a href={`${GITHUB_REPO}/releases`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                <span className="badge">v3.4.1</span>
+              </a>
+              <a href="/api/health" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                <span className="badge emerald">
+                  <span className="dot live" /> All systems normal
+                </span>
+              </a>
             </div>
           </div>
-          <FooterCol title="Product" items={['Console', 'Agents', 'Workflows', 'Memory', 'Evaluations']} />
-          <FooterCol title="Developers" items={['Docs', 'SDK · Python', 'SDK · TypeScript', 'CLI', 'OpenAPI']} />
-          <FooterCol title="Enterprise" items={['Security', 'SLA', 'Air-gap deploy', 'Pricing', 'Contact']} />
-          <FooterCol title="Company" items={['About', 'Customers', 'Careers', 'Brand', 'Status']} />
+          {FOOTER_COLUMNS.map((c) => (
+            <FooterCol key={c.title} title={c.title} items={c.items} />
+          ))}
         </div>
         <div className="hairline" style={{ marginTop: 40 }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 18, fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.04em' }}>
-          <span>© 2026 ForgeFlow Labs, Inc.</span>
-          <span>Built in San Francisco · Apache 2.0</span>
+          <span>© 2026 ForgeFlow Labs · Apache 2.0</span>
+          <span>
+            <a href={GITHUB_REPO} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
+              github.com/JoelJohnsonThomas/forgeflow
+            </a>
+          </span>
         </div>
       </div>
     </footer>
   )
 }
 
-function FooterCol({ title, items }: { title: string; items: string[] }) {
+function FooterCol({ title, items }: { title: string; items: FooterLink[] }) {
   return (
     <div>
       <h5>{title}</h5>
       <ul>
         {items.map((i) => (
-          <li key={i}>
-            <a href="#">{i}</a>
+          <li key={i.label}>
+            {i.external ? (
+              <a href={i.href} target="_blank" rel="noopener noreferrer">{i.label}</a>
+            ) : (
+              <a href={i.href}>{i.label}</a>
+            )}
           </li>
         ))}
       </ul>

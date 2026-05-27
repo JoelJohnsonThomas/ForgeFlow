@@ -63,6 +63,16 @@ variable "node_max_size" {
   default = 10
 }
 
+# --- EKS public-endpoint access control ---
+# SECURITY_AUDIT.md §8: leaving endpoint_public_access wide-open is the
+# default that ships kubectl access to the whole internet. Lock it down to
+# the CIDRs that genuinely need control-plane reach (office VPN, CI runners).
+variable "eks_public_access_cidrs" {
+  description = "CIDRs allowed to call the EKS public endpoint. Empty list = private-only."
+  type        = list(string)
+  default     = []
+}
+
 # --- RDS ------------------------------------------------------------------
 
 variable "rds_instance_class" {

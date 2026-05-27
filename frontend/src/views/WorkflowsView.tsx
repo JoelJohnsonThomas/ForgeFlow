@@ -63,8 +63,22 @@ export function WorkflowsView() {
             </p>
           </div>
           <div className="actions">
-            <button className="btn sm">View docs</button>
-            <button className="btn sm primary">+ Build new</button>
+            <a
+              href="https://github.com/JoelJohnsonThomas/forgeflow/blob/main/docs/sales-ops-production.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn sm"
+            >
+              Production runbook →
+            </a>
+            <a
+              href="https://github.com/JoelJohnsonThomas/forgeflow/blob/main/forgeflow/workflows/sales_ops/pipeline.py"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn sm primary"
+            >
+              + Build new (sample) →
+            </a>
           </div>
         </div>
       </div>
@@ -168,10 +182,21 @@ function TemplateCard({ t }: { t: Template }) {
       )}
 
       <div style={{ marginTop: 'auto', paddingTop: 16, display: 'flex', gap: 8 }}>
-        <button className={isProduction ? 'btn sm primary' : 'btn sm'} disabled={!isProduction}>
-          {t.ctaPrimary}
-        </button>
-        <button className="btn sm">View graph</button>
+        {isProduction ? (
+          <a
+            href="https://github.com/JoelJohnsonThomas/forgeflow/blob/main/docs/sales-ops-production.md#trigger-a-workflow-against-your-data-2-min"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn sm primary"
+          >
+            {t.ctaPrimary}
+          </a>
+        ) : (
+          <button className="btn sm" disabled title="Template scaffold — wire a connector first">
+            {t.ctaPrimary}
+          </button>
+        )}
+        <a href="/architecture#architecture" className="btn sm">View graph</a>
       </div>
     </div>
   )

@@ -6,6 +6,11 @@ on:
   push:
     branches: [main]
 
+# SECURITY_AUDIT.md §9: explicit per-job permissions so a compromised
+# action cannot escalate via the default GITHUB_TOKEN write scopes.
+permissions:
+  contents: read
+
 jobs:
   # ----------------------------------------------------------------
   # Lint: ruff + mypy

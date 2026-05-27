@@ -37,9 +37,30 @@ export function ClustersView() {
             <p className="sub">4 environments · 312 pods · 14 nodes · 2 regions · sample data</p>
           </div>
           <div className="actions">
-            <button className="btn sm">View Helm chart</button>
-            <button className="btn sm">Deploy v3.4.2 →</button>
-            <button className="btn sm primary">+ New cluster</button>
+            <a
+              href="https://github.com/JoelJohnsonThomas/forgeflow/tree/main/helm"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn sm"
+            >
+              View Helm chart →
+            </a>
+            <a
+              href="https://github.com/JoelJohnsonThomas/forgeflow/releases"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn sm"
+            >
+              Releases →
+            </a>
+            <a
+              href="https://github.com/JoelJohnsonThomas/forgeflow/blob/main/docs/sales-ops-production.md#deploy-to-flyio-15-min"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn sm primary"
+            >
+              + New deploy (docs) →
+            </a>
           </div>
         </div>
       </div>

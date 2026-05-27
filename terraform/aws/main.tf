@@ -148,12 +148,15 @@ resource "aws_eks_cluster" "this" {
 
   vpc_config {
     subnet_ids              = concat(aws_subnet.public[*].id, aws_subnet.private[*].id)
-    endpoint_public_access  = true
+    # SECURITY_AUDIT.md §8: public endpoint is allowed only for the CIDRs
+    # the operator explicitly lists; empty list ⇒ public access disabled.
+    endpoint_public_access  = length(var.eks_public_access_cidrs) > 0
     endpoint_private_access = true
+    public_access_cidrs     = length(var.eks_public_access_cidrs) > 0 ? var.eks_public_access_cidrs : null
   }
 
   # Enable EKS-managed control plane logs for audit
-  enabled_cluster_log_types = ["api", "audit", "authenticator"]
+  enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
   depends_on = [aws_iam_role_policy_attachment.eks_cluster_policy]
 }
@@ -188,12 +191,48 @@ resource "aws_iam_role_policy_attachment" "ecr_read" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
+# SECURITY_AUDIT.md C-6: IMDSv2 must be required so SSRF in a pod can't read
+# the node's instance credentials. hop-limit=1 stops containerised processes
+# from reaching IMDS at all (the extra hop crossing the bridge eats the TTL).
+resource "aws_launch_template" "nodes" {
+  name_prefix = "${local.name}-node-"
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 1
+    instance_metadata_tags      = "disabled"
+  }
+
+  monitoring { enabled = true }
+
+  block_device_mappings {
+    device_name = "/dev/xvda"
+    ebs {
+      volume_size           = 50
+      volume_type           = "gp3"
+      encrypted             = true
+      delete_on_termination = true
+    }
+  }
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = { Name = "${local.name}-node" }
+  }
+}
+
 resource "aws_eks_node_group" "default" {
   cluster_name    = aws_eks_cluster.this.name
   node_group_name = "${local.name}-default"
   node_role_arn   = aws_iam_role.eks_node.arn
   subnet_ids      = aws_subnet.private[*].id
   instance_types  = var.node_instance_types
+
+  launch_template {
+    id      = aws_launch_template.nodes.id
+    version = aws_launch_template.nodes.latest_version
+  }
 
   scaling_config {
     desired_size = var.node_desired_size
@@ -273,6 +312,20 @@ resource "aws_db_parameter_group" "pg16" {
   }
 }
 
+# SECURITY_AUDIT.md §8: encryption-at-rest with a customer-managed KMS key
+# (not the default aws/rds key) so we can audit grants + revoke decrypt.
+resource "aws_kms_key" "data" {
+  description             = "${local.name} application data (RDS, Secrets Manager)"
+  deletion_window_in_days = var.environment == "prod" ? 30 : 7
+  enable_key_rotation     = true
+  tags                    = { Name = "${local.name}-data" }
+}
+
+resource "aws_kms_alias" "data" {
+  name          = "alias/${local.name}-data"
+  target_key_id = aws_kms_key.data.key_id
+}
+
 resource "aws_db_instance" "this" {
   identifier              = "${local.name}-db"
   engine                  = "postgres"
@@ -282,6 +335,7 @@ resource "aws_db_instance" "this" {
   max_allocated_storage   = var.rds_max_allocated_storage_gb > 0 ? var.rds_max_allocated_storage_gb : null
   storage_type            = "gp3"
   storage_encrypted       = true
+  kms_key_id              = aws_kms_key.data.arn
 
   db_name                 = "forgeflow"
   username                = "forgeflow"
@@ -299,7 +353,12 @@ resource "aws_db_instance" "this" {
   skip_final_snapshot       = var.rds_skip_final_snapshot
   final_snapshot_identifier = var.rds_skip_final_snapshot ? null : "${local.name}-final-${formatdate("YYYYMMDDhhmmss", timestamp())}"
 
-  performance_insights_enabled = true
+  performance_insights_enabled    = true
+  performance_insights_kms_key_id = aws_kms_key.data.arn
+  # Forward Postgres logs to CloudWatch so audit/forensics survive instance loss.
+  enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
+  # Auto-apply minor version bumps in maintenance window — closes CVEs faster.
+  auto_minor_version_upgrade      = true
 
   tags = { Name = "${local.name}-db" }
 }
@@ -311,6 +370,7 @@ resource "aws_secretsmanager_secret" "forgeflow" {
   name        = "${local.name}/runtime"
   description = "ForgeFlow runtime secrets (OpenAI key, JWT signing, DB password, ...)"
   recovery_window_in_days = var.environment == "prod" ? 30 : 0
+  kms_key_id  = aws_kms_key.data.arn
 }
 
 resource "aws_secretsmanager_secret_version" "forgeflow" {

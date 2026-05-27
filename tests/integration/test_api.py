@@ -44,16 +44,28 @@ def test_docs_accessible(client):
 
 
 def test_rbac_blocks_unauthenticated():
-    """Viewer role cannot execute workflows."""
+    """Requests without a valid JWT are rejected — the legacy X-Role header
+    is no longer trusted (SECURITY_AUDIT.md C-3)."""
     with patch("forgeflow.api.main.init_pool", new_callable=AsyncMock), \
          patch("forgeflow.api.main.compile_graph", new_callable=AsyncMock), \
          patch("forgeflow.api.main.get_mcp_tools", new_callable=AsyncMock, return_value=[]):
 
         from forgeflow.api.main import app
         with TestClient(app, raise_server_exceptions=False) as c:
+            # Legacy header fallback removed — must fail.
             response = c.post(
                 "/workflows/run",
                 json={"lead_data": {"company_name": "Test"}},
                 headers={"X-Role": "viewer"},
+            )
+            assert response.status_code == 401
+
+            # Real JWT for a viewer → 403 (mapped route, lacks execute perm).
+            from forgeflow.auth.jwt import create_access_token
+            token = create_access_token(user_id="u-view", role="viewer")
+            response = c.post(
+                "/workflows/run",
+                json={"lead_data": {"company_name": "Test"}},
+                headers={"Authorization": f"Bearer {token}"},
             )
             assert response.status_code == 403

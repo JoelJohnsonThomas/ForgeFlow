@@ -37,9 +37,11 @@ function ArchTopbar() {
             <span className="brand-name">ForgeFlow</span>
           </Link>
           <ul>
+            <li><a href="/design-hub">Index</a></li>
             <li><a href="/">Landing</a></li>
             <li><a href="/console">Console</a></li>
             <li><a href="/architecture" className="active">Architecture</a></li>
+            <li><a href="/design-system">Design system</a></li>
           </ul>
         </div>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-muted)' }}>

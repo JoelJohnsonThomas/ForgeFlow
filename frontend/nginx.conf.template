@@ -1,32 +1,134 @@
+# ForgeFlow SPA — nginx config template.
+#
+# Hardening (SECURITY_AUDIT.md C-2 + §5):
+#   - The previous build injected `Authorization: Bearer ${API_SECRET_KEY}`
+#     on every request, silently authenticating every visitor as wildcard
+#     admin. That line is gone. The SPA now obtains a JWT from /api/auth/*
+#     and attaches it from client code.
+#   - Global security headers are set with `always` so they're emitted on
+#     non-200 responses too.
+#   - Login is per-IP rate-limited at the edge to slow credential stuffing.
+
+# --- rate-limit zones --------------------------------------------------------
+limit_req_zone $binary_remote_addr zone=login_zone:10m rate=5r/m;
+limit_req_zone $binary_remote_addr zone=api_zone:10m rate=120r/m;
+
 server {
   listen 80;
   server_name _;
   root /usr/share/nginx/html;
   index index.html;
 
-  # SPA fallback — all unknown paths return index.html so the client router handles them.
+  # --- security headers (apply to every response) ---------------------------
+  add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; font-src 'self' data:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
+  add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+  add_header X-Content-Type-Options "nosniff" always;
+  add_header X-Frame-Options "DENY" always;
+  add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+  add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()" always;
+  add_header Cross-Origin-Opener-Policy "same-origin" always;
+  add_header Cross-Origin-Resource-Policy "same-origin" always;
+  add_header X-Permitted-Cross-Domain-Policies "none" always;
+
+  # Disable directory listing + hide nginx version.
+  server_tokens off;
+  autoindex off;
+
+  # Hard cap on request body so a malicious client can't DoS the upstream.
+  client_max_body_size 5m;
+
+  # --- SPA fallback ---------------------------------------------------------
   location / {
     try_files $uri $uri/ /index.html;
   }
 
-  # Long-cache the hashed assets Vite emits under /assets/.
+  # Long-cache hashed assets.
   location /assets/ {
     expires 1y;
-    add_header Cache-Control "public, immutable";
+    add_header Cache-Control "public, immutable" always;
   }
 
-  # Reverse-proxy API calls to the FastAPI service inside the compose network.
-  # Inject the service token so the SPA inherits "admin" until real login lands.
+  # --- API proxy ------------------------------------------------------------
+  # No more service-token injection — the SPA attaches Authorization itself.
   location /api/ {
+    limit_req zone=api_zone burst=20 nodelay;
+
     proxy_pass http://api:8000/;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
-    proxy_set_header Authorization "Bearer ${API_SECRET_KEY}";
-    # SSE / chunked streaming — disable buffering so /workflows/{id}/stream works.
+    # SSE / chunked streaming — disable buffering so /workflows/stream works.
     proxy_buffering off;
     proxy_read_timeout 1h;
+  }
+
+  # Stricter limit for /api/auth/login — slows credential stuffing at the edge.
+  location = /api/auth/login {
+    limit_req zone=login_zone burst=2 nodelay;
+    proxy_pass http://api:8000/auth/login;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  # --- Swagger / Redoc docs ------------------------------------------------
+  # FastAPI's built-in docs HTML pulls Swagger UI from cdn.jsdelivr.net and
+  # the favicon from fastapi.tiangolo.com. The global strict CSP above blocks
+  # both. Allow those specific sources ONLY on the docs pages; the rest of
+  # the API surface keeps the tight default-src 'self' policy.
+  #
+  # `add_header` inside a location block *replaces* (not appends) inherited
+  # headers, so we re-state every one we want to keep. Exact-match locations
+  # so the proxy_pass URI rewriting works (FastAPI serves at /docs, not /api/docs).
+  location = /api/docs {
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https://fastapi.tiangolo.com; font-src 'self' data: https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()" always;
+    add_header Cross-Origin-Opener-Policy "same-origin" always;
+    add_header X-Permitted-Cross-Domain-Policies "none" always;
+
+    proxy_pass http://api:8000/docs;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    # Disable upstream gzip so sub_filter can rewrite the HTML body.
+    proxy_set_header Accept-Encoding "";
+    # FastAPI's docs HTML hardcodes url: '/openapi.json' which would 404
+    # behind the SPA fallback. Rewrite to the proxied path.
+    sub_filter_once on;
+    sub_filter_types text/html;
+    sub_filter "url: '/openapi.json'" "url: '/api/openapi.json'";
+  }
+
+  location = /api/redoc {
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https://fastapi.tiangolo.com https://cdn.redoc.ly; font-src 'self' data: https://cdn.jsdelivr.net https://fonts.gstatic.com; connect-src 'self' https://cdn.jsdelivr.net; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' blob:; worker-src 'self' blob:" always;
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()" always;
+    add_header Cross-Origin-Opener-Policy "same-origin" always;
+    add_header X-Permitted-Cross-Domain-Policies "none" always;
+
+    proxy_pass http://api:8000/redoc;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    # Same trick — Redoc loads the spec from /openapi.json by default.
+    proxy_set_header Accept-Encoding "";
+    sub_filter_once on;
+    sub_filter_types text/html;
+    sub_filter "spec-url='/openapi.json'" "spec-url='/api/openapi.json'";
   }
 }

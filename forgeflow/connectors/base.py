@@ -149,10 +149,23 @@ class BaseConnector:
         if extra_headers:
             headers.update(extra_headers)
 
+        # SSRF guard — vendor base_urls are config-controlled, but `path`
+        # is sometimes built from LLM/agent input (issue numbers, repo
+        # slugs, …). Re-validate every outbound URL.
+        try:
+            from forgeflow.security.ssrf_guard import SSRFBlocked, check_url
+
+            check_url(url)
+        except SSRFBlocked as exc:
+            logger.warning("SSRF-blocked %s call to %s: %s", self.vendor, url, exc)
+            raise PermanentError(0, f"SSRF block: {exc}", self.vendor) from exc
+
         last_exc: Exception | None = None
         for attempt in range(1, self.max_attempts + 1):
             try:
-                async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
+                async with httpx.AsyncClient(
+                    timeout=self.timeout_seconds, follow_redirects=False
+                ) as client:
                     response = await client.request(
                         method, url, params=params, json=json, headers=headers
                     )

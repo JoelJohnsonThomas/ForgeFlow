@@ -5,6 +5,7 @@
  */
 
 const BASE = '/api'
+const TOKEN_KEY = 'forgeflow.jwt'
 
 export class ApiError extends Error {
   status: number
@@ -15,16 +16,80 @@ export class ApiError extends Error {
   }
 }
 
+// --- token storage ---------------------------------------------------------
+// SECURITY_AUDIT.md C-2: nginx no longer injects an admin service token. The
+// SPA stores the user's JWT in sessionStorage (cleared on tab close, not
+// shared between tabs/origins) and attaches it as Authorization on every
+// request. Migrate to HttpOnly+Secure cookies + CSRF token once a real
+// session backend lands.
+
+export function setToken(token: string | null): void {
+  if (typeof window === 'undefined') return
+  if (token) {
+    window.sessionStorage.setItem(TOKEN_KEY, token)
+  } else {
+    window.sessionStorage.removeItem(TOKEN_KEY)
+  }
+}
+
+export function getToken(): string | null {
+  if (typeof window === 'undefined') return null
+  return window.sessionStorage.getItem(TOKEN_KEY)
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    ...init,
-    headers: { 'content-type': 'application/json', ...(init?.headers ?? {}) },
-  })
+  const token = getToken()
+  const headers: Record<string, string> = {
+    'content-type': 'application/json',
+    ...(init?.headers as Record<string, string> | undefined),
+  }
+  if (token) headers['authorization'] = `Bearer ${token}`
+
+  const res = await fetch(`${BASE}${path}`, { ...init, headers })
+  if (res.status === 401) {
+    // Stale or revoked token — clear it so the next interaction re-prompts.
+    setToken(null)
+  }
   if (!res.ok) {
     const body = await res.text().catch(() => '')
     throw new ApiError(res.status, `${res.status} ${res.statusText}: ${body.slice(0, 200)}`)
   }
   return res.json() as Promise<T>
+}
+
+// --- auth helpers ----------------------------------------------------------
+
+export type LoginPayload = {
+  user_id: string
+  password: string
+  workspace_id?: string
+  ttl_hours?: number
+}
+
+export async function login(payload: LoginPayload): Promise<{ access_token: string; role: string }> {
+  const res = await fetch(`${BASE}/auth/login`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new ApiError(res.status, `${res.status} ${res.statusText}: ${body.slice(0, 200)}`)
+  }
+  const data = (await res.json()) as { access_token: string; role: string }
+  setToken(data.access_token)
+  return data
+}
+
+export async function logout(): Promise<void> {
+  const token = getToken()
+  setToken(null)
+  if (!token) return
+  await fetch(`${BASE}/auth/logout`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ token }),
+  }).catch(() => undefined)
 }
 
 // ---- Types ----------------------------------------------------------------

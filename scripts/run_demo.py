@@ -9,11 +9,33 @@ Usage:
 from __future__ import annotations
 
 import asyncio
+import os
 import sys
 
 import httpx
 
 API_URL = "http://localhost:8000"
+
+
+async def _mint_token(client: httpx.AsyncClient, user_id: str) -> str:
+    """Obtain a demo JWT. Falls back to FORGEFLOW_TOKEN env if /auth/login
+    is disabled (DEV_LOGIN_ENABLED=false in prod-shaped setups)."""
+    explicit = os.environ.get("FORGEFLOW_TOKEN")
+    if explicit:
+        return explicit
+
+    password = os.environ.get("DEV_LOGIN_PASSWORD")
+    if not password:
+        raise SystemExit(
+            "FORGEFLOW_TOKEN or DEV_LOGIN_PASSWORD must be set in the env to "
+            "run the demo. See SECURITY_AUDIT.md C-3."
+        )
+    resp = await client.post(
+        f"{API_URL}/auth/login",
+        json={"user_id": user_id, "password": password},
+    )
+    resp.raise_for_status()
+    return resp.json()["access_token"]
 
 
 async def run_demo(company: str = "Acme Corp", auto_approve: bool = False) -> None:
@@ -22,12 +44,16 @@ async def run_demo(company: str = "Acme Corp", auto_approve: bool = False) -> No
     print(f"{'='*60}\n")
 
     async with httpx.AsyncClient(timeout=120) as client:
+        rep_token = await _mint_token(client, "rep-1")
+        mgr_token = await _mint_token(client, "manager-1")
+        rep_hdr = {"Authorization": f"Bearer {rep_token}"}
+        mgr_hdr = {"Authorization": f"Bearer {mgr_token}"}
         # 1. Trigger workflow
         print("▶ Triggering sales ops workflow...")
         resp = await client.post(
             f"{API_URL}/workflows/run",
             json={"lead_data": {"company_name": company}, "workflow_type": "sales_ops"},
-            headers={"X-Role": "sales_rep", "X-User-Id": "demo-user"},
+            headers=rep_hdr,
         )
 
         if resp.status_code != 200:
@@ -50,7 +76,7 @@ async def run_demo(company: str = "Acme Corp", auto_approve: bool = False) -> No
             await asyncio.sleep(2)
             status_resp = await client.get(
                 f"{API_URL}/workflows/{run_id}",
-                headers={"X-Role": "sales_rep"},
+                headers=rep_hdr,
             )
             if status_resp.status_code == 200:
                 state = status_resp.json()
@@ -64,7 +90,7 @@ async def run_demo(company: str = "Acme Corp", auto_approve: bool = False) -> No
 
             pending_resp = await client.get(
                 f"{API_URL}/approvals/pending",
-                headers={"X-Role": "manager"},
+                headers=mgr_hdr,
             )
             pending = pending_resp.json()
 
@@ -79,7 +105,7 @@ async def run_demo(company: str = "Acme Corp", auto_approve: bool = False) -> No
                     approve_resp = await client.post(
                         f"{API_URL}/approvals/{token}/approve",
                         json={"note": "Approved via demo script"},
-                        headers={"X-Role": "manager"},
+                        headers=mgr_hdr,
                     )
                     print(f"  Result: {approve_resp.json()}")
                 else:

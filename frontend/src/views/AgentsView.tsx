@@ -19,9 +19,16 @@ export function AgentsView() {
             </p>
           </div>
           <div className="actions">
-            <button className="btn sm">Time range: 60s ▾</button>
-            <button className="btn sm">Filter: all workflows ▾</button>
-            <button className="btn sm primary">+ Register agent</button>
+            <button className="btn sm" disabled title="Filter UI — wire to real /agents query params">Time range: 60s ▾</button>
+            <button className="btn sm" disabled title="Filter UI — wire to real /agents query params">Filter: all workflows ▾</button>
+            <a
+              href="https://github.com/JoelJohnsonThomas/forgeflow/blob/main/forgeflow/a2a/registry.py"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn sm primary"
+            >
+              + Register agent (docs) →
+            </a>
           </div>
         </div>
       </div>
