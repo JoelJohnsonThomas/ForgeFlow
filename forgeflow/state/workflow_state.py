@@ -13,7 +13,7 @@ from typing import Annotated
 
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 
 class WorkflowState(TypedDict):
@@ -44,6 +44,11 @@ class WorkflowState(TypedDict):
     lead_id: str | None
     lead_data: dict | None
     proposal: dict | None
+
+    # Workspace-level settings (deal-value caps, allowed email domains, …).
+    # Read by the executor to bound LLM-controlled outputs. Optional — pipeline
+    # entry points may omit it, in which case the executor falls back to defaults.
+    workspace_settings: NotRequired[dict | None]
 
     # Human-in-the-loop
     approval_status: str | None   # pending | approved | rejected
