@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import socket
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -19,6 +20,27 @@ os.environ.setdefault("BUDGET_LIMIT_USD", "10.0")
 # production unless dry_run=True. Tests bypass the guard via this opt-in flag
 # (also documented in the pipelines' module docstrings).
 os.environ.setdefault("FORGEFLOW_ALLOW_TEMPLATE_WORKFLOWS", "1")
+
+
+@pytest.fixture(autouse=True)
+def _stub_dns(monkeypatch):
+    """Make the test suite hermetic by stubbing DNS resolution.
+
+    The SSRF guard (forgeflow.security.ssrf_guard.check_url) calls
+    socket.getaddrinfo on every outbound connector request. Unit tests mock the
+    HTTP transport but not DNS, so on a network-less runner the guard raised
+    SSRFBlocked before the mocked client was ever reached. We resolve every host
+    to a fixed public IP (example.com's address) so the guard's real logic —
+    scheme, userinfo, IP-literal and private-range checks — still runs, while
+    no test touches the network. Tests that need to exercise private-range
+    rejection can pass IP literals (which skip getaddrinfo entirely).
+    """
+    public_ip = "93.184.216.34"  # example.com — globally routable
+
+    def _fake_getaddrinfo(host, *args, **kwargs):
+        return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", (public_ip, 0))]
+
+    monkeypatch.setattr(socket, "getaddrinfo", _fake_getaddrinfo)
 
 
 @pytest.fixture

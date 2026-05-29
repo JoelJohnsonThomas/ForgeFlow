@@ -84,14 +84,20 @@ def check_url(url: str) -> _CheckedURL:
     if parsed.username or parsed.password:
         raise SSRFBlocked("URLs with userinfo are not permitted")
 
-    # If the host is already a literal IP, validate directly.
+    # If the host is already a literal IP, validate directly. Keep the parse in
+    # its own try: SSRFBlocked subclasses ValueError, so raising it inside the
+    # same block that catches ValueError would swallow the rejection and fall
+    # through to the DNS path.
     try:
-        literal = ipaddress.ip_address(host)
+        literal: ipaddress.IPv4Address | ipaddress.IPv6Address | None = (
+            ipaddress.ip_address(host)
+        )
+    except ValueError:
+        literal = None  # not an IP literal — DNS resolve below
+    if literal is not None:
         if _is_private_ip(literal):
             raise SSRFBlocked(f"target IP is private/reserved: {literal}")
         return _CheckedURL(url=url, host=host, pinned_ip=str(literal))
-    except ValueError:
-        pass  # not an IP literal — DNS resolve below
 
     # Resolve every A/AAAA the host advertises; ANY private hit = reject.
     try:

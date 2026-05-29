@@ -137,6 +137,7 @@ class TestMCPEmailTools:
             to="ceo@stripe.com",
             subject="Partnership Proposal",
             body="Dear CEO, we'd like to propose a partnership...",
+            allowed_domains=["stripe.com"],
         )
 
         assert "message_id" in result
