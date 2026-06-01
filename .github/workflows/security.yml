@@ -83,7 +83,7 @@ jobs:
           python-version: "3.11"
           cache: pip
       - run: pip install pip-audit
-      - run: pip-audit -r requirements.txt --strict --disable-pip
+      - run: pip-audit -r requirements.txt --strict
         continue-on-error: false
 
   dependency-review:
