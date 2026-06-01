@@ -27,7 +27,6 @@
 
 - [What is ForgeFlow?](#-what-is-forgeflow)
 - [Why ForgeFlow?](#-why-forgeflow)
-- [Screenshots](#-screenshots)
 - [Features](#-features)
 - [Architecture](#-architecture)
 - [Technology Stack](#-technology-stack)
@@ -93,29 +92,6 @@ Most "agent demos" collapse the moment they meet production reality: there's no 
 - 🚢 **Deploy anywhere** — Docker Compose, Kubernetes, Helm, Terraform (AWS), Fly.io, and an offline bundle for air-gapped sites.
 
 ---
-
-## 📸 Screenshots
-
-> Replace these renders with live captures of your own deployment.
-
-| Landing & marketing page | Operations console |
-|---|---|
-| ![Landing page](docs/images/index.png) | ![Console dashboard](docs/images/dashboard.png) |
-
-| System overview | Architecture deep-dive |
-|---|---|
-| ![System overview](docs/images/system.png) | ![Architecture page](docs/images/architecture.png) |
-
-<details>
-<summary><b>Suggested screenshots to capture for your fork</b></summary>
-
-- `docs/images/dashboard.png` — `/console` operations overview (KPI strip + recent runs)
-- `docs/images/live-run.png` — `/console/runs` Gantt timeline + tool trace tree
-- `docs/images/approvals.png` — `/console/approvals` queue with approve/reject
-- `docs/images/cost.png` — `/console/cost` per-agent and per-workflow breakdown
-- `docs/images/architecture.png` — `/architecture` 8-section system deep-dive
-
-</details>
 
 ---
 
