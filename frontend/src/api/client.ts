@@ -131,6 +131,9 @@ export type Approval = {
   token: string
   run_id: string
   workflow_id: string
+  // The API serialises the proposal under `payload`; `proposal` is the
+  // normalised alias the UI reads (mapped in approvalsPending()).
+  payload?: Record<string, unknown>
   proposal: Record<string, unknown>
   status: string
   requested_at: string
@@ -221,7 +224,12 @@ export const api = {
     request<CostByWorkflowRow[]>(`/metrics/cost/by_workflow_type?days=${days}`),
   topRuns: (days = 7, limit = 10) =>
     request<TopRun[]>(`/metrics/cost/top_runs?days=${days}&limit=${limit}`),
-  approvalsPending: () => request<Approval[]>('/approvals/pending'),
+  approvalsPending: async () => {
+    const rows = await request<Approval[]>('/approvals/pending')
+    // API sends the proposal under `payload`; normalise to `proposal` so the
+    // Approvals view (which reads approval.proposal) renders the details.
+    return rows.map((r) => ({ ...r, proposal: r.payload ?? r.proposal }))
+  },
   approveApproval: (token: string, note = '') =>
     request<{ status: string; thread_id: string }>(`/approvals/${token}/approve`, {
       method: 'POST',
