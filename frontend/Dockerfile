@@ -21,5 +21,7 @@ COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
+# Use 127.0.0.1, not localhost: BusyBox wget resolves localhost to IPv6 ::1,
+# but nginx listens on IPv4 only, so the probe got "connection refused".
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD wget -q --spider http://localhost/ || exit 1
+    CMD wget -q --spider http://127.0.0.1/ || exit 1

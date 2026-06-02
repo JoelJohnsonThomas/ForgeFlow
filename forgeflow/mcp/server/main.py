@@ -62,6 +62,15 @@ mcp.mount(msgraph_tools.router, prefix="msgraph")
 mcp.mount(multimodal_tools.router, prefix="multimodal")
 
 
+@mcp.custom_route("/health", methods=["GET"])
+async def health_check(request):  # noqa: ANN001
+    """Liveness probe for the HTTP transport. The MCP protocol lives at POST
+    /mcp (which 406s a plain GET), so container healthchecks hit this instead."""
+    from starlette.responses import JSONResponse
+
+    return JSONResponse({"status": "ok", "service": "forgeflow-mcp"})
+
+
 if __name__ == "__main__":
     settings = get_settings()
     mode = sys.argv[1] if len(sys.argv) > 1 else "http"
