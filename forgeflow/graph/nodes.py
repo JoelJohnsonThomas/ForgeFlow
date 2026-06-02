@@ -34,24 +34,39 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# Agent singletons — set by build_node_factory() in builder.py
-_supervisor: SupervisorAgent | None = None
-_researcher: ResearcherAgent | None = None
-_analyzer: AnalyzerAgent | None = None
-_executor: ExecutorAgent | None = None
-
-
 def build_node_factory(
     supervisor: SupervisorAgent,
     researcher: ResearcherAgent,
     analyzer: AnalyzerAgent,
     executor: ExecutorAgent,
-) -> None:
-    global _supervisor, _researcher, _analyzer, _executor
-    _supervisor = supervisor
-    _researcher = researcher
-    _analyzer = analyzer
-    _executor = executor
+) -> dict[str, Any]:
+    """Return per-graph node callables bound to *this* graph's agents.
+
+    Each compiled graph gets its own closures so that compiling multiple
+    workflow types in one process (sales_ops, support_ops, finance_recon) no
+    longer clobbers a shared module-level agent — previously the last
+    compile_graph() call won and every graph silently ran its agents.
+    """
+
+    async def supervisor_node(state: WorkflowState) -> dict:
+        return await _run_with_cost_tracking(supervisor, state)
+
+    async def researcher_node(state: WorkflowState) -> dict:
+        return await _run_with_cost_tracking(researcher, state)
+
+    async def analyzer_node(state: WorkflowState) -> dict:
+        return await _run_with_cost_tracking(analyzer, state)
+
+    async def executor_node(state: WorkflowState) -> dict:
+        return await _run_with_cost_tracking(executor, state)
+
+    return {
+        "supervisor": supervisor_node,
+        "researcher": researcher_node,
+        "analyzer": analyzer_node,
+        "executor": executor_node,
+        "human_approval": human_approval_node,
+    }
 
 
 def _extract_usage(messages: list[Any], model_name: str) -> tuple[int, int]:
@@ -120,26 +135,6 @@ async def _run_with_cost_tracking(agent: BaseAgent, state: WorkflowState) -> dic
         patch["total_cost_usd"],
     )
     return patch
-
-
-async def supervisor_node(state: WorkflowState) -> dict:
-    assert _supervisor is not None, "Supervisor agent not initialised"
-    return await _run_with_cost_tracking(_supervisor, state)
-
-
-async def researcher_node(state: WorkflowState) -> dict:
-    assert _researcher is not None, "Researcher agent not initialised"
-    return await _run_with_cost_tracking(_researcher, state)
-
-
-async def analyzer_node(state: WorkflowState) -> dict:
-    assert _analyzer is not None, "Analyzer agent not initialised"
-    return await _run_with_cost_tracking(_analyzer, state)
-
-
-async def executor_node(state: WorkflowState) -> dict:
-    assert _executor is not None, "Executor agent not initialised"
-    return await _run_with_cost_tracking(_executor, state)
 
 
 async def human_approval_node(state: WorkflowState) -> dict:

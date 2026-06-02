@@ -24,14 +24,7 @@ from forgeflow.agents.supervisor import SupervisorAgent
 from forgeflow.config import get_settings
 from forgeflow.graph.checkpointer import get_checkpointer
 from forgeflow.graph.edges import route_human_approval, route_supervisor
-from forgeflow.graph.nodes import (
-    analyzer_node,
-    build_node_factory,
-    executor_node,
-    human_approval_node,
-    researcher_node,
-    supervisor_node,
-)
+from forgeflow.graph.nodes import build_node_factory
 from forgeflow.models import get_model
 from forgeflow.state.workflow_state import WorkflowState
 
@@ -99,19 +92,20 @@ async def compile_graph(
         model=model_fast, tools=mcp_tools or [], system_prompt=prompts.get("executor")
     )
 
-    # Register agents with node functions
-    build_node_factory(supervisor, researcher, analyzer, executor)
+    # Build per-graph node closures bound to THIS graph's agents (no shared
+    # module-level singletons — see build_node_factory docstring).
+    nodes = build_node_factory(supervisor, researcher, analyzer, executor)
 
     # ------------------------------------------------------------------ #
     # Build the graph                                                      #
     # ------------------------------------------------------------------ #
     builder = StateGraph(WorkflowState)
 
-    builder.add_node("supervisor", supervisor_node)
-    builder.add_node("researcher", researcher_node)
-    builder.add_node("analyzer", analyzer_node)
-    builder.add_node("executor", executor_node)
-    builder.add_node("human_approval", human_approval_node)
+    builder.add_node("supervisor", nodes["supervisor"])
+    builder.add_node("researcher", nodes["researcher"])
+    builder.add_node("analyzer", nodes["analyzer"])
+    builder.add_node("executor", nodes["executor"])
+    builder.add_node("human_approval", nodes["human_approval"])
 
     # Entry point
     builder.set_entry_point("supervisor")

@@ -48,13 +48,16 @@ Format your response as JSON with keys:
 
 
 class ProposalContent(BaseModel):
-    executive_summary: str
-    pain_points_addressed: list[str] = Field(min_length=2)
-    solution_overview: str
-    pricing_tiers: list[dict]
-    expected_roi: str
-    next_steps: list[str]
-    estimated_deal_value_usd: int = Field(ge=0)
+    # All fields default so a non-deterministic LLM omission (under
+    # method="function_calling", which is not strict) degrades to an empty
+    # value instead of raising a ValidationError that 500s the whole run.
+    executive_summary: str = ""
+    pain_points_addressed: list[str] = Field(default_factory=list)
+    solution_overview: str = ""
+    pricing_tiers: list[dict] = Field(default_factory=list)
+    expected_roi: str = ""
+    next_steps: list[str] = Field(default_factory=list)
+    estimated_deal_value_usd: int = 0
 
 
 class ExecutorAgent(BaseAgent):

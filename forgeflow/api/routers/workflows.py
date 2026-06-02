@@ -88,6 +88,14 @@ async def run_workflow(
     latency_ms = (time.monotonic() - start) * 1000
     stage = final_state.get("current_stage", "unknown")
 
+    # workflow_runs.user_id is a UUID column, but dev-login subjects are plain
+    # strings ("rep-1"). Store NULL rather than letting the INSERT fail — a
+    # failed run-row INSERT also breaks the approval_requests FK below.
+    try:
+        user_uuid: uuid.UUID | None = uuid.UUID(str(user.user_id))
+    except (ValueError, TypeError, AttributeError):
+        user_uuid = None
+
     # Persist run record (tenant-scoped via workspace_id when present)
     try:
         async with pool.acquire() as conn:
@@ -108,7 +116,7 @@ async def run_workflow(
                 {"final_stage": stage},
                 final_state.get("total_tokens", 0),
                 final_state.get("total_cost_usd", 0.0),
-                user.user_id,
+                user_uuid,
                 {"latency_ms": round(latency_ms, 1)},
                 uuid.UUID(workspace_id) if workspace_id else None,
             )
