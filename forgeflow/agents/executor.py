@@ -70,7 +70,13 @@ class ExecutorAgent(BaseAgent):
             tools=tools or [],
             system_prompt=system_prompt or EXECUTOR_SYSTEM_PROPOSE,
         )
-        self._proposal_model = model.with_structured_output(ProposalContent)
+        # method="function_calling" avoids OpenAI's strict json_schema mode, which
+        # rejects the free-form `pricing_tiers: list[dict]` field (strict mode requires
+        # additionalProperties:false on every nested object). langchain-openai>=0.3
+        # defaults to strict json_schema, so this must be explicit.
+        self._proposal_model = model.with_structured_output(
+            ProposalContent, method="function_calling"
+        )
         self._tool_map = {t.name: t for t in (tools or [])}
 
     async def run(self, state: WorkflowState) -> dict:
