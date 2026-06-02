@@ -75,7 +75,7 @@ async def run_escalation_pass(
                        resolved_at = now(),
                        resolution_note = 'auto-rejected: exceeded SLA'
                 WHERE  status = 'pending'
-                  AND  requested_at < now() - ($1 || ' minutes')::INTERVAL
+                  AND  requested_at < now() - make_interval(mins => $1)
                 RETURNING id::text, token::text
                 """,
                 cfg.auto_reject_minutes,
@@ -91,7 +91,7 @@ async def run_escalation_pass(
                        escalated_to = 'director'
                 WHERE  status = 'pending'
                   AND  escalation_level < 2
-                  AND  requested_at < now() - ($1 || ' minutes')::INTERVAL
+                  AND  requested_at < now() - make_interval(mins => $1)
                 RETURNING id::text, token::text
                 """,
                 cfg.second_escalation_minutes,
@@ -107,7 +107,7 @@ async def run_escalation_pass(
                        escalated_to = 'manager'
                 WHERE  status = 'pending'
                   AND  escalation_level < 1
-                  AND  requested_at < now() - ($1 || ' minutes')::INTERVAL
+                  AND  requested_at < now() - make_interval(mins => $1)
                 RETURNING id::text, token::text
                 """,
                 cfg.first_escalation_minutes,
