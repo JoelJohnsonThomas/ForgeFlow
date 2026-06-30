@@ -1,0 +1,6 @@
+{
+  "apiKey": "$TESTRELIC_API_KEY",
+  "endpoint": "https://platform.testrelic.ai/api/v1",
+  "upload": "batch",
+  "projectName": "ForgeFlow"
+}

@@ -1,0 +1,7 @@
+# Local override: host port 5432 is already taken by another Postgres on this
+# machine, so expose ForgeFlow's DB on 5433 instead. Internal service-to-service
+# traffic still uses postgres:5432 inside the compose network — unchanged.
+services:
+  postgres:
+    ports:
+      - "5433:5432"

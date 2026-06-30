@@ -150,6 +150,20 @@ class Settings(BaseSettings):
     # --- Search ---
     tavily_api_key: SecretStr = Field(SecretStr(""), description="Tavily search API key")
 
+    # --- TestRelic (test-analytics reporter — testrelic-pytest plugin) ---
+    testrelic_api_key: SecretStr = Field(
+        SecretStr(""),
+        description="TestRelic API key — authenticates the pytest reporter upload",
+    )
+    testrelic_project_name: str = Field(
+        "ForgeFlow",
+        description="Project name shown in the TestRelic dashboard",
+    )
+    testrelic_upload_strategy: str = Field(
+        "batch",
+        description="When the reporter uploads results: batch (end of run) | realtime",
+    )
+
     # --- OpenTelemetry (optional — for Phoenix/Langfuse/Jaeger/Datadog APM) ---
     otel_enabled: bool = Field(False, description="Toggle OpenTelemetry tracing")
     otel_service_name: str = Field("forgeflow-api")
@@ -348,6 +362,10 @@ class Settings(BaseSettings):
     def is_slack_enabled(self) -> bool:
         key = self.slack_bot_token.get_secret_value()
         return bool(key and key.startswith("xoxb-"))
+
+    def is_testrelic_enabled(self) -> bool:
+        key = self.testrelic_api_key.get_secret_value()
+        return bool(key and key.startswith("tr_"))
 
 
 @lru_cache(maxsize=1)

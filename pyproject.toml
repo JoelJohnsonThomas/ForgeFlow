@@ -70,6 +70,9 @@ dev = [
     "ruff>=0.8.0",
     "mypy>=1.13.0",
     "types-beautifulsoup4",
+    # TestRelic test-analytics reporter — uploads each pytest run to TestRelic.
+    # Auto-registers via its pytest11 entry point; no-ops when the API key is unset.
+    "testrelic-pytest>=0.6.4",
 ]
 # Local-first / privacy mode — run against an Ollama daemon instead of OpenAI
 ollama = [

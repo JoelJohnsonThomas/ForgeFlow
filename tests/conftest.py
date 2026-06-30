@@ -21,6 +21,19 @@ os.environ.setdefault("BUDGET_LIMIT_USD", "10.0")
 # (also documented in the pipelines' module docstrings).
 os.environ.setdefault("FORGEFLOW_ALLOW_TEMPLATE_WORKFLOWS", "1")
 
+# The TestRelic reporter (testrelic-pytest) reads TESTRELIC_API_KEY from the OS
+# environment, but pytest doesn't auto-load .env where the rest of our config
+# lives. Surface the TestRelic keys here so a bare `pytest` reports runs without
+# a manual `export`. We never override an already-set value (CI secrets win),
+# and the plugin silently no-ops when the key is absent.
+from dotenv import dotenv_values, find_dotenv  # noqa: E402
+
+_dotenv = dotenv_values(find_dotenv())
+for _key in ("TESTRELIC_API_KEY", "TESTRELIC_PROJECT_NAME", "TESTRELIC_UPLOAD_STRATEGY"):
+    _val = _dotenv.get(_key)
+    if _val and not os.environ.get(_key):
+        os.environ[_key] = _val
+
 
 @pytest.fixture(autouse=True)
 def _stub_dns(monkeypatch):
