@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
-import { DOCS, DOC_GROUPS, DOCS_BY_SLUG, prevNext } from '../docs/manifest'
+import { DOCS, DOC_GROUPS, DOCS_BY_SLUG, editUrl, issueUrl, prevNext } from '../docs/manifest'
+import type { DocEntry } from '../docs/manifest'
 import { getDocSource } from '../docs/content'
+import { extractToc, highlightSegments, searchDocs } from '../docs/search'
+import type { TocItem } from '../docs/search'
 import { DocMarkdown } from '../components/DocMarkdown'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import '../styles/docs.css'
@@ -24,13 +27,25 @@ function DocsTopbar({ navOpen, onMenuToggle }: { navOpen: boolean; onMenuToggle:
         <span className="brand-name">ForgeFlow</span>
         <span className="docs-tag">docs</span>
       </Link>
+      <span className="docs-version" title="Documented version">v0.1.0</span>
       <nav aria-label="Site">
         <a href="/">Landing</a>
         <a href="/console">Console</a>
         <Link to="/architecture">Architecture</Link>
+        <a href="/api/docs">API reference ↗</a>
         <a href="https://github.com/JoelJohnsonThomas/forgeflow" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
       </nav>
     </header>
+  )
+}
+
+function Highlighted({ text, query }: { text: string; query: string }) {
+  return (
+    <>
+      {highlightSegments(text, query).map((seg, i) =>
+        seg.match ? <mark key={i}>{seg.text}</mark> : <span key={i}>{seg.text}</span>,
+      )}
+    </>
   )
 }
 
@@ -44,53 +59,99 @@ function DocsSidebar({
   onNavigate?: () => void
 }) {
   const [q, setQ] = useState('')
-  const query = q.trim().toLowerCase()
-  const groups = useMemo(
-    () =>
-      DOC_GROUPS.map((g) => ({
-        group: g,
-        items: DOCS.filter(
-          (d) =>
-            d.group === g &&
-            (query === '' ||
-              d.title.toLowerCase().includes(query) ||
-              (d.summary ?? '').toLowerCase().includes(query)),
-        ),
-      })).filter((x) => x.items.length > 0),
-    [query],
-  )
+  const inputRef = useRef<HTMLInputElement>(null)
+  const query = q.trim()
+  const hits = useMemo(() => (query ? searchDocs(query) : []), [query])
+
+  // "/" or Ctrl/Cmd+K focuses search from anywhere on the page.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null
+      const typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)
+      if ((e.key === '/' && !typing) || (e.key.toLowerCase() === 'k' && (e.ctrlKey || e.metaKey))) {
+        e.preventDefault()
+        inputRef.current?.focus()
+        inputRef.current?.select()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   return (
     <aside id="docs-sidebar" className={`docs-sidebar${open ? ' open' : ''}`} aria-label="Documentation">
       <label className="docs-search">
         <span className="sr-only">Search documentation</span>
         <input
+          ref={inputRef}
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape' && q) {
+              e.stopPropagation()
+              setQ('')
+            }
+          }}
           placeholder="Search docs…"
           aria-label="Search documentation"
         />
+        <kbd className="docs-search-kbd" aria-hidden="true">/</kbd>
       </label>
-      {groups.length === 0 && <p className="docs-empty">No pages match “{q}”.</p>}
-      {groups.map(({ group, items }) => (
-        <div className="docs-nav-group" key={group}>
-          <div className="docs-nav-title">{group}</div>
-          {items.map((d) => (
+
+      {query ? (
+        <div className="docs-results" role="region" aria-label="Search results">
+          <p className="docs-results-count" role="status">
+            {hits.length === 0 ? `No pages match “${query}”.` : `${hits.length} result${hits.length === 1 ? '' : 's'}`}
+          </p>
+          {hits.map((h) => (
             <Link
-              key={d.slug}
+              key={h.entry.slug}
               to="/docs/$slug"
-              params={{ slug: d.slug }}
-              className="docs-nav-link"
-              activeProps={{ className: 'docs-nav-link active' }}
-              aria-current={active === d.slug ? 'page' : undefined}
-              onClick={onNavigate}
+              params={{ slug: h.entry.slug }}
+              hash={h.heading?.id}
+              className="docs-result"
+              onClick={() => {
+                setQ('')
+                onNavigate?.()
+              }}
             >
-              {d.title}
+              <span className="docs-result-title">
+                <Highlighted text={h.entry.title} query={query} />
+              </span>
+              {h.heading && (
+                <span className="docs-result-heading">
+                  § <Highlighted text={h.heading.text} query={query} />
+                </span>
+              )}
+              {h.snippet && (
+                <span className="docs-result-snippet">
+                  <Highlighted text={h.snippet} query={query} />
+                </span>
+              )}
             </Link>
           ))}
         </div>
-      ))}
+      ) : (
+        DOC_GROUPS.map((group) => (
+          <div className="docs-nav-group" key={group}>
+            <div className="docs-nav-title">{group}</div>
+            {DOCS.filter((d) => d.group === group).map((d) => (
+              <Link
+                key={d.slug}
+                to="/docs/$slug"
+                params={{ slug: d.slug }}
+                className="docs-nav-link"
+                activeProps={{ className: 'docs-nav-link active' }}
+                aria-current={active === d.slug ? 'page' : undefined}
+                onClick={onNavigate}
+              >
+                {d.title}
+              </Link>
+            ))}
+          </div>
+        ))
+      )}
     </aside>
   )
 }
@@ -135,7 +196,7 @@ export function DocsIndexPage() {
           <Link to="/docs/$slug" params={{ slug: 'tutorials-first-workflow' }}>
             Your first workflow
           </Link>{' '}
-          — clone to a completed run in about 15 minutes.
+          — clone to a completed run in about 15 minutes. Press <kbd className="kbd">/</kbd> to search.
         </p>
       </div>
       {DOC_GROUPS.map((group) => (
@@ -152,6 +213,90 @@ export function DocsIndexPage() {
         </section>
       ))}
     </DocsShell>
+  )
+}
+
+/** ~220 wpm, floored at 1 minute. */
+function readingTime(source: string): number {
+  const words = source.split(/\s+/).filter(Boolean).length
+  return Math.max(1, Math.round(words / 220))
+}
+
+/** Right-rail "On this page" with scroll-spy. Hidden on narrow viewports (CSS). */
+function DocToc({ items }: { items: TocItem[] }) {
+  const [activeId, setActiveId] = useState<string | undefined>()
+
+  useEffect(() => {
+    const els = items.map((t) => document.getElementById(t.id)).filter((el): el is HTMLElement => el !== null)
+    if (els.length === 0) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting)
+        if (visible.length > 0) setActiveId(visible[0].target.id)
+      },
+      { rootMargin: '-64px 0px -70% 0px' },
+    )
+    els.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }, [items])
+
+  if (items.length < 2) return null
+  return (
+    <nav className="doc-toc" aria-label="On this page">
+      <div className="doc-toc-title">On this page</div>
+      {items.map((t, i) => (
+        <a
+          key={`${t.id}-${i}`}
+          href={`#${t.id}`}
+          className={`doc-toc-link lvl-${t.level}${activeId === t.id ? ' active' : ''}`}
+        >
+          {t.text}
+        </a>
+      ))}
+    </nav>
+  )
+}
+
+/** "Was this page helpful?" — recorded locally; issues go to GitHub. */
+function DocFeedback({ entry }: { entry: DocEntry }) {
+  const storageKey = `ff-docs-feedback:${entry.slug}`
+  const [vote, setVote] = useState<string | null>(() => {
+    try {
+      return window.localStorage.getItem(storageKey)
+    } catch {
+      return null
+    }
+  })
+  const record = (v: 'up' | 'down') => {
+    setVote(v)
+    try {
+      window.localStorage.setItem(storageKey, v)
+    } catch {
+      // Storage unavailable (private mode) — the thanks message still shows.
+    }
+  }
+
+  return (
+    <div className="doc-feedback" role="group" aria-label="Page feedback">
+      {vote ? (
+        <p className="doc-feedback-thanks">
+          Thanks for the feedback.{' '}
+          <a href={issueUrl(entry)} target="_blank" rel="noopener noreferrer">
+            Report an issue on GitHub ↗
+          </a>
+        </p>
+      ) : (
+        <>
+          <span>Was this page helpful?</span>
+          <button type="button" className="btn sm" onClick={() => record('up')}>
+            👍 Yes
+          </button>
+          <button type="button" className="btn sm" onClick={() => record('down')}>
+            👎 No
+          </button>
+        </>
+      )}
+    </div>
   )
 }
 
@@ -189,44 +334,62 @@ export function DocsArticlePage() {
 
   const source = getDocSource(entry.file)
   const { prev, next } = prevNext(entry.slug)
+  const toc = source ? extractToc(source) : []
 
   return (
     <DocsShell active={entry.slug}>
-      <nav className="docs-breadcrumbs" aria-label="Breadcrumb">
-        <Link to="/docs">Docs</Link>
-        <span className="sep">/</span>
-        <span>{entry.group}</span>
-        <span className="sep">/</span>
-        <span className="cur">{entry.title}</span>
-      </nav>
+      <div className="docs-article">
+        <div className="docs-article-content">
+          <nav className="docs-breadcrumbs" aria-label="Breadcrumb">
+            <Link to="/docs">Docs</Link>
+            <span className="sep">/</span>
+            <span>{entry.group}</span>
+            <span className="sep">/</span>
+            <span className="cur">{entry.title}</span>
+          </nav>
 
-      {source ? (
-        <DocMarkdown source={source} file={entry.file} />
-      ) : (
-        <div className="doc-prose">
-          <h1>{entry.title}</h1>
-          <p>This page's source could not be loaded.</p>
+          {source && (
+            <div className="docs-meta">
+              <span>{readingTime(source)} min read</span>
+              <span className="sep" aria-hidden="true">·</span>
+              <a href={editUrl(entry.file)} target="_blank" rel="noopener noreferrer">
+                Edit this page on GitHub ↗
+              </a>
+            </div>
+          )}
+
+          {source ? (
+            <DocMarkdown source={source} file={entry.file} />
+          ) : (
+            <div className="doc-prose">
+              <h1>{entry.title}</h1>
+              <p>This page's source could not be loaded.</p>
+            </div>
+          )}
+
+          <DocFeedback entry={entry} />
+
+          <nav className="docs-prevnext" aria-label="Pagination">
+            {prev ? (
+              <Link to="/docs/$slug" params={{ slug: prev.slug }} className="docs-prevnext-link prev">
+                <span className="dir">← Previous</span>
+                <span className="ttl">{prev.title}</span>
+              </Link>
+            ) : (
+              <span />
+            )}
+            {next ? (
+              <Link to="/docs/$slug" params={{ slug: next.slug }} className="docs-prevnext-link next">
+                <span className="dir">Next →</span>
+                <span className="ttl">{next.title}</span>
+              </Link>
+            ) : (
+              <span />
+            )}
+          </nav>
         </div>
-      )}
-
-      <nav className="docs-prevnext" aria-label="Pagination">
-        {prev ? (
-          <Link to="/docs/$slug" params={{ slug: prev.slug }} className="docs-prevnext-link prev">
-            <span className="dir">← Previous</span>
-            <span className="ttl">{prev.title}</span>
-          </Link>
-        ) : (
-          <span />
-        )}
-        {next ? (
-          <Link to="/docs/$slug" params={{ slug: next.slug }} className="docs-prevnext-link next">
-            <span className="dir">Next →</span>
-            <span className="ttl">{next.title}</span>
-          </Link>
-        ) : (
-          <span />
-        )}
-      </nav>
+        <DocToc items={toc} />
+      </div>
     </DocsShell>
   )
 }

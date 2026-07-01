@@ -43,6 +43,7 @@ function ArchTopbar() {
             <li><a href="/">Landing</a></li>
             <li><a href="/console">Console</a></li>
             <li><a href="/architecture" className="active">Architecture</a></li>
+            <li><a href="/docs">Docs</a></li>
             <li><a href="/design-system">Design system</a></li>
           </ul>
         </div>
