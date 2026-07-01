@@ -6,9 +6,19 @@ import { DocMarkdown } from '../components/DocMarkdown'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import '../styles/docs.css'
 
-function DocsTopbar() {
+function DocsTopbar({ navOpen, onMenuToggle }: { navOpen: boolean; onMenuToggle: () => void }) {
   return (
     <header className="docs-topbar">
+      <button
+        type="button"
+        className="docs-menu-btn"
+        aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
+        aria-expanded={navOpen}
+        aria-controls="docs-sidebar"
+        onClick={onMenuToggle}
+      >
+        <span aria-hidden="true">{navOpen ? '✕' : '☰'}</span>
+      </button>
       <Link to="/" className="brand" aria-label="ForgeFlow home">
         <span className="brand-mark" />
         <span className="brand-name">ForgeFlow</span>
@@ -24,7 +34,15 @@ function DocsTopbar() {
   )
 }
 
-function DocsSidebar({ active }: { active?: string }) {
+function DocsSidebar({
+  active,
+  open,
+  onNavigate,
+}: {
+  active?: string
+  open?: boolean
+  onNavigate?: () => void
+}) {
   const [q, setQ] = useState('')
   const query = q.trim().toLowerCase()
   const groups = useMemo(
@@ -43,7 +61,7 @@ function DocsSidebar({ active }: { active?: string }) {
   )
 
   return (
-    <aside className="docs-sidebar" aria-label="Documentation">
+    <aside id="docs-sidebar" className={`docs-sidebar${open ? ' open' : ''}`} aria-label="Documentation">
       <label className="docs-search">
         <span className="sr-only">Search documentation</span>
         <input
@@ -66,6 +84,7 @@ function DocsSidebar({ active }: { active?: string }) {
               className="docs-nav-link"
               activeProps={{ className: 'docs-nav-link active' }}
               aria-current={active === d.slug ? 'page' : undefined}
+              onClick={onNavigate}
             >
               {d.title}
             </Link>
@@ -77,12 +96,25 @@ function DocsSidebar({ active }: { active?: string }) {
 }
 
 function DocsShell({ active, children }: { active?: string; children: React.ReactNode }) {
+  const [navOpen, setNavOpen] = useState(false)
+
+  // Close the mobile drawer on Escape.
+  useEffect(() => {
+    if (!navOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setNavOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [navOpen])
+
   return (
     <div className="docs-root">
       <a href="#docs-content" className="skip-link">Skip to content</a>
-      <DocsTopbar />
+      <DocsTopbar navOpen={navOpen} onMenuToggle={() => setNavOpen((v) => !v)} />
       <div className="docs-body">
-        <DocsSidebar active={active} />
+        {navOpen && <div className="docs-scrim" aria-hidden="true" onClick={() => setNavOpen(false)} />}
+        <DocsSidebar active={active} open={navOpen} onNavigate={() => setNavOpen(false)} />
         <main className="docs-main" id="docs-content" tabIndex={-1}>
           {children}
         </main>

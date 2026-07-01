@@ -229,15 +229,58 @@
 .docs-prevnext-link .dir { font-size: 11.5px; color: var(--fg-muted); font-family: var(--font-mono); }
 .docs-prevnext-link .ttl { color: var(--blue-4); font-size: 14px; }
 
+/* Mobile nav toggle + scrim (hidden on desktop) --------------------------- */
+.docs-menu-btn { display: none; }
+.docs-scrim { display: none; }
+
 /* Responsive -------------------------------------------------------------- */
 @media (max-width: 860px) {
+  .docs-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    margin-right: 4px;
+    background: var(--bg-inset);
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    color: var(--fg-primary);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+  }
   .docs-body { grid-template-columns: 1fr; }
+  /* Sidebar becomes an off-canvas drawer, toggled by .open. */
   .docs-sidebar {
-    position: static;
-    height: auto;
-    border-right: none;
-    border-bottom: 1px solid var(--border-subtle);
+    position: fixed;
+    top: 56px;
+    left: 0;
+    z-index: 40;
+    width: 280px;
+    max-width: 84vw;
+    height: calc(100vh - 56px);
+    background: var(--bg-canvas);
+    border-right: 1px solid var(--border-default);
+    transform: translateX(-100%);
+    transition: transform 180ms ease;
+  }
+  .docs-sidebar.open {
+    transform: translateX(0);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+  }
+  .docs-scrim {
+    display: block;
+    position: fixed;
+    inset: 56px 0 0 0;
+    z-index: 30;
+    background: rgba(0, 0, 0, 0.5);
   }
   .docs-main { padding: 20px; }
   .docs-prevnext { grid-template-columns: 1fr; }
+}
+
+/* Respect users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  .docs-sidebar { transition: none; }
 }
