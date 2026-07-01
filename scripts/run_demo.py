@@ -16,6 +16,23 @@ import httpx
 
 API_URL = "http://localhost:8000"
 
+# Windows consoles default to cp1252 and choke on the ▶/✓ glyphs below.
+# Force UTF-8 so the demo runs cross-platform without PYTHONUTF8=1.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+    except (AttributeError, ValueError):
+        pass
+
+
+def _json_or_text(resp: httpx.Response):
+    """Approve/reject may return a non-JSON body on error (e.g. a bare 500).
+    Don't let response parsing mask the real status."""
+    try:
+        return resp.json()
+    except ValueError:
+        return {"status_code": resp.status_code, "body": resp.text[:200]}
+
 
 async def _mint_token(client: httpx.AsyncClient, user_id: str) -> str:
     """Obtain a demo JWT. Falls back to FORGEFLOW_TOKEN env if /auth/login
@@ -107,7 +124,11 @@ async def run_demo(company: str = "Acme Corp", auto_approve: bool = False) -> No
                         json={"note": "Approved via demo script"},
                         headers=mgr_hdr,
                     )
-                    print(f"  Result: {approve_resp.json()}")
+                    if approve_resp.status_code != 200:
+                        print(f"  ✗ Approve failed: {approve_resp.status_code} — "
+                              f"{approve_resp.text[:200]}")
+                    else:
+                        print(f"  Result: {_json_or_text(approve_resp)}")
                 else:
                     print(f"\n  To approve: POST {API_URL}/approvals/{token}/approve")
                     print(f"  To reject:  POST {API_URL}/approvals/{token}/reject")

@@ -118,9 +118,14 @@ async def reject(
 
     pipeline = SalesOpsPipeline(graph)
     try:
-        await pipeline.resume(thread_id=thread_id, approval_status="rejected")
+        await pipeline.resume(
+            thread_id=thread_id, approval_status="rejected", resolved_by=user.user_id
+        )
     except Exception as e:
+        # Consistent with approve(): surface a resume failure rather than
+        # silently marking the request rejected while the graph never resumed.
         logger.error("Graph resume (reject) failed: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to resume workflow: {e}") from e
 
     async with pool.acquire() as conn:
         await conn.execute(

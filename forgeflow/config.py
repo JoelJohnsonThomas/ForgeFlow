@@ -121,6 +121,16 @@ class Settings(BaseSettings):
     max_retries: int = Field(3, ge=1, le=10)
     circuit_breaker_threshold: int = Field(5, ge=1)
     budget_limit_usd: float = Field(5.0, gt=0, description="Max USD spend per workflow run")
+    workflow_run_timeout_seconds: int = Field(
+        180,
+        ge=5,
+        le=1800,
+        description=(
+            "Hard ceiling on a synchronous /workflows/run. Exceeding it returns "
+            "504 and frees the worker, so a hung LLM/tool can't pin a request "
+            "indefinitely. (Long jobs should use the async path — see ROADMAP.)"
+        ),
+    )
 
     # --- A2A protocol ---
     a2a_dispatch_enabled: bool = Field(
@@ -366,6 +376,60 @@ class Settings(BaseSettings):
     def is_testrelic_enabled(self) -> bool:
         key = self.testrelic_api_key.get_secret_value()
         return bool(key and key.startswith("tr_"))
+
+    # ------------------------------------------------------------------ #
+    # Production posture + startup validation                            #
+    # ------------------------------------------------------------------ #
+    _INSECURE_SECRETS = frozenset(
+        {
+            "",
+            "change-me-in-production",
+            "change-me-in-production-use-secrets-manager",
+        }
+    )
+
+    def is_production(self) -> bool:
+        """True for prod-shaped deployments. We key off the explicit
+        environment label; dev_login_enabled is a secondary signal."""
+        return self.otel_environment.lower() in {"prod", "production", "staging"}
+
+    def validate_runtime(self) -> list[str]:
+        """Return a list of fatal misconfigurations. Empty ⇒ safe to boot.
+
+        The caller (API lifespan) hard-fails on any problem in production and
+        logs warnings in dev — so an insecure prod deploy fails closed at
+        startup instead of silently serving with default secrets.
+        """
+        problems: list[str] = []
+        prod = self.is_production()
+
+        if self.api_secret_key.get_secret_value() in self._INSECURE_SECRETS:
+            problems.append("API_SECRET_KEY is unset or a known default")
+
+        if prod and self.dev_login_enabled:
+            problems.append("DEV_LOGIN_ENABLED must be false in production (use OIDC)")
+
+        if self.dev_login_enabled and not self.dev_login_password.get_secret_value():
+            problems.append("DEV_LOGIN_PASSWORD is required when DEV_LOGIN_ENABLED=true")
+
+        if "*" in self.cors_origins():
+            problems.append("CORS_ALLOW_ORIGINS must be an explicit allowlist, never '*'")
+
+        if prod and self.docs_enabled:
+            problems.append("DOCS_ENABLED should be false in production")
+
+        if self.llm_provider == "openai" and not self.openai_api_key.get_secret_value():
+            problems.append("OPENAI_API_KEY is required when LLM_PROVIDER=openai")
+        if self.llm_provider == "anthropic" and not self.anthropic_api_key.get_secret_value():
+            problems.append("ANTHROPIC_API_KEY is required when LLM_PROVIDER=anthropic")
+
+        if self.trusted_proxy_count == 0 and prod:
+            problems.append(
+                "TRUSTED_PROXY_COUNT=0 in production — client IPs (and login "
+                "rate-limiting) will trust the socket peer only; set it to your "
+                "real proxy hop count"
+            )
+        return problems
 
 
 @lru_cache(maxsize=1)

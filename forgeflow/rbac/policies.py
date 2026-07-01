@@ -62,8 +62,9 @@ ROUTE_PERMISSION_MAP: dict[tuple[str, str], tuple[str, str]] = {
     ("POST",   "/workflows/run"):                 ("execute", "workflows"),
     ("POST",   "/workflows/stream"):              ("execute", "workflows"),
     ("GET",    "/workflows"):                     ("read",    "workflows"),
-    # Trace exposes prompts + LLM output → require explicit perm
-    ("GET",    "/workflows/trace"):               ("read",    "workflows"),  # legacy
+    # Trace (/workflows/{id}/trace) exposes prompts + LLM output. It matches the
+    # "/workflows" prefix above (read:workflows); object-level ownership is
+    # enforced in the handler (see routers/workflows.py).
     # --- approvals ---
     ("POST",   "/approvals"):                     ("approve", "proposals"),
     ("GET",    "/approvals"):                     ("read",    "proposals"),

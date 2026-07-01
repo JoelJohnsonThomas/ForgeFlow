@@ -31,6 +31,7 @@ from forgeflow.middleware.audit import AuditMiddleware
 from forgeflow.middleware.auth import RBACMiddleware
 from forgeflow.middleware.rate_limit import RateLimitMiddleware
 from forgeflow.middleware.security import SecurityMiddleware
+from forgeflow.middleware.security_headers import SecurityHeadersMiddleware
 from forgeflow.observability.prometheus import _build_registry
 from forgeflow.observability.tracing import init_tracing
 from forgeflow.observability.tracing_provider import configure as configure_tracing_provider
@@ -45,6 +46,23 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("ForgeFlow API starting...")
+
+    # Fail-fast configuration validation. In production any problem aborts
+    # startup (fail closed); in dev we log warnings so local work isn't blocked.
+    _startup_settings = get_settings()
+    _config_problems = _startup_settings.validate_runtime()
+    if _config_problems:
+        for _p in _config_problems:
+            logger.error("CONFIG: %s", _p)
+        if _startup_settings.is_production():
+            raise RuntimeError(
+                f"Refusing to start: {len(_config_problems)} fatal configuration "
+                f"problem(s) in production — see CONFIG errors above."
+            )
+        logger.warning(
+            "Continuing in non-production despite %d config warning(s).",
+            len(_config_problems),
+        )
 
     # Database pool
     app.state.pool = await init_pool()
@@ -181,6 +199,9 @@ app.add_middleware(AuditMiddleware)
 app.add_middleware(SecurityMiddleware)
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(RBACMiddleware)
+# Outermost (added last) so hardening headers land on EVERY response, including
+# 401/403/429 returned by the inner middlewares.
+app.add_middleware(SecurityHeadersMiddleware)
 
 # Routers
 from forgeflow.api.routers import (

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import time
@@ -23,6 +24,7 @@ from forgeflow.api.schemas import (
     WorkflowRunResponse,
     WorkflowStatusResponse,
 )
+from forgeflow.config import get_settings
 from forgeflow.notifications.slack import notify_approval_request
 from forgeflow.rbac.models import UserContext
 from forgeflow.workflows.finance_recon.models import ReconciliationInput
@@ -34,6 +36,26 @@ from forgeflow.workflows.support_ops.pipeline import SupportOpsPipeline
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# Roles allowed to read ANY run within their workspace (oversight / approval /
+# admin duties). Every other role (notably sales_rep) may only read runs it
+# owns — this closes the horizontal IDOR where one rep could read another rep's
+# run + agent trace (prompts + LLM output) by guessing the run id.
+_ELEVATED_READ_ROLES = frozenset({"admin", "manager", "viewer", "service"})
+
+
+def _assert_can_read_run(user: UserContext, row_user_id: str | None) -> None:
+    """Object-level authorization for a single run row.
+
+    RBAC already proved the caller has read:workflows. This adds ownership:
+    non-elevated roles may only see their own runs. Raises 404 (not 403) so we
+    don't confirm the existence of a run the caller isn't allowed to see.
+    """
+    if user.role in _ELEVATED_READ_ROLES:
+        return
+    if row_user_id is not None and str(row_user_id) == str(user.user_id):
+        return
+    raise HTTPException(status_code=404, detail="Workflow run not found")
 
 
 def _dispatch_pipeline(workflow_type: str, graph, payload: dict):
@@ -74,13 +96,25 @@ async def run_workflow(
 
     start = time.monotonic()
 
+    timeout_s = get_settings().workflow_run_timeout_seconds
     try:
-        workflow_id, thread_id, final_state = await pipeline.run(
-            domain_input,
-            user_id=user.user_id,
-            role=user.role,
-            dry_run=request.dry_run,
+        workflow_id, thread_id, final_state = await asyncio.wait_for(
+            pipeline.run(
+                domain_input,
+                user_id=user.user_id,
+                role=user.role,
+                dry_run=request.dry_run,
+            ),
+            timeout=timeout_s,
         )
+    except TimeoutError as e:
+        # Free the worker rather than blocking on a hung LLM/tool. The run is
+        # checkpointed in Postgres, so it can be inspected/resumed out-of-band.
+        logger.error("Workflow run timed out after %ss", timeout_s)
+        raise HTTPException(
+            status_code=504,
+            detail=f"Workflow exceeded the {timeout_s}s execution limit.",
+        ) from e
     except Exception as e:
         logger.error("Workflow run failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e)) from e
@@ -88,15 +122,10 @@ async def run_workflow(
     latency_ms = (time.monotonic() - start) * 1000
     stage = final_state.get("current_stage", "unknown")
 
-    # workflow_runs.user_id is a UUID column, but dev-login subjects are plain
-    # strings ("rep-1"). Store NULL rather than letting the INSERT fail — a
-    # failed run-row INSERT also breaks the approval_requests FK below.
-    try:
-        user_uuid: uuid.UUID | None = uuid.UUID(str(user.user_id))
-    except (ValueError, TypeError, AttributeError):
-        user_uuid = None
-
-    # Persist run record (tenant-scoped via workspace_id when present)
+    # Persist run record (tenant-scoped via workspace_id when present).
+    # user_id stores the JWT subject string (e.g. "rep-1") — see migration 007,
+    # which widened the column from UUID to VARCHAR. Attributing the run to its
+    # owner is what backs object-level authorization on the read endpoints below.
     try:
         async with pool.acquire() as conn:
             await conn.execute(
@@ -116,7 +145,7 @@ async def run_workflow(
                 {"final_stage": stage},
                 final_state.get("total_tokens", 0),
                 final_state.get("total_cost_usd", 0.0),
-                user_uuid,
+                str(user.user_id),
                 {"latency_ms": round(latency_ms, 1)},
                 uuid.UUID(workspace_id) if workspace_id else None,
             )
@@ -229,6 +258,7 @@ async def stream_workflow(
 async def get_workflow(
     run_id: str,
     pool: asyncpg.Pool = Depends(get_pool),
+    user: UserContext = Depends(get_current_user),
     workspace_id: str | None = Depends(get_workspace_id),
 ):
     """Get the current status and state of a workflow run.
@@ -237,6 +267,9 @@ async def get_workflow(
     in their workspace. Calls with no workspace_id see rows where
     workspace_id IS NULL (legacy / global runs) — this preserves
     single-tenant deployments through the migration window.
+
+    Object-scoped: non-elevated roles (e.g. sales_rep) may only read their
+    own runs — see _assert_can_read_run.
     """
     try:
         async with pool.acquire() as conn:
@@ -264,6 +297,7 @@ async def get_workflow(
         raise HTTPException(status_code=404, detail="Workflow run not found")
 
     r = dict(row)
+    _assert_can_read_run(user, r.get("user_id"))
     return WorkflowStatusResponse(
         run_id=str(r["id"]),
         thread_id=str(r["thread_id"]),
@@ -281,6 +315,7 @@ async def get_workflow(
 async def get_trace(
     run_id: str,
     pool: asyncpg.Pool = Depends(get_pool),
+    user: UserContext = Depends(get_current_user),
     workspace_id: str | None = Depends(get_workspace_id),
 ):
     """Get per-agent execution traces for a workflow run.
@@ -288,6 +323,9 @@ async def get_trace(
     Tenant-scoped: we first verify the run belongs to the caller's workspace
     (or is a legacy NULL-workspace row when the caller has no workspace
     claim) before returning trace data.
+
+    Object-scoped: traces expose prompts + LLM output, so non-elevated roles
+    may only read traces of runs they own — see _assert_can_read_run.
     """
     try:
         run_uuid = uuid.UUID(run_id)
@@ -298,17 +336,18 @@ async def get_trace(
         async with pool.acquire() as conn:
             if workspace_id:
                 owner = await conn.fetchrow(
-                    "SELECT 1 FROM workflow_runs WHERE id = $1 AND workspace_id = $2",
+                    "SELECT user_id FROM workflow_runs WHERE id = $1 AND workspace_id = $2",
                     run_uuid,
                     uuid.UUID(workspace_id),
                 )
             else:
                 owner = await conn.fetchrow(
-                    "SELECT 1 FROM workflow_runs WHERE id = $1 AND workspace_id IS NULL",
+                    "SELECT user_id FROM workflow_runs WHERE id = $1 AND workspace_id IS NULL",
                     run_uuid,
                 )
             if owner is None:
                 raise HTTPException(status_code=404, detail="Workflow run not found")
+            _assert_can_read_run(user, dict(owner).get("user_id"))
 
             rows = await conn.fetch(
                 "SELECT * FROM agent_traces WHERE run_id = $1 ORDER BY started_at",

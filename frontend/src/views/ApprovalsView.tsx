@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useApprovalsPending, useApproveMutation, useRejectMutation } from '../api/hooks'
 import type { Approval } from '../api/client'
 
@@ -130,7 +130,15 @@ function ApprovalCard({ approval }: { approval: Approval }) {
   const approve = useApproveMutation()
   const reject = useRejectMutation()
   const pending = approve.isPending || reject.isPending
-  const ageMin = Math.max(0, Math.floor((Date.now() - new Date(approval.requested_at).getTime()) / 60000))
+  // Reading Date.now() during render is impure (react-hooks/purity). Capture it
+  // in state via a lazy initializer and tick it once a minute so the displayed
+  // age stays correct without an unstable render-time read.
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 60_000)
+    return () => clearInterval(id)
+  }, [])
+  const ageMin = Math.max(0, Math.floor((now - new Date(approval.requested_at).getTime()) / 60000))
   const proposal = approval.proposal as Record<string, unknown>
   const title = (proposal?.title as string) ?? (proposal?.subject as string) ?? `Approval · ${approval.token.slice(0, 8)}`
   const summary = (proposal?.summary as string) ?? (proposal?.description as string)

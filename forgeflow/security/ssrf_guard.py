@@ -155,7 +155,10 @@ async def safe_get(
                 if not loc:
                     raise SSRFBlocked("redirect without Location header")
                 # Resolve relative redirects against the current URL.
-                current = httpx.URL(current).join(loc).human_repr()
+                # NB: httpx.URL has no human_repr() (that's a yarl/aiohttp
+                # method) — str() is the correct serialization. Using
+                # human_repr() AttributeError'd on every redirect.
+                current = str(httpx.URL(current).join(loc))
                 continue
             # Enforce size cap by reading at most max_bytes.
             content = response.content[:max_bytes]

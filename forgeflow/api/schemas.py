@@ -22,8 +22,10 @@ class WorkflowRunRequest(BaseModel):
             "support_ops: TicketInput; finance_recon: ReconciliationInput."
         ),
     )
-    user_id: str = "anon"
-    role: str = "sales_rep"
+    # NOTE: identity (user_id/role) is taken from the verified JWT in the
+    # RBAC middleware — never from the request body. Body-supplied identity
+    # fields were removed to avoid the impression that a client can self-assert
+    # its role here (it cannot).
     dry_run: bool = Field(
         False,
         description=(
