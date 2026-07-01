@@ -78,12 +78,10 @@ export function Topbar() {
           <IconBell />
         </a>
         <a
-          href="https://github.com/JoelJohnsonThomas/forgeflow/blob/main/docs/sales-ops-production.md"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="/docs"
           className="btn ghost icon-only"
-          title="Production runbook + docs"
-          aria-label="Open the production runbook and docs"
+          title="Documentation"
+          aria-label="Open the documentation"
         >
           <IconHelp />
         </a>

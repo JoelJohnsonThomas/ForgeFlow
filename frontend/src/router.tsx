@@ -27,6 +27,8 @@ const lazyView = (
 const ArchitecturePage = lazyView(() => import('./views/ArchitecturePage'), 'ArchitecturePage')
 const DesignHubPage = lazyView(() => import('./views/DesignHubPage'), 'DesignHubPage')
 const DesignSystemPage = lazyView(() => import('./views/DesignSystemPage'), 'DesignSystemPage')
+const DocsIndexPage = lazyView(() => import('./views/DocsPage'), 'DocsIndexPage')
+const DocsArticlePage = lazyView(() => import('./views/DocsPage'), 'DocsArticlePage')
 const OverviewView = lazyView(() => import('./views/OverviewView'), 'OverviewView')
 const LiveRunsView = lazyView(() => import('./views/LiveRunsView'), 'LiveRunsView')
 const ApprovalsView = lazyView(() => import('./views/ApprovalsView'), 'ApprovalsView')
@@ -79,6 +81,18 @@ const designSystemRoute = createRoute({
   component: DesignSystemPage,
 })
 
+const docsIndexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/docs',
+  component: DocsIndexPage,
+})
+
+const docsArticleRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/docs/$slug',
+  component: DocsArticlePage,
+})
+
 // Console layout — every child gets the topbar + sidebar shell.
 const consoleLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -115,6 +129,8 @@ const routeTree = rootRoute.addChildren([
   architectureRoute,
   designHubRoute,
   designSystemRoute,
+  docsIndexRoute,
+  docsArticleRoute,
   consoleLayoutRoute.addChildren(consoleChildren),
 ])
 

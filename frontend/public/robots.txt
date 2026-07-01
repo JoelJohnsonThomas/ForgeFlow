@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /$
+Allow: /docs
 Allow: /architecture
 Allow: /design-system
 Allow: /design-hub

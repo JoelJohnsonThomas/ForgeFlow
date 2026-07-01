@@ -662,7 +662,7 @@ async for event in wf.stream({"company": "Stripe"}):
               frontend team can actually generate clients against.
             </p>
             <div className="hero-cta" style={{ marginTop: 28 }}>
-              <a href="#docs" className="btn primary">Read the docs →</a>
+              <a href="/docs" className="btn primary">Read the docs →</a>
               <a href="/api/docs" target="_blank" rel="noopener noreferrer" className="btn">API reference</a>
             </div>
 
@@ -865,7 +865,7 @@ $ curl -X POST http://localhost:8000/workflows/run \\
       </h3>
       <pre className="code" style={{ margin: 0, fontSize: 12.5 }}>{code}</pre>
       <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-        <a href="/architecture" className="btn primary sm">
+        <a href="/docs/tutorials-first-workflow" className="btn primary sm">
           Open quickstart →
         </a>
         <a href="/api/docs" target="_blank" rel="noopener noreferrer" className="btn sm">
@@ -975,7 +975,7 @@ const SURFACES: Surface[] = [
     name: 'Quickstart & concepts',
     count: 12,
     icon: <PlayIcon />,
-    href: '/architecture',
+    href: '/docs/tutorials',
     articles: [
       'Five-minute install with Docker',
       'Your first workflow: sales_ops',
@@ -1014,7 +1014,7 @@ const SURFACES: Surface[] = [
     name: 'Operations playbooks',
     count: 41,
     icon: <BookIcon />,
-    href: '/architecture',
+    href: '/docs/operations-backup-dr',
     articles: [
       'On-call runbook: stuck workflow',
       'Capacity planning: RPS to pod count',
@@ -1027,7 +1027,7 @@ const SURFACES: Surface[] = [
     name: 'Security & access',
     count: 19,
     icon: <ShieldIcon />,
-    href: '/architecture',
+    href: '/docs/auth',
     articles: [
       'OIDC single sign-on setup',
       'TOTP multi-factor authentication',
