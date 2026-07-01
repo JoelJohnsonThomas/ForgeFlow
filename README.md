@@ -12,10 +12,10 @@
 [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-purple.svg)](https://modelcontextprotocol.io)
 [![React 19](https://img.shields.io/badge/React-19-61dafb.svg)](https://react.dev)
 [![Docker](https://img.shields.io/badge/docker-compose-2496ed.svg)](https://docker.com)
-[![Tests](https://img.shields.io/badge/tests-306%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-344%20passing-brightgreen.svg)](tests/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-[Quickstart](#-quickstart) · [Architecture](#-architecture) · [Features](#-features) · [API](#-api-reference) · [Deployment](#-deployment) · [Roadmap](#-roadmap) · [Contributing](#-contributing)
+[Quickstart](#-quickstart) · [Architecture](#-architecture) · [Features](#-features) · [API](#-api-reference) · [Deployment](#-deployment) · [Docs](docs/) · [Roadmap](#-roadmap) · [Contributing](#-contributing)
 
 ![ForgeFlow Console](docs/images/dashboard.png)
 
@@ -323,14 +323,29 @@ docker compose up                                      # start the stack
 
 ### 3. Run the demo
 
-```bash
-# Option A — via the API
-curl -X POST http://localhost:8000/workflows/run \
-  -H "Content-Type: application/json" \
-  -H "X-Role: sales_rep" \
-  -d '{"lead_data": {"company_name": "Stripe"}, "workflow_type": "sales_ops"}'
+Every API call requires a bearer JWT. With `DEV_LOGIN_ENABLED=true`, mint one
+from `/auth/login` using a seeded demo user (`rep-1` has the `sales_rep` role),
+then trigger a run:
 
-# Option B — the demo script (auto-approves the proposal)
+```bash
+# 1. Get a token (password = your DEV_LOGIN_PASSWORD; .env.example default shown). Requires jq.
+TOKEN=$(curl -s http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "rep-1", "password": "change-me-locally-only"}' | jq -r .access_token)
+
+# 2. Trigger a workflow
+curl -X POST http://localhost:8000/workflows/run \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"lead_data": {"company_name": "Stripe"}, "workflow_type": "sales_ops"}'
+```
+
+Or use the demo script — it mints its own tokens and auto-approves the proposal.
+It runs on the **host** (not in the container), so install the package first:
+
+```bash
+pip install -e .                        # once — pulls httpx + script deps
+export DEV_LOGIN_PASSWORD=change-me-locally-only   # match your .env
 python scripts/run_demo.py "Stripe" approve
 ```
 
@@ -342,6 +357,8 @@ curl http://localhost:8000/health
 ```
 
 Then open **http://localhost:8501** and watch the run land in `/console/runs`. 🎉
+
+> Hit a snag? See **[docs/troubleshooting.md](docs/troubleshooting.md)** — it covers 401s, port conflicts, slow startup, and other common first-run issues.
 
 <details>
 <summary><b>🔒 Local-first mode (privacy / air-gapped with Ollama)</b></summary>
@@ -384,16 +401,22 @@ All configuration is environment-based and loaded through Pydantic Settings ([fo
 
 > Optional extras gate heavier dependencies: `[ollama]`, `[anthropic]`, `[otel]`, `[multimodal]`, `[events]`, `[events-kafka]`. Install with e.g. `pip install 'forgeflow[otel,multimodal]'`.
 
+> 📖 **Full reference:** every environment variable with its default is documented in **[docs/configuration.md](docs/configuration.md)**.
+
 ---
 
 ## 📚 Usage Examples
+
+> Every example assumes a `$TOKEN` from the [login step above](#3-run-the-demo).
+> Roles enforce separation of duties: `sales_rep` **executes** workflows,
+> `manager` **approves** them (see [RBAC policies](forgeflow/rbac/policies.py)).
 
 ### Run a workflow synchronously
 
 ```bash
 curl -X POST http://localhost:8000/workflows/run \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -H "X-Role: sales_rep" \
   -d '{
         "lead_data": {"company_name": "Acme Corp", "industry": "fintech"},
         "workflow_type": "sales_ops"
@@ -404,26 +427,35 @@ curl -X POST http://localhost:8000/workflows/run \
 
 ```bash
 curl -N -X POST http://localhost:8000/workflows/stream \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"lead_data": {"company_name": "Stripe"}, "workflow_type": "sales_ops"}'
 ```
 
 ### Approve a paused proposal (human-in-the-loop)
 
-```bash
-# 1. See what's waiting
-curl http://localhost:8000/approvals/pending
+Approvals require the **`manager`** role, so mint a manager token first:
 
-# 2. Approve (or /reject) — the workflow resumes from the checkpoint
+```bash
+MGR=$(curl -s http://localhost:8000/auth/login -H "Content-Type: application/json" \
+  -d '{"user_id": "manager-1", "password": "change-me-locally-only"}' | jq -r .access_token)
+
+# 1. See what's waiting
+curl http://localhost:8000/approvals/pending -H "Authorization: Bearer $MGR"
+
+# 2. Approve (or /reject) — the workflow resumes from the checkpoint.
+#    Body fields: {"note": "..."} for approve, {"reason": "..."} for reject.
 curl -X POST http://localhost:8000/approvals/<token>/approve \
+  -H "Authorization: Bearer $MGR" \
   -H "Content-Type: application/json" \
-  -d '{"approver": "manager@acme.com", "comment": "Good fit, proceed"}'
+  -d '{"note": "Good fit, proceed"}'
 ```
 
 ### Dry-run a template workflow (no side effects)
 
 ```bash
 curl -X POST http://localhost:8000/workflows/run \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"lead_data": {"ticket": "Login broken"}, "workflow_type": "support_ops", "dry_run": true}'
 ```
@@ -431,13 +463,15 @@ curl -X POST http://localhost:8000/workflows/run \
 ### Search semantic memory
 
 ```bash
-curl "http://localhost:8000/memory/search?q=enterprise%20fintech%20leads&limit=5"
+curl "http://localhost:8000/memory/search?q=enterprise%20fintech%20leads&limit=5" \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ### Validate a custom workflow template
 
 ```bash
-python scripts/marketplace.py validate templates/community/my_workflow/
+# Pass the manifest file (not the directory). See templates/community/lead_triage/ for a working example.
+python scripts/marketplace.py validate templates/community/lead_triage/manifest.yaml
 ```
 
 ---
@@ -459,11 +493,13 @@ Connectors are real (non-mock) integrations exposed to agents as MCP tools. All 
 
 The MCP server mounts **14 tool routers** (search, CRM, email, data, Slack, + the 8 connectors above, plus multi-modal) — see [forgeflow/mcp/server/main.py](forgeflow/mcp/server/main.py).
 
+> 🔌 **Setup:** each connector's environment variables and how to obtain the credentials are in **[docs/connectors.md](docs/connectors.md)**.
+
 ---
 
 ## 🔐 API Reference
 
-Interactive OpenAPI docs live at **http://localhost:8000/docs**. Core endpoints:
+Interactive OpenAPI docs live at **http://localhost:8000/docs**. For a written reference with authentication requirements, per-role access, and error semantics, see **[docs/api-reference.md](docs/api-reference.md)**. Core endpoints:
 
 <details open>
 <summary><b>Workflows</b></summary>
@@ -519,13 +555,17 @@ GET   /workspaces/                 List tenants
 POST  /workspaces/                 Create a tenant
 GET   /workspaces/{slug}
 
-POST  /auth/login                  Issue a JWT (demo path, gate behind DEV_LOGIN_ENABLED)
-POST  /auth/introspect             Decode + validate a JWT
-POST  /auth/logout
+POST  /auth/login                  Issue access + refresh tokens (dev path; gate behind DEV_LOGIN_ENABLED)
+POST  /auth/refresh                Rotate refresh token → new access + refresh (reuse-detecting)
+POST  /auth/logout                 Revoke the access jti + the refresh-token family
+POST  /auth/introspect             Decode + validate an access JWT
+POST  /auth/mfa/enroll             Begin TOTP MFA enrollment (authenticated)
+POST  /auth/mfa/verify             Confirm + enable TOTP MFA (authenticated)
+POST  /auth/oidc/exchange          Exchange an external IdP id_token for local tokens
 ```
 </details>
 
-**Authentication.** Requests carry a bearer JWT (`Authorization: Bearer <token>`). The middleware maps role → permissions ([forgeflow/middleware/auth.py](forgeflow/middleware/auth.py)). For local development, `/auth/login` issues a token when `DEV_LOGIN_ENABLED=true`; in production, disable it and front the API with an OIDC IdP. A legacy `X-Role` header is accepted for migration.
+**Authentication.** Every non-public route requires a bearer JWT (`Authorization: Bearer <token>`) — there is **no header-based fallback**; unauthenticated requests fail closed with `401`. The middleware maps role → permissions ([forgeflow/middleware/auth.py](forgeflow/middleware/auth.py)). For local development, `/auth/login` issues an **access + refresh** token pair when `DEV_LOGIN_ENABLED=true` (rotate via `/auth/refresh`). In production, disable dev login and front the API with an OIDC IdP via `/auth/oidc/exchange`. TOTP MFA is available via `/auth/mfa/*`.
 
 **Errors.** Standard HTTP semantics — `401` (no/invalid token), `403` (insufficient role), `422` (validation), `429` (rate-limited), `5xx` (upstream/LLM failure surfaced after retries + circuit breaker).
 
@@ -550,7 +590,9 @@ ForgeFlow ships a documented threat model and the controls that close each findi
 - Use a secrets manager (AWS Parameter Store, GCP Secret Manager, Vault) — `.env` is for local only.
 - The SPA authenticates per-user via `/auth/login`; nginx no longer injects a shared admin secret.
 
-**Reporting a vulnerability.** Please **do not** open a public issue for security reports. Email the maintainer or use GitHub's private security advisory flow; see [SECURITY_AUDIT.md](SECURITY_AUDIT.md) for the disclosure process.
+> **Full auth model** — tokens, refresh rotation + reuse detection, TOTP MFA, OIDC SSO, and the RBAC matrix — is documented in **[docs/auth.md](docs/auth.md)**.
+
+**Reporting a vulnerability.** Please **do not** open a public issue for security reports. See **[SECURITY.md](SECURITY.md)** for the private disclosure process; [SECURITY_AUDIT.md](SECURITY_AUDIT.md) documents the threat model and prior findings.
 
 ---
 
@@ -558,7 +600,7 @@ ForgeFlow ships a documented threat model and the controls that close each findi
 
 | Concern | Approach |
 |---|---|
-| **Horizontal scaling** | The API is stateless — workers share one PostgreSQL checkpointer, so any worker resumes any `thread_id`. Scale with `docker compose up --scale api=4` or a Kubernetes HPA (api 2→10, mcp 1→5). |
+| **Horizontal scaling** | The API is stateless — workers share one PostgreSQL checkpointer, so any worker resumes any `thread_id`. Scale out behind a load balancer or a Kubernetes HPA (api 2→10, mcp 1→5). Note: `docker compose --scale api=N` requires removing the static `8000:8000` port mapping first, since a fixed host port can't bind N times. |
 | **Memory at scale** | `ivfflat` cosine index works well for <1M vectors; switch to **HNSW** for higher recall at scale. |
 | **MCP transport** | Defaults to `streamable-http`; co-located deployments can use `stdio` for lower latency. |
 | **Cost control** | `BudgetGuard` blocks an LLM call before projected spend exceeds `BUDGET_LIMIT_USD`; cost is tracked per token, per agent, per workflow. |
@@ -566,6 +608,11 @@ ForgeFlow ships a documented threat model and the controls that close each findi
 | **Resource baseline** | A full local stack (Postgres + MCP + API + frontend) runs comfortably on ~4 GB RAM / 2 vCPU for evaluation. |
 
 ### Evaluation results (simulation)
+
+> ⚠️ **Illustrative only — not a benchmark.** These figures come from an LLM
+> judge over 20 synthetic test cases and exist to demonstrate the evaluation
+> harness ([scripts/run_eval.py](scripts/run_eval.py)), not to claim production
+> accuracy. Re-generate them yourself before citing.
 
 | Metric | Score | Notes |
 |---|---|---|
@@ -592,6 +639,8 @@ ForgeFlow ships a documented threat model and the controls that close each findi
 | **Fly.io** | [fly/](fly/) · [scripts/deploy_fly.sh](scripts/deploy_fly.sh) | 3 apps + managed Postgres + 6PN networking |
 | **Air-gapped** | [docs/deployment/AIRGAPPED.md](docs/deployment/AIRGAPPED.md) · [scripts/build_offline_bundle.sh](scripts/build_offline_bundle.sh) | Offline bundle builder |
 
+> **Backup & disaster recovery** — Postgres is the single source of truth; see **[docs/operations/backup-dr.md](docs/operations/backup-dr.md)** for backup, restore, RPO/RTO, and DR-runbook guidance.
+
 ---
 
 ## 👩‍💻 Developer Guide
@@ -615,6 +664,8 @@ uvicorn forgeflow.api.main:app --reload
 # Run the React console (Vite dev server, HMR, proxies /api → :8000)
 cd frontend && npm install && npm run dev   # → http://localhost:5173
 ```
+
+> **VS Code Dev Containers** — "Reopen in Container" uses [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json) to give you Python 3.11 + Node + the `[dev]` deps preinstalled. Services still come up with `docker compose up`.
 
 ### Extension points
 
@@ -655,9 +706,9 @@ forgeflow/
 └── notifications/    # Slack HITL cards
 
 frontend/             # React 19 + Vite SPA (13 console views + landing + architecture)
-tests/                # unit/ + integration/ (306 tests)
+tests/                # unit/ + integration/ (344 tests)
 scripts/              # seed_db · run_demo · run_eval · validate_hubspot · deploy_fly · marketplace
-alembic/              # 5 migrations (schema · pgvector · RBAC · escalation · multi-tenant)
+alembic/              # 9 migrations (schema · pgvector · RBAC · escalation · multi-tenant · auth hardening)
 k8s/ · helm/ · terraform/ · fly/   # Deployment targets
 templates/            # Built-in + community workflow templates
 docs/                 # Production runbook · air-gapped guide · images

@@ -1,0 +1,35 @@
+{
+  "name": "ForgeFlow",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "lts" },
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
+  // API, MCP, console, Postgres.
+  "forwardPorts": [8000, 8001, 8501, 5432],
+  "portsAttributes": {
+    "8000": { "label": "API" },
+    "8001": { "label": "MCP" },
+    "8501": { "label": "Console" },
+    "5432": { "label": "Postgres" }
+  },
+  // Install Python dev deps + frontend deps so the toolchain is ready.
+  // Services (Postgres/MCP/API) still come up via `docker compose up`.
+  "postCreateCommand": "pip install -e '.[dev]' && (cd frontend && npm install)",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "ms-azuretools.vscode-docker",
+        "dbaeumer.vscode-eslint",
+        "ms-playwright.playwright"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "editor.formatOnSave": true
+      }
+    }
+  },
+  "remoteUser": "vscode"
+}

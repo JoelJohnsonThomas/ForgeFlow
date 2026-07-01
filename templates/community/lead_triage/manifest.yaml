@@ -1,0 +1,31 @@
+name: lead_triage
+version: "1.0.0"
+description: >-
+  A lightweight sales_ops variant that qualifies and scores an inbound lead
+  without drafting a full proposal — useful for high-volume triage where a human
+  only wants a go/no-go signal and a short rationale. Runs the researcher +
+  analyzer, then stops at approval.
+domain: sales_ops
+author: community
+homepage: https://github.com/JoelJohnsonThomas/forgeflow
+license: Apache-2.0
+tags:
+  - sales
+  - qualification
+  - triage
+  - example
+# Stages mirror the sales_ops pipeline; a triage run typically halts at `approve`.
+stages:
+  - qualify
+  - research
+  - analyze
+  - approve
+input_schema:
+  company_name: { type: string, required: true }
+  industry: { type: string, required: false }
+  source: { type: string, required: false, enum: [inbound_form, event, referral, cold] }
+  notes: { type: string, required: false }
+requires_connectors: []
+# Optional connectors:
+#   - hubspot     # write the qualification result back to the CRM
+requires_extras: []

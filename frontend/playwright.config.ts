@@ -15,6 +15,10 @@ export default defineConfig({
   // TestRelic reads TESTRELIC_API_KEY from the environment to upload the timeline.
   reporter: [
     ['list'],
+    // Source snippets + stack traces are intentionally OFF so no private repo
+    // source is uploaded to the external TestRelic service — the navigation
+    // timeline + network stats still upload. Flip these to true only if you
+    // accept shipping code/stack-traces off-box (and run it from a trusted env).
     ['@testrelic/playwright-analytics', {
       outputPath: './test-results/analytics-timeline.json',
       includeStackTrace: false,
@@ -41,4 +45,4 @@ export default defineConfig({
     timeout: 120_000,
     reuseExistingServer: !process.env.CI,
   },
-}
+})
