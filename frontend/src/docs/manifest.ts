@@ -21,6 +21,7 @@ export const DOCS: DocEntry[] = [
   { slug: 'tutorials-ollama', file: 'tutorials/02-run-offline-with-ollama.md', title: 'Run offline with Ollama', group: 'Getting started', summary: 'Execute workflows with a local LLM.' },
   { slug: 'tutorials-streaming', file: 'tutorials/03-streaming-and-debugging.md', title: 'Stream & debug a run', group: 'Getting started', summary: 'SSE, per-agent traces, failure modes.' },
   { slug: 'tutorials-memory', file: 'tutorials/04-semantic-memory.md', title: 'Semantic memory', group: 'Getting started', summary: 'Store and recall context with pgvector.' },
+  { slug: 'tutorials-custom-tool', file: 'tutorials/05-custom-mcp-tool.md', title: 'Author a custom tool', group: 'Getting started', summary: 'Add an MCP tool that agents pick up automatically.' },
   { slug: 'faq', file: 'faq.md', title: 'FAQ', group: 'Getting started', summary: 'Quick answers; what is and isn\'t implemented.' },
   { slug: 'glossary', file: 'glossary.md', title: 'Glossary', group: 'Getting started', summary: 'Every term, defined.' },
   { slug: 'troubleshooting', file: 'troubleshooting.md', title: 'Troubleshooting', group: 'Getting started', summary: 'Common first-run failures and fixes.' },

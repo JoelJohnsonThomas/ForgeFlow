@@ -10,6 +10,7 @@ here is run against the real API and has been kept in sync with the codebase.
 | 2 | [Run fully offline with Ollama](02-run-offline-with-ollama.md) | Execute workflows with a local LLM — no OpenAI key, no egress | ~15 min |
 | 3 | [Stream & debug a run](03-streaming-and-debugging.md) | Watch agent reasoning over SSE, read per-agent traces, and diagnose failures | ~10 min |
 | 4 | [Semantic memory](04-semantic-memory.md) | Store and recall context with pgvector | ~10 min |
+| 5 | [Author a custom tool](05-custom-mcp-tool.md) | Add a tool to the MCP server and have agents pick it up | ~20 min |
 
 ## Before you start
 
