@@ -14,6 +14,15 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
+      // FastAPI's Swagger UI (served at /api/docs) fetches the spec from the
+      // root-absolute /openapi.json. In prod nginx rewrites that to
+      // /api/openapi.json; in dev we proxy it straight through so the API
+      // reference renders instead of parsing the SPA's index.html.
+      // (We do NOT proxy /docs — that's the in-app documentation SPA route.)
+      '/openapi.json': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
     },
   },
 })
