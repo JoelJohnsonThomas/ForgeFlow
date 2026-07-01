@@ -68,3 +68,5 @@ alembic/versions/__pycache__/
 *.p12
 secrets/
 Design/
+# TestRelic test artifacts
+frontend/test-results/artifacts/

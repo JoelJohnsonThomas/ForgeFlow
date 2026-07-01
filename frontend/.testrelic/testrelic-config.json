@@ -1,0 +1,10 @@
+{
+  "cloud": {
+    "apiKey": "$TESTRELIC_API_KEY",
+    "endpoint": "https://platform.testrelic.ai/api/v1",
+    "upload": "both"
+  },
+  "testrelic-repo": {
+    "name": "ForgeFlow"
+  }
+}
