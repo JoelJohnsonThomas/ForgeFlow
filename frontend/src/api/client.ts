@@ -6,6 +6,11 @@
 
 const BASE = '/api'
 const TOKEN_KEY = 'forgeflow.jwt'
+const USER_KEY = 'forgeflow.user'
+const ROLE_KEY = 'forgeflow.role'
+
+/** Fired on window whenever the stored session changes (sign-in/out, 401). */
+export const AUTH_CHANGED_EVENT = 'ff-auth-changed'
 
 export class ApiError extends Error {
   status: number
@@ -23,18 +28,33 @@ export class ApiError extends Error {
 // request. Migrate to HttpOnly+Secure cookies + CSRF token once a real
 // session backend lands.
 
+export type Session = { userId: string; role: string }
+
 export function setToken(token: string | null): void {
   if (typeof window === 'undefined') return
   if (token) {
     window.sessionStorage.setItem(TOKEN_KEY, token)
   } else {
     window.sessionStorage.removeItem(TOKEN_KEY)
+    window.sessionStorage.removeItem(USER_KEY)
+    window.sessionStorage.removeItem(ROLE_KEY)
   }
+  window.dispatchEvent(new Event(AUTH_CHANGED_EVENT))
 }
 
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null
   return window.sessionStorage.getItem(TOKEN_KEY)
+}
+
+/** Who is signed in (display only — authorization is enforced server-side). */
+export function getSession(): Session | null {
+  if (typeof window === 'undefined') return null
+  if (!window.sessionStorage.getItem(TOKEN_KEY)) return null
+  return {
+    userId: window.sessionStorage.getItem(USER_KEY) ?? 'unknown',
+    role: window.sessionStorage.getItem(ROLE_KEY) ?? 'unknown',
+  }
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -62,6 +82,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export type LoginPayload = {
   user_id: string
   password: string
+  mfa_code?: string
   workspace_id?: string
   ttl_hours?: number
 }
@@ -77,6 +98,8 @@ export async function login(payload: LoginPayload): Promise<{ access_token: stri
     throw new ApiError(res.status, `${res.status} ${res.statusText}: ${body.slice(0, 200)}`)
   }
   const data = (await res.json()) as { access_token: string; role: string }
+  window.sessionStorage.setItem(USER_KEY, payload.user_id)
+  window.sessionStorage.setItem(ROLE_KEY, data.role)
   setToken(data.access_token)
   return data
 }
@@ -207,9 +230,19 @@ export type CostByWorkflowRow = {
 export type TopRun = {
   run_id: string
   workflow_type: string
-  total_cost_usd: number
-  total_tokens: number
+  total_cost_usd: number | null
+  total_tokens: number | null
   created_at: string | null
+}
+
+// Raw per-day rows as the API returns them (metrics_store groups by date).
+type RawCostByAgent = { agent: string | null; date?: string; total_cost_usd?: number | null; run_count?: number }
+type RawCostByWorkflow = {
+  workflow_type: string | null
+  date?: string
+  total_cost_usd?: number | null
+  total_tokens?: number | null
+  run_count?: number
 }
 
 // ---- Endpoints ------------------------------------------------------------
@@ -219,9 +252,34 @@ export const api = {
   metricsSummary: () => request<MetricsSummary>('/metrics/'),
   evaluationSummary: () => request<EvaluationSummary>('/metrics/evaluation'),
   recentRuns: (limit = 20) => request<RecentRun[]>(`/metrics/runs?limit=${limit}`),
-  costByAgent: (days = 7) => request<CostByAgentRow[]>(`/metrics/cost?days=${days}`),
-  costByWorkflow: (days = 7) =>
-    request<CostByWorkflowRow[]>(`/metrics/cost/by_workflow_type?days=${days}`),
+  // The API returns one row per (agent|workflow, day); the console shows
+  // window totals, so aggregate here and map run_count/total_cost_usd onto
+  // the row shapes the views render.
+  costByAgent: async (days = 7): Promise<CostByAgentRow[]> => {
+    const rows = await request<RawCostByAgent[]>(`/metrics/cost?days=${days}`)
+    const acc = new Map<string, CostByAgentRow>()
+    for (const r of rows) {
+      const agent = r.agent ?? 'unknown'
+      const cur = acc.get(agent) ?? { agent, total_cost: 0, total_tokens: 0, runs: 0 }
+      cur.total_cost += Number(r.total_cost_usd ?? 0)
+      cur.runs += Number(r.run_count ?? 0)
+      acc.set(agent, cur)
+    }
+    return [...acc.values()].sort((a, b) => b.total_cost - a.total_cost)
+  },
+  costByWorkflow: async (days = 7): Promise<CostByWorkflowRow[]> => {
+    const rows = await request<RawCostByWorkflow[]>(`/metrics/cost/by_workflow_type?days=${days}`)
+    const acc = new Map<string, CostByWorkflowRow>()
+    for (const r of rows) {
+      const wf = r.workflow_type ?? 'unknown'
+      const cur = acc.get(wf) ?? { workflow_type: wf, total_cost: 0, total_tokens: 0, runs: 0 }
+      cur.total_cost += Number(r.total_cost_usd ?? 0)
+      cur.total_tokens += Number(r.total_tokens ?? 0)
+      cur.runs += Number(r.run_count ?? 0)
+      acc.set(wf, cur)
+    }
+    return [...acc.values()].sort((a, b) => b.total_cost - a.total_cost)
+  },
   topRuns: (days = 7, limit = 10) =>
     request<TopRun[]>(`/metrics/cost/top_runs?days=${days}&limit=${limit}`),
   approvalsPending: async () => {

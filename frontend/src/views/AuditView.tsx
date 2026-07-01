@@ -15,9 +15,15 @@ export function AuditView() {
             <h1>Audit log</h1>
             <p className="sub">
               Immutable · partitioned by tenant + day ·{' '}
-              {stats.data ? `${stats.data.total.toLocaleString()} entries (${stats.data.window_days}d)` : '—'}
+              {/* /audit/stats degrades to {error} on a query failure — never crash on it. */}
+              {stats.data?.total != null
+                ? `${stats.data.total.toLocaleString()} entries (${stats.data.window_days}d)`
+                : '—'}
               {stats.data?.denied != null && ` · ${stats.data.denied} denied`}
               {stats.data?.errors != null && ` · ${stats.data.errors} errors`}
+              {stats.data?.error && (
+                <span style={{ color: 'var(--red-4)' }}> · stats unavailable: {stats.data.error.slice(0, 80)}</span>
+              )}
             </p>
           </div>
           <div className="actions">
@@ -40,7 +46,7 @@ export function AuditView() {
             <div className="actions">
               <span className="mono">limit=50</span>
               <span style={{ color: 'var(--fg-faint)' }}>·</span>
-              <span>{search.data ? `${search.data.items.length} of ${search.data.total}` : '—'}</span>
+              <span>{search.data?.items ? `${search.data.items.length} of ${search.data.total}` : '—'}</span>
               {search.data?.error && (
                 <span style={{ color: 'var(--red-4)' }}>· {search.data.error.slice(0, 80)}</span>
               )}
@@ -68,7 +74,7 @@ export function AuditView() {
             {search.isLoading && (
               <div style={{ padding: 24, textAlign: 'center', color: 'var(--fg-muted)' }}>loading…</div>
             )}
-            {search.data?.items.length === 0 && !search.isLoading && (
+            {search.data?.items?.length === 0 && !search.isLoading && (
               <div style={{ padding: 24, textAlign: 'center', color: 'var(--fg-muted)' }}>
                 No entries match.
               </div>

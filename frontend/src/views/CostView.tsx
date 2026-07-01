@@ -423,8 +423,8 @@ function TopCostDrivers() {
                 <tr key={r.run_id}>
                   <td><span className="id">{r.run_id.slice(0, 8)}</span></td>
                   <td>{r.workflow_type}</td>
-                  <td className="num">{r.total_tokens.toLocaleString()}</td>
-                  <td className="num">${r.total_cost_usd.toFixed(3)}</td>
+                  <td className="num">{(r.total_tokens ?? 0).toLocaleString()}</td>
+                  <td className="num">${Number(r.total_cost_usd ?? 0).toFixed(3)}</td>
                   <td className="num text-mono text-muted">
                     {r.created_at ? new Date(r.created_at).toLocaleString() : '—'}
                   </td>

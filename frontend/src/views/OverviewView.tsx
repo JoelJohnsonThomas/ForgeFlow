@@ -333,8 +333,8 @@ function RecentRunsTable() {
                 </td>
                 <td>{r.workflow_type}</td>
                 <td>{statusBadge(r.status)}</td>
-                <td className="num">${r.total_cost_usd.toFixed(3)}</td>
-                <td className="num">{r.total_tokens.toLocaleString()}</td>
+                <td className="num">${Number(r.total_cost_usd ?? 0).toFixed(3)}</td>
+                <td className="num">{(r.total_tokens ?? 0).toLocaleString()}</td>
                 <td className="num text-mono text-muted">{relativeTime(r.created_at)}</td>
               </tr>
             ))}

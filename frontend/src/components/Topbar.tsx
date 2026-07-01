@@ -1,5 +1,6 @@
 import { useMatchRoute } from '@tanstack/react-router'
 import { IconBell, IconChevronDown, IconHelp, IconSearch } from './icons'
+import { AuthControls } from './AuthControls'
 
 // Map console routes → breadcrumb segments. The last entry is the
 // "current page" (rendered with .cur styling). Keeps crumbs honest
@@ -85,7 +86,7 @@ export function Topbar() {
         >
           <IconHelp />
         </a>
-        <span className="avatar" title="Signed in · session JWT" aria-label="Signed in via session JWT">JJ</span>
+        <AuthControls />
       </div>
     </header>
   )

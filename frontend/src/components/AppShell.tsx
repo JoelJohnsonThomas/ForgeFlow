@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { Topbar } from './Topbar'
+import { AuthBanner } from './AuthControls'
 import { Sidebar, type ViewId } from './Sidebar'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
@@ -56,7 +57,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         active={active}
         onSelect={(id) => navigate({ to: VIEW_PATHS[id] })}
       />
-      <main className="main" id="main-content" tabIndex={-1}>{children}</main>
+      <main className="main" id="main-content" tabIndex={-1}>
+        <AuthBanner />
+        {children}
+      </main>
     </div>
   )
 }
