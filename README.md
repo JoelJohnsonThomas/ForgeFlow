@@ -171,6 +171,8 @@ Most "agent demos" collapse the moment they meet production reality: there's no 
 
 ## 🏗️ Architecture
 
+> 📐 **Deep dive:** [docs/architecture.md](docs/architecture.md) has the full component design, API request lifecycle, workflow execution, agent, and auth flows as **Mermaid diagrams**; [docs/database.md](docs/database.md) has the schema + ER diagram.
+
 ForgeFlow is a **hub-and-spoke** system: a FastAPI control plane drives a checkpointed LangGraph state machine, agents reach the outside world only through an MCP tool server, and a React console operates the whole thing.
 
 ```mermaid
