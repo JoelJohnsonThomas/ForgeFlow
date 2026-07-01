@@ -47,7 +47,7 @@ function ArchTopbar() {
           </ul>
         </div>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-muted)' }}>
-          v3.4.1 · 2026.05.21
+          v0.1.0 · pre-release
         </div>
       </div>
     </header>
@@ -801,7 +801,7 @@ function Section07() {
       <div className="canvas">
         <div className="meta-strip">
           <span>prod-us-east-1 · k8s 1.30 · 6 nodes · 128 pods</span>
-          <span>Helm chart · forgeflow-3.4.1</span>
+          <span>Helm chart · forgeflow-0.1.0</span>
         </div>
         <div className="k8s-nodes" role="img" aria-label="Kubernetes deployment topology: six worker nodes each running a mix of API, supervisor, worker, MCP, Postgres, and platform pods, with the horizontal pod autoscaler scaling API, researcher, and executor pods on p95 latency.">
           {K8S_NODES.map((n) => (

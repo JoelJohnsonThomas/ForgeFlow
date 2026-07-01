@@ -50,7 +50,7 @@ function LandingNav() {
         </div>
         <div className="right">
           <span className="nav-pill">
-            <span className="tag">v3.4</span> Checkpointed runs are now resumable across pods
+            <span className="tag">NEW</span> Checkpointed runs are now resumable across pods
             <span className="arrow">→</span>
           </span>
           <a href={CONSOLE_HREF} className="btn ghost">
@@ -759,7 +759,7 @@ function Docs() {
   return (
     <section id="docs">
       <div className="wrap">
-        <div className="section-eyebrow">Documentation · v3.4.1</div>
+        <div className="section-eyebrow">Documentation · v0.1.0 · pre-release</div>
         <h2>Everything to ship, operate, and extend ForgeFlow.</h2>
         <p className="sub">
           Quickstart in three commands, a full interactive REST reference at <span className="mono">/api/docs</span>,
@@ -827,9 +827,12 @@ $ cp .env.example .env  # set OPENAI_API_KEY
 $ docker compose --profile migration run --rm migrate
 $ docker compose up -d
 
-# 3. trigger your first workflow
-$ curl -X POST http://localhost:8000/api/workflows/run \\
+# 3. get a dev token, then trigger your first workflow
+$ TOKEN=$(curl -s http://localhost:8000/auth/login \\
     -H "Content-Type: application/json" \\
+    -d '{"user_id":"rep-1","password":"change-me-locally-only"}' | jq -r .access_token)
+$ curl -X POST http://localhost:8000/workflows/run \\
+    -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \\
     -d '{"workflow_type":"sales_ops","lead_data":{"company_name":"Stripe"}}'`
 
   return (
@@ -883,12 +886,14 @@ type ChangelogEntry = {
   title: string
 }
 
+// Mirrors the repo CHANGELOG.md (Keep a Changelog). The project is pre-1.0;
+// the top entries are unreleased work on `main`, then the 0.1.0 release.
 const CHANGELOG: ChangelogEntry[] = [
-  { version: 'v3.4.1', date: '2026-05-26', tag: 'release', title: 'React console + nginx replaces Streamlit dashboard' },
-  { version: 'v3.4.0', date: '2026-05-21', tag: 'release', title: 'Postgres checkpointing for resumable workflow runs' },
-  { version: 'v3.3.9', date: '2026-05-12', tag: 'security', title: 'Per-user JWT auth for SPA → API (service token removed)' },
-  { version: 'v3.3.8', date: '2026-05-04', tag: 'fix', title: 'PII redactor: phone regex no longer eats card digits' },
-  { version: 'v3.3.7', date: '2026-04-28', tag: 'release', title: 'Air-gapped deployment against a local Ollama daemon' },
+  { version: 'unreleased', date: 'main', tag: 'security', title: 'Enterprise auth — Argon2id hashing, TOTP MFA, rotating refresh tokens, OIDC exchange' },
+  { version: 'unreleased', date: 'main', tag: 'security', title: 'Object-level authorization (IDOR fix) on GET /workflows/{id} and /trace' },
+  { version: 'unreleased', date: 'main', tag: 'fix', title: 'Execution timeout on /workflows/run returns 504 instead of pinning a worker' },
+  { version: 'unreleased', date: 'main', tag: 'release', title: 'React 19 console views code-split; initial bundle ~547 kB → ~364 kB' },
+  { version: 'v0.1.0', date: '2026', tag: 'release', title: 'Initial public release — supervisor multi-agent core, MCP, A2A, pgvector memory' },
 ]
 
 function tagBadge(tag: ChangelogEntry['tag']) {
@@ -919,12 +924,12 @@ function Changelog() {
           marginBottom: 14,
         }}
       >
-        WHAT'S NEW · LAST 30 DAYS
+        WHAT'S NEW · CHANGELOG
       </div>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {CHANGELOG.map((c, i) => (
           <div
-            key={c.version}
+            key={c.title}
             style={{
               display: 'grid',
               gridTemplateColumns: '70px 1fr auto',
@@ -944,7 +949,7 @@ function Changelog() {
         ))}
       </div>
       <a
-        href="https://github.com/JoelJohnsonThomas/forgeflow/releases"
+        href="https://github.com/JoelJohnsonThomas/forgeflow/blob/main/CHANGELOG.md"
         target="_blank"
         rel="noopener noreferrer"
         style={{ marginTop: 'auto', paddingTop: 14, fontSize: 12, color: 'var(--blue-4)', textDecoration: 'none' }}
@@ -1198,7 +1203,7 @@ function DeveloperReference() {
           DEVELOPER REFERENCE
         </span>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-muted)' }}>
-          v3.4.1 · OpenAPI 3.1 · Apache 2.0
+          v0.1.0 · OpenAPI 3.1 · Apache 2.0
         </span>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
@@ -1287,7 +1292,7 @@ $ docker compose up
 → api      :8000  ready
 → mcp      :8001  tools registered
 → postgres :5432  migrated · pgvector OK
-→ web      :5173  console ready`
+→ console  :8501  nginx · proxies /api → api:8000`
 
   return (
     <section>
@@ -1380,7 +1385,7 @@ function Footer() {
                 <span className="badge">Apache 2.0</span>
               </a>
               <a href={`${GITHUB_REPO}/releases`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                <span className="badge">v3.4.1</span>
+                <span className="badge">v0.1.0</span>
               </a>
               <a href="/api/health" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }} aria-label="Open the API health endpoint">
                 <span className="badge">

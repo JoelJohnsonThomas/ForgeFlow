@@ -357,25 +357,25 @@ function Positioning() {
 }
 
 const ROADMAP_COLS = [
-  { cls: '', tag: 'SHIPPING NOW', when: 'v3.4 · 2026 Q2', items: [
+  { cls: '', tag: 'SHIPPING NOW', when: 'v0.1 · current', items: [
     'Live console (current build) — runs, agents, approvals',
     'Air-gapped deploy against a local Ollama daemon',
     'Postgres checkpointing for resumable runs',
     'RBAC roles + scoped API tokens + audit log',
   ]},
-  { cls: 'q2', tag: 'NEXT', when: 'v3.5 · 2026 Q3', items: [
+  { cls: 'q2', tag: 'NEXT', when: 'v0.2 · planned', items: [
     'Workflow simulation mode (replay against historical traffic)',
     'Drag-and-drop graph editor (React Flow)',
     'Marketplace v2 — signed community templates',
     'Forge AI · failure root-cause assistant GA',
   ]},
-  { cls: 'q3', tag: 'DESIGNED', when: 'v4.0 · 2026 Q4', items: [
+  { cls: 'q3', tag: 'DESIGNED', when: 'v0.3 · designed', items: [
     'Natural-language workflow creation',
     'Autonomous workflow healing (auto-fallback tools)',
     'Self-improving orchestration (online supervisor)',
     'SDK · TypeScript + Go parity with Python',
   ]},
-  { cls: 'q4', tag: 'EXPLORING', when: 'v4.1+ · 2027 H1', items: [
+  { cls: 'q4', tag: 'EXPLORING', when: 'future · exploring', items: [
     'Agent collaboration visual replay (time-scrubbable)',
     'Semantic observability — search by intent',
     'AI governance center · model + tool allow-lists',
