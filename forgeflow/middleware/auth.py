@@ -32,7 +32,16 @@ logger = logging.getLogger(__name__)
 # Routes that bypass RBAC entirely. Kept short on purpose — every addition
 # here is a potential public-internet exposure.
 _OPEN_PATHS = {"/", "/health", "/openapi.json"}
-_OPEN_PREFIXES = ("/auth/login", "/auth/introspect", "/auth/logout")
+# Login-equivalent routes that establish a session and therefore can't require a
+# prior ForgeFlow token. /auth/mfa/* is intentionally NOT here — it requires an
+# authenticated session (see ROUTE_PERMISSION_MAP: manage:self).
+_OPEN_PREFIXES = (
+    "/auth/login",
+    "/auth/introspect",
+    "/auth/logout",
+    "/auth/refresh",
+    "/auth/oidc",
+)
 # /docs and /redoc are open ONLY when docs_enabled — handled inline so the
 # admin can flip the toggle without redeploying middleware code.
 

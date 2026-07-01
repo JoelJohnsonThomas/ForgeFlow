@@ -26,6 +26,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         "read:audit",
         "read:workspaces",
         "read:marketplace",
+        "manage:self",
     },
     "sales_rep": {
         "execute:workflows",
@@ -35,11 +36,13 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         "write:memory",
         "read:agents",
         "read:marketplace",
+        "manage:self",
     },
     "viewer": {
         "read:metrics",
         "read:workflows",
         "read:marketplace",
+        "manage:self",
     },
     "anonymous": {
         # Marketplace listing is intentionally public — discovery is the point.
@@ -58,6 +61,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
 # denies unmapped routes (fail-closed). When you add a new router, add its
 # entries here in the same commit.
 ROUTE_PERMISSION_MAP: dict[tuple[str, str], tuple[str, str]] = {
+    # --- auth: self-service MFA (authenticated; every real role manages own) ---
+    ("POST", "/auth/mfa"): ("manage", "self"),
     # --- workflows ---
     ("POST",   "/workflows/run"):                 ("execute", "workflows"),
     ("POST",   "/workflows/stream"):              ("execute", "workflows"),

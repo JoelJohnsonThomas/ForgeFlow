@@ -93,6 +93,25 @@ class Settings(BaseSettings):
         ),
     )
 
+    # --- Tokens (Increment 2 auth) ---
+    access_token_ttl_hours: int = Field(
+        1, ge=1, le=24, description="Access-token lifetime (short-lived JWT)."
+    )
+    refresh_token_ttl_days: int = Field(
+        30, ge=1, le=365, description="Refresh-token lifetime (rotating, revocable)."
+    )
+
+    # --- OIDC (enterprise SSO — verify an external IdP's id_token) ---
+    oidc_enabled: bool = Field(
+        False, description="Enable POST /auth/oidc/exchange (external IdP login)."
+    )
+    oidc_issuer: str = Field("", description="Expected 'iss' of the IdP id_token.")
+    oidc_audience: str = Field("", description="Expected 'aud' (this app's client id).")
+    oidc_jwks_url: str = Field("", description="IdP JWKS endpoint for RS256 verification.")
+    oidc_default_role: str = Field(
+        "viewer", description="Role assigned to auto-provisioned OIDC users."
+    )
+
     # --- API surface toggles ---
     docs_enabled: bool = Field(
         True,

@@ -68,6 +68,12 @@ async def lifespan(app: FastAPI):
     app.state.pool = await init_pool()
     logger.info("Database pool ready")
 
+    # Seed the demo users into the credential store so the local/dev password
+    # login keeps working after the Increment-2 auth overhaul. Prod (dev login
+    # off) skips this and relies on OIDC / externally-provisioned users.
+    if _startup_settings.dev_login_enabled:
+        await _seed_demo_users(app.state.pool, _startup_settings)
+
     # MCP tools (optional — agents degrade gracefully without them)
     mcp_tools = await get_mcp_tools()
     logger.info("MCP tools loaded: %d", len(mcp_tools))
@@ -130,6 +136,33 @@ async def lifespan(app: FastAPI):
     if getattr(app.state, "escalation_job", None):
         await app.state.escalation_job.stop()
     await close_pool()
+
+
+_DEMO_USERS = {
+    "admin": "admin",
+    "manager-1": "manager",
+    "rep-1": "sales_rep",
+    "viewer-1": "viewer",
+}
+
+
+async def _seed_demo_users(pool: Any, settings: Settings) -> None:
+    """Idempotently upsert the demo users with the dev password (Argon2-hashed).
+    No-op with a warning when DEV_LOGIN_PASSWORD is unset."""
+    from forgeflow.auth import passwords
+    from forgeflow.auth import users as user_store
+
+    password = settings.dev_login_password.get_secret_value()
+    if not password:
+        logger.warning("DEV_LOGIN_PASSWORD unset — skipping demo-user seeding")
+        return
+    password_hash = passwords.hash_password(password)
+    for username, role in _DEMO_USERS.items():
+        try:
+            await user_store.upsert_local_user(pool, username, password_hash, role)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("demo-user seed failed for %s: %s", username, exc)
+    logger.info("Seeded %d demo users into the credential store", len(_DEMO_USERS))
 
 
 async def _build_event_consumer(settings: Settings, dispatcher: EventDispatcher) -> Any:
