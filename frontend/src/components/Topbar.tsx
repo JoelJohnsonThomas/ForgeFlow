@@ -74,7 +74,7 @@ export function Topbar() {
         >
           <span className="dot live" /> live · /api/health
         </a>
-        <a href="/console/approvals" className="btn ghost icon-only" title="Pending approvals">
+        <a href="/console/approvals" className="btn ghost icon-only" title="Pending approvals" aria-label="Pending approvals">
           <IconBell />
         </a>
         <a
@@ -83,10 +83,11 @@ export function Topbar() {
           rel="noopener noreferrer"
           className="btn ghost icon-only"
           title="Production runbook + docs"
+          aria-label="Open the production runbook and docs"
         >
           <IconHelp />
         </a>
-        <span className="avatar" title="JoelJohnsonThomas (service token mode)">JJ</span>
+        <span className="avatar" title="Signed in · session JWT" aria-label="Signed in via session JWT">JJ</span>
       </div>
     </header>
   )

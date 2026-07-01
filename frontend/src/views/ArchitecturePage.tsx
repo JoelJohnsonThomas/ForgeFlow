@@ -1,8 +1,10 @@
 import { useEffect, useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import '../styles/architecture.css'
 
 export function ArchitecturePage() {
+  useDocumentTitle('Architecture — reference topology')
   useEffect(() => {
     document.body.classList.add('architecture')
     return () => document.body.classList.remove('architecture')
@@ -63,6 +65,23 @@ function PageHeader() {
           Kubernetes deploy. Use this as the reference architecture for security reviews, platform onboarding,
           and capacity planning.
         </p>
+        <p
+          role="note"
+          style={{
+            marginTop: 14,
+            padding: '8px 12px',
+            borderLeft: '2px solid var(--amber-4)',
+            background: 'var(--bg-inset)',
+            borderRadius: 6,
+            fontSize: 12.5,
+            color: 'var(--fg-secondary)',
+            maxWidth: '72ch',
+          }}
+        >
+          <b style={{ color: 'var(--amber-4)' }}>Reference architecture.</b> Figures, node counts, and latencies on
+          this page are illustrative — a target topology, not live telemetry from a running cluster. Multi-region
+          failover and the air-gapped enclave describe a deployment pattern, not a hosted service.
+        </p>
       </div>
       <div style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
         8 sections<br />
@@ -98,7 +117,7 @@ function Section01() {
               <LegendSwatch color="var(--amber-4)" label="interrupt" />
             </span>
           </div>
-          <svg viewBox="0 0 800 480" width="100%" height={480} className="diagram-grid">
+          <svg viewBox="0 0 800 480" width="100%" height={480} className="diagram-grid" role="img" aria-label="Supervisor orchestration: a hub-and-spoke StateGraph where one supervisor routes work to researcher, analyzer, and executor workers, with a human-approval interrupt before execution. State is checkpointed on every transition.">
             <defs>
               <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
                 <path d="M0,0 L10,5 L0,10 z" fill="var(--fg-muted)" />
@@ -236,7 +255,7 @@ function Section02() {
             <span>A2A registry · 14 cards · 38 capabilities</span>
             <span>JSON-RPC 2.0</span>
           </div>
-          <svg viewBox="0 0 520 420" width="100%" height={420} className="diagram-grid">
+          <svg viewBox="0 0 520 420" width="100%" height={420} className="diagram-grid" role="img" aria-label="Agent-to-agent communication: workers register capability cards with a central registry and exchange peer-to-peer messages over JSON-RPC 2.0, while the supervisor still owns workflow state and routing.">
             <g transform="translate(220 180)">
               <rect width="100" height="60" rx="10" className="node accent-purple" />
               <text x="50" y="20" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="9" fill="var(--purple-4)" letterSpacing="2">REGISTRY</text>
@@ -325,7 +344,7 @@ function Section03() {
           <span>FastMCP :8001 · 14 tools · 4 providers · 8,124 invocations/min</span>
           <span>streamable-HTTP</span>
         </div>
-        <svg viewBox="0 0 1280 360" width="100%" height={360} className="diagram-grid">
+        <svg viewBox="0 0 1280 360" width="100%" height={360} className="diagram-grid" role="img" aria-label="MCP tool topology: agents call tools through a single FastMCP server that fronts SaaS, data, and on-premise providers over a streamable-HTTP wire format, so providers can be swapped without redeploying agents.">
           <g fontFamily="var(--font-mono)" fontSize="10" fill="var(--fg-muted)" letterSpacing="2">
             <text x="20" y="36">AGENTS</text>
             <text x="500" y="36">MCP SERVER</text>
@@ -446,7 +465,7 @@ function Section04() {
             <span>memory · 1.4M vectors · 1536d · ns:sales/*</span>
             <span>UMAP projection</span>
           </div>
-          <svg viewBox="0 0 720 460" width="100%" height={460} className="diagram-grid">
+          <svg viewBox="0 0 720 460" width="100%" height={460} className="diagram-grid" role="img" aria-label="Semantic memory: embeddings stored in Postgres with pgvector, projected into clusters by namespace. A query returns the nearest namespace-scoped matches by cosine similarity.">
             <g opacity="0.12">
               <ellipse cx="200" cy="160" rx="140" ry="100" fill="var(--blue-4)" />
               <ellipse cx="510" cy="190" rx="130" ry="95" fill="var(--purple-4)" />
@@ -562,7 +581,7 @@ function Section05() {
             <span className="pill">execute</span><span className="arr">→</span>
             <span className="pill end">done</span>
           </div>
-          <svg viewBox="0 0 1200 200" width="100%" height={200} style={{ marginTop: 36 }}>
+          <svg viewBox="0 0 1200 200" width="100%" height={200} style={{ marginTop: 36 }} role="img" aria-label="Workflow state and checkpointing: a timeline of persisted checkpoints across a run, from qualify through routing, work, memory recall, and tool calls, pausing at a human-approval interrupt. Any pod can resume from the latest checkpoint.">
             <line x1="60" y1="100" x2="1140" y2="100" stroke="var(--border-default)" strokeWidth="1" />
             {CHECKPOINTS.map((c) => {
               const col = KIND_COLOR[c.kind]
@@ -614,7 +633,7 @@ function Section06() {
           <span>~1.8k events/s sustained · 12k peak · 30d retention</span>
           <span>SSE · Kafka · OTel</span>
         </div>
-        <svg viewBox="0 0 1280 280" width="100%" height={280} className="diagram-grid">
+        <svg viewBox="0 0 1280 280" width="100%" height={280} className="diagram-grid" role="img" aria-label="Event streaming and observability pipeline: producers emit events to Kafka topics, fanned out live over Redis Streams and server-sent events to the console, and exported through an OpenTelemetry collector to tracing, analytics, cold storage, and SIEM sinks.">
           <g transform="translate(40 80)">
             <rect width="160" height="120" rx="10" fill="var(--bg-canvas)" stroke="var(--border-default)" />
             <text x="14" y="20" fontFamily="var(--font-mono)" fontSize="9" fill="var(--blue-4)" letterSpacing="2">PRODUCERS</text>
@@ -784,7 +803,7 @@ function Section07() {
           <span>prod-us-east-1 · k8s 1.30 · 6 nodes · 128 pods</span>
           <span>Helm chart · forgeflow-3.4.1</span>
         </div>
-        <div className="k8s-nodes">
+        <div className="k8s-nodes" role="img" aria-label="Kubernetes deployment topology: six worker nodes each running a mix of API, supervisor, worker, MCP, Postgres, and platform pods, with the horizontal pod autoscaler scaling API, researcher, and executor pods on p95 latency.">
           {K8S_NODES.map((n) => (
             <div className="k8s-node" key={n.name}>
               <div className="hd">
@@ -824,7 +843,7 @@ function Section08() {
           <span>3 regions · 1 air-gapped enclave · cross-region p99 84ms</span>
           <span>RPO 5s · RTO 90s</span>
         </div>
-        <svg viewBox="0 0 1280 380" width="100%" height={380} className="diagram-grid">
+        <svg viewBox="0 0 1280 380" width="100%" height={380} className="diagram-grid" role="img" aria-label="Multi-region failover and air-gap: a primary region streams write-ahead-log changes to a warm read-only standby, while a fully air-gapped enclave runs independently with a local LLM and receives updates only via signed offline bundles.">
           <defs>
             <marker id="arrow-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
               <path d="M0,0 L10,5 L0,10 z" fill="var(--fg-muted)" />

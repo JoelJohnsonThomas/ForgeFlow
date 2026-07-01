@@ -4,12 +4,59 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0d0d12" />
+
+    <!-- Primary meta -->
+    <title>ForgeFlow — The operating system for production AI agents</title>
+    <meta
+      name="description"
+      content="ForgeFlow orchestrates teams of specialized AI agents with human-in-the-loop approvals, semantic memory, sub-second observability, and an immutable audit log. Self-hosted and open source under Apache 2.0."
+    />
+    <meta name="keywords" content="AI agents, agent orchestration, LangGraph, MCP, human-in-the-loop, LLM observability, AI workflows, self-hosted, open source" />
+    <link rel="canonical" href="https://forgeflow.app/" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ForgeFlow" />
+    <meta property="og:title" content="ForgeFlow — production AI agent orchestration" />
+    <meta
+      property="og:description"
+      content="Orchestrate teams of specialized AI agents with human-in-the-loop approvals, semantic memory, and an audit trail your security team signs off on. Apache 2.0."
+    />
+    <meta property="og:url" content="https://forgeflow.app/" />
+    <meta property="og:image" content="https://forgeflow.app/og-cover.png" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ForgeFlow — production AI agent orchestration" />
+    <meta
+      name="twitter:description"
+      content="Human-in-the-loop AI agent orchestration with semantic memory, live observability, and an immutable audit log. Self-hosted, Apache 2.0."
+    />
+    <meta name="twitter:image" content="https://forgeflow.app/og-cover.png" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <title>ForgeFlow Console</title>
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "ForgeFlow",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Docker, Kubernetes, Linux",
+        "description": "An operating system for production AI agents: multi-agent orchestration with human-in-the-loop approvals, semantic memory, live observability, and an immutable audit log.",
+        "license": "https://www.apache.org/licenses/LICENSE-2.0",
+        "url": "https://forgeflow.app/",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>ForgeFlow is a JavaScript application. Please enable JavaScript to use the console.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

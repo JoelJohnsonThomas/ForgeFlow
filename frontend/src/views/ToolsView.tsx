@@ -27,7 +27,10 @@ export function ToolsView() {
         <div className="row">
           <div>
             <h1>Tools · MCP</h1>
-            <p className="sub">{TOOLS.length} registered tools · served via FastMCP on :8001</p>
+            <p className="sub">
+              Reference list of the default MCP tool providers, served via FastMCP on <span className="mono">:8001</span>.
+              Availability depends on the credentials you configure — no live tool-catalog endpoint yet.
+            </p>
           </div>
         </div>
       </div>
@@ -52,7 +55,11 @@ export function ToolsView() {
                     <td className="mono">{t.name}</td>
                     <td style={{ color: 'var(--fg-secondary)' }}>{t.desc}</td>
                     <td>
-                      <span className="badge emerald">● ready</span>
+                      {/(env-gated|connector|Mock|swappable)/i.test(t.desc) ? (
+                        <span className="badge" title="Requires credentials / configuration">○ optional</span>
+                      ) : (
+                        <span className="badge emerald">● default</span>
+                      )}
                     </td>
                   </tr>
                 ))}

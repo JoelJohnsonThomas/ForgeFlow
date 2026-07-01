@@ -11,6 +11,7 @@ export function LiveRunsView() {
     <section className="view active" data-screen-label="Run · wf_8K42n">
       <RunHeader />
       <div className="page-body">
+        <DemoBanner />
         <KpiStrip />
         <div className="run-layout" style={{ marginTop: 16 }}>
           <div className="grid-stack">
@@ -27,6 +28,41 @@ export function LiveRunsView() {
         </div>
       </div>
     </section>
+  )
+}
+
+function DemoBanner() {
+  return (
+    <div
+      role="note"
+      style={{
+        marginBottom: 16,
+        padding: '10px 14px',
+        borderLeft: '2px solid var(--amber-4)',
+        background: 'var(--bg-inset)',
+        borderRadius: 6,
+        fontSize: 12.5,
+        color: 'var(--fg-secondary)',
+        lineHeight: 1.5,
+      }}
+    >
+      <span
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: 10,
+          letterSpacing: '.12em',
+          textTransform: 'uppercase',
+          color: 'var(--amber-4)',
+          marginRight: 8,
+        }}
+      >
+        Demo run
+      </span>
+      This screen shows a sample run (<span className="mono">wf_8K42n</span>) — the timeline, event stream, tool
+      trace, and approval card are illustrative. A live per-run streaming endpoint
+      (<span className="mono">/workflows/&#123;id&#125;/stream</span>) is planned; the run title above reflects your most
+      recent real run when one exists.
+    </div>
   )
 }
 

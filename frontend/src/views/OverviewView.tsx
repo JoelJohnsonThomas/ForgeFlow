@@ -8,7 +8,7 @@ export function OverviewView() {
         <div className="row">
           <div>
             <h1>Operations overview</h1>
-            <p className="sub">Acme · sales_ops · prod-us-east-1 · last 24h</p>
+            <p className="sub">Demo workspace · last 24h · KPIs are live from <span className="mono">/api/metrics</span></p>
           </div>
           <div className="actions">
             <button className="btn sm" disabled title="Time-window selector — wire to /metrics/* days param">
@@ -145,7 +145,7 @@ function RunsChart() {
         </div>
       </div>
       <div className="panel-body">
-        <svg viewBox="0 0 800 220" width="100%" height={220}>
+        <svg viewBox="0 0 800 220" width="100%" height={220} role="img" aria-label="Sample area chart of runs over the last 24 hours by status: completed, pending approval, and failed.">
           <g stroke="var(--border-subtle)" strokeDasharray="2 4" opacity="0.5">
             <line x1="0" y1="40" x2="800" y2="40" />
             <line x1="0" y1="100" x2="800" y2="100" />
@@ -229,12 +229,13 @@ function SpendByAgent() {
       <div className="panel-head">
         <div className="title">Spend by agent · 24h</div>
         <div className="actions">
-          <span>sample</span>
+          <span className="badge amber" style={{ fontSize: 10 }}>Sample data</span>
         </div>
       </div>
       <div className="panel-body">
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-          <svg viewBox="0 0 200 200" width={180} height={180} className="donut">
+          <svg viewBox="0 0 200 200" width={180} height={180} className="donut" role="img" aria-label="Sample donut chart of spend by agent: executor 36 percent, researcher 28 percent, analyzer 20 percent, supervisor 16 percent.">
+            <title>Sample spend-by-agent breakdown</title>
             <circle cx="100" cy="100" r="80" fill="none" strokeWidth={22} stroke="oklch(0.25 0.012 250)" />
             <circle cx="100" cy="100" r="80" fill="none" strokeWidth={22} stroke="var(--blue-4)" strokeDasharray="180 502" strokeDashoffset="0" />
             <circle cx="100" cy="100" r="80" fill="none" strokeWidth={22} stroke="var(--purple-4)" strokeDasharray="140 502" strokeDashoffset="-180" />
@@ -321,7 +322,7 @@ function RecentRunsTable() {
             {runs.length === 0 && !runsQ.isLoading && (
               <tr>
                 <td colSpan={6} style={{ textAlign: 'center', padding: 32, color: 'var(--fg-muted)' }}>
-                  No runs yet. POST to /workflows/run to kick one off.
+                  No runs yet. Trigger one with <code style={{ color: 'var(--blue-4)' }}>POST /api/workflows/run</code>, then it appears here.
                 </td>
               </tr>
             )}

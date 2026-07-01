@@ -60,7 +60,7 @@ export function EvaluationsView() {
               <div className="title">Score distribution · sample</div>
             </div>
             <div className="panel-body">
-              <svg viewBox="0 0 480 200" width="100%" height={200}>
+              <svg viewBox="0 0 480 200" width="100%" height={200} role="img" aria-label="Sample histogram of judge scores from 4.0 to 10, peaking around 8.5.">
                 {[2, 3, 5, 8, 14, 22, 38, 68, 110, 142, 118, 68].map((v, i, arr) => {
                   const max = Math.max(...arr)
                   const h = (v / max) * 160
@@ -113,7 +113,7 @@ function ForgeRootCause() {
       }}
     >
       <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--blue-4)', letterSpacing: '.12em', textTransform: 'uppercase' }}>
-        FORGE · ROOT CAUSE
+        FORGE · ROOT CAUSE · PREVIEW
       </span>
       <br />
       <span style={{ color: 'var(--fg-primary)' }}>42</span> hallucinations cluster on prompts where{' '}

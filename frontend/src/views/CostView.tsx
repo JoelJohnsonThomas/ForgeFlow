@@ -7,7 +7,10 @@ export function CostView() {
         <div className="row">
           <div>
             <h1>Cost &amp; spend</h1>
-            <p className="sub">Acme · all workflows · MTD $4,148.20 · budget $6,000 · forecast on track</p>
+            <p className="sub">
+              Demo workspace · the top KPIs, trend, and forecast are <b>sample data</b>; the “Live” panels below
+              pull real figures from <span className="mono">/api/metrics/cost</span>.
+            </p>
           </div>
           <div className="actions">
             <button className="btn sm" disabled title="Filter UI — selector not yet wired">Group by: agent ▾</button>
@@ -82,11 +85,12 @@ function SpendTrendPanel() {
       <div className="panel-head">
         <div className="title">Spend trend · 30d</div>
         <div className="actions">
+          <span className="badge amber" style={{ fontSize: 10 }}>Sample data</span>
           <span>by model</span>
         </div>
       </div>
       <div className="panel-body">
-        <svg viewBox="0 0 800 220" width="100%" height={220}>
+        <svg viewBox="0 0 800 220" width="100%" height={220} role="img" aria-label="Sample 30-day spend trend by model, trending upward, split between gpt-4o and claude.">
           <g stroke="var(--border-subtle)" strokeDasharray="2 4" opacity="0.5">
             <line x1="0" y1="40" x2="800" y2="40" />
             <line x1="0" y1="100" x2="800" y2="100" />
@@ -144,7 +148,7 @@ function ForecastPanel() {
       <div className="panel-head">
         <div className="title">AI cost forecast</div>
         <div className="actions">
-          <span>predicted by ForgeFlow</span>
+          <span className="badge amber" style={{ fontSize: 10 }}>Sample · preview</span>
         </div>
       </div>
       <div className="panel-body">
@@ -196,7 +200,7 @@ function ForgeSuggestion() {
       }}
     >
       <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--blue-4)', letterSpacing: '.12em', textTransform: 'uppercase' }}>
-        FORGE · SUGGESTION
+        FORGE · SUGGESTION · PREVIEW
       </span>
       <br />
       Switching <span style={{ color: 'var(--fg-primary)' }}>analyzer</span> from gpt-4o to{' '}
@@ -341,6 +345,7 @@ function TopCostDrivers() {
         <div className="panel-head">
           <div className="title">Top cost drivers</div>
           <div className="actions">
+            <span className="badge amber" style={{ fontSize: 10 }}>Sample data</span>
             <span>workflow × agent × model</span>
           </div>
         </div>

@@ -75,6 +75,7 @@ function ActivityTable() {
       <div className="panel-head">
         <div className="title">Approval activity · last 7d</div>
         <div className="actions">
+          <span className="badge amber" style={{ fontSize: 10 }}>Sample data</span>
           <span>p50 review: 6m 12s</span>
         </div>
       </div>
@@ -188,19 +189,24 @@ function ApprovalCard({ approval }: { approval: Approval }) {
           className="btn sm primary"
           style={{ flex: 1, justifyContent: 'center' }}
           disabled={pending}
+          title="Approve this step and resume the workflow"
           onClick={() => approve.mutate({ token: approval.token, note })}
         >
-          {approve.isPending ? '…' : 'Approve'}
+          {approve.isPending ? 'Approving…' : 'Approve & resume'}
         </button>
         <button
           className="btn sm"
           style={{ flex: 1, justifyContent: 'center' }}
           disabled={pending}
+          title="Reject this step. This decision is final and cannot be undone."
           onClick={() => reject.mutate({ token: approval.token, note })}
         >
-          {reject.isPending ? '…' : 'Reject'}
+          {reject.isPending ? 'Rejecting…' : 'Reject'}
         </button>
       </div>
+      <p style={{ margin: '8px 0 0', fontSize: 11, color: 'var(--fg-muted)' }}>
+        Approving resumes the run from this checkpoint. Rejecting is final.
+      </p>
       {(approve.isError || reject.isError) && (
         <div style={{ color: 'var(--red-4)', fontSize: 11, marginTop: 8 }}>
           {(approve.error ?? reject.error)?.message}
