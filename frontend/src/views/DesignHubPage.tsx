@@ -1,8 +1,10 @@
 import { useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import '../styles/design-hub.css'
 
 export function DesignHubPage() {
+  useDocumentTitle('Design hub')
   useEffect(() => {
     document.body.classList.add('design-hub')
     return () => document.body.classList.remove('design-hub')
@@ -226,30 +228,37 @@ function DesignMoves() {
   )
 }
 
-const AI_FEATURES = [
-  { live: true, title: 'Forge AI · root-cause assistant', body: 'Surfaces failure clusters on the evaluations page with a 1-click "apply fix" — e.g. truncate researcher scrapes to cut hallucination rate.' },
-  { live: true, title: 'Predictive cost forecasting', body: 'End-of-month spend forecast with a budget bar and a "switch analyzer model on low-score runs to save ~$412/mo" suggestion that\'s a button, not a graph.' },
-  { live: true, title: 'Natural-language run search', body: 'cmd-K palette is a real shortcut — search runs, agents, audit, memory; "Ask Forge AI…" and "Simulate cost change…" are first-class actions.' },
-  { live: true, title: 'Replay & fork-at-checkpoint', body: 'Every checkpoint on the run timeline is a fork point. Test a prompt change against the exact upstream state; produce deterministic eval transcripts.' },
-  { live: false, title: 'Workflow simulation mode', body: 'Dry-run a workflow against historical traffic before pushing the change. Outputs an A/B view of cost, judge score, hallucination rate.' },
-  { live: false, title: 'Autonomous workflow healing', body: 'When circuit breaker trips on a tool, supervisor automatically falls back to declared alternates — surfaced in audit, replayable in console.' },
-  { live: false, title: 'AI governance center', body: 'OPA policy bundles, model allow-lists, PII detection on every tool input, signed checkpoints — the AI version of "least privilege."' },
-  { live: false, title: 'Semantic observability', body: 'Search audit + traces by intent, not just by string. "Show me runs where the researcher hit a paywall" returns the right transcripts.' },
+type FeatureStatus = 'preview' | 'planned'
+const AI_FEATURES: { status: FeatureStatus; title: string; body: string }[] = [
+  { status: 'preview', title: 'Forge AI · root-cause assistant', body: 'A designed panel on the Evaluations page that groups failure classes and suggests a fix. The suggestion is illustrative today; automated analysis is not yet wired.' },
+  { status: 'preview', title: 'Predictive cost forecasting', body: 'An end-of-month spend forecast with a budget bar and a model-swap suggestion. The forecast figures are illustrative; live spend is shown in the panels below it.' },
+  { status: 'planned', title: 'Natural-language run search', body: 'Planned: a cmd-K palette to search runs, agents, audit, and memory, with "Ask Forge AI" and "Simulate cost change" as first-class actions. Search today links to the audit log.' },
+  { status: 'planned', title: 'Replay & fork-at-checkpoint', body: 'Runs persist a Postgres checkpoint at every node. A console UI to replay or fork from a checkpoint is planned; the run "Replay" control is not yet wired.' },
+  { status: 'planned', title: 'Workflow simulation mode', body: 'Dry-run a workflow against historical traffic before pushing the change. Outputs an A/B view of cost, judge score, and hallucination rate.' },
+  { status: 'planned', title: 'Autonomous workflow healing', body: 'When a circuit breaker trips on a tool, the supervisor falls back to declared alternates — surfaced in audit, replayable in the console.' },
+  { status: 'planned', title: 'AI governance center', body: 'Policy bundles, model allow-lists, PII detection on every tool input, and signed checkpoints — the AI version of "least privilege."' },
+  { status: 'planned', title: 'Semantic observability', body: 'Search audit and traces by intent, not just by string. "Show me runs where the researcher hit a paywall" returns the right transcripts.' },
 ]
+
+function statusPill(status: FeatureStatus) {
+  return status === 'preview'
+    ? <span className="new" style={{ background: 'oklch(0.30 0.06 75 / 0.45)', color: 'var(--amber-4)' }}>PREVIEW</span>
+    : <span className="new" style={{ background: 'var(--bg-elevated)', color: 'var(--fg-muted)' }}>PLANNED</span>
+}
 
 function AiNativeFeatures() {
   return (
     <>
       <div className="sec-h">
         <span className="num">03</span>
-        <h2>The AI-native moves baked in</h2>
-        <span className="sub" style={{ marginLeft: 'auto' }}>designed, not future-vision</span>
+        <h2>The AI-native moves in the design</h2>
+        <span className="sub" style={{ marginLeft: 'auto' }}>preview = designed &amp; visible · planned = not yet built</span>
       </div>
       <div className="features-tight">
         {AI_FEATURES.map((f) => (
           <div key={f.title} className="f">
             <h5>
-              {f.live && <span className="new">LIVE</span>}
+              {statusPill(f.status)}
               {f.title}
             </h5>
             <p>{f.body}</p>
@@ -300,7 +309,7 @@ const POSITIONING: PosRow[] = [
     { mark: 'miss', label: '●' },
   ]},
   { capability: 'Enterprise governance', cells: [
-    { mark: 'check', label: '● RBAC · OPA · audit · SAML' },
+    { mark: 'check', label: '● RBAC · audit · OIDC · MFA' },
     { mark: 'partial', label: '● cloud RBAC' },
     { mark: 'miss', label: '●' },
     { mark: 'check', label: '●' },
@@ -348,25 +357,25 @@ function Positioning() {
 }
 
 const ROADMAP_COLS = [
-  { cls: '', tag: 'SHIPPING NOW', when: 'v3.4 · 2026 Q2', items: [
+  { cls: '', tag: 'SHIPPING NOW', when: 'v0.1 · current', items: [
     'Live console (current build) — runs, agents, approvals',
-    'Air-gapped deploy with Ollama + signed bundle',
-    'Multi-region checkpoint replication (RPO 5s)',
-    'OPA policy bundles per tenant',
+    'Air-gapped deploy against a local Ollama daemon',
+    'Postgres checkpointing for resumable runs',
+    'RBAC roles + scoped API tokens + audit log',
   ]},
-  { cls: 'q2', tag: 'NEXT', when: 'v3.5 · 2026 Q3', items: [
+  { cls: 'q2', tag: 'NEXT', when: 'v0.2 · planned', items: [
     'Workflow simulation mode (replay against historical traffic)',
     'Drag-and-drop graph editor (React Flow)',
     'Marketplace v2 — signed community templates',
     'Forge AI · failure root-cause assistant GA',
   ]},
-  { cls: 'q3', tag: 'DESIGNED', when: 'v4.0 · 2026 Q4', items: [
+  { cls: 'q3', tag: 'DESIGNED', when: 'v0.3 · designed', items: [
     'Natural-language workflow creation',
     'Autonomous workflow healing (auto-fallback tools)',
     'Self-improving orchestration (online supervisor)',
     'SDK · TypeScript + Go parity with Python',
   ]},
-  { cls: 'q4', tag: 'EXPLORING', when: 'v4.1+ · 2027 H1', items: [
+  { cls: 'q4', tag: 'EXPLORING', when: 'future · exploring', items: [
     'Agent collaboration visual replay (time-scrubbable)',
     'Semantic observability — search by intent',
     'AI governance center · model + tool allow-lists',

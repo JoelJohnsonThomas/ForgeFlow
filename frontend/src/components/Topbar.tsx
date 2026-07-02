@@ -1,5 +1,6 @@
 import { useMatchRoute } from '@tanstack/react-router'
 import { IconBell, IconChevronDown, IconHelp, IconSearch } from './icons'
+import { AuthControls } from './AuthControls'
 
 // Map console routes → breadcrumb segments. The last entry is the
 // "current page" (rendered with .cur styling). Keeps crumbs honest
@@ -74,19 +75,18 @@ export function Topbar() {
         >
           <span className="dot live" /> live · /api/health
         </a>
-        <a href="/console/approvals" className="btn ghost icon-only" title="Pending approvals">
+        <a href="/console/approvals" className="btn ghost icon-only" title="Pending approvals" aria-label="Pending approvals">
           <IconBell />
         </a>
         <a
-          href="https://github.com/JoelJohnsonThomas/forgeflow/blob/main/docs/sales-ops-production.md"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="/docs"
           className="btn ghost icon-only"
-          title="Production runbook + docs"
+          title="Documentation"
+          aria-label="Open the documentation"
         >
           <IconHelp />
         </a>
-        <span className="avatar" title="JoelJohnsonThomas (service token mode)">JJ</span>
+        <AuthControls />
       </div>
     </header>
   )

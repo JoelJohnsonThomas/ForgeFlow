@@ -1,0 +1,96 @@
+/* Console sign-in dialog, topbar auth controls, and signed-out banner. */
+
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.auth-dialog {
+  width: min(440px, calc(100vw - 32px));
+  padding: 24px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-4, 12px);
+  box-shadow: var(--shadow-lg);
+}
+.auth-dialog h2 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+.auth-hint {
+  margin: 0 0 16px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--fg-muted);
+}
+.auth-hint code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--fg-secondary);
+  background: var(--bg-inset);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+.auth-dialog form { display: flex; flex-direction: column; gap: 12px; }
+.auth-dialog label { display: flex; flex-direction: column; gap: 5px; }
+.auth-dialog label span { font-size: 12px; color: var(--fg-secondary); }
+.auth-dialog input {
+  padding: 8px 12px;
+  background: var(--bg-inset);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-2, 6px);
+  color: var(--fg-primary);
+  font-size: 13.5px;
+  font-family: var(--font-sans);
+  outline: none;
+}
+.auth-dialog input:focus { border-color: var(--border-focus); }
+.auth-error {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--red-4);
+}
+.auth-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Topbar controls */
+.auth-user { display: inline-flex; align-items: center; gap: 8px; }
+.auth-role {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--fg-muted);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-pill);
+  padding: 1px 7px;
+}
+
+/* Signed-out banner (top of the console main area) */
+.auth-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 12px 16px 0;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  color: var(--fg-secondary);
+  background: color-mix(in oklab, var(--amber-1) 45%, var(--bg-canvas));
+  border: 1px solid color-mix(in oklab, var(--amber-2) 50%, transparent);
+  border-radius: var(--r-3, 8px);
+}
+.auth-banner code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--amber-4);
+}

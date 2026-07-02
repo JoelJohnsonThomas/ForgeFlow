@@ -14,7 +14,8 @@ export function AgentsView() {
           <div>
             <h1>Agent topology</h1>
             <p className="sub">
-              Live A2A communication graph · {agents.length} registered agents
+              Registry is live from <span className="mono">/api/agents</span> · {agents.length} registered agents ·
+              the topology diagram below is illustrative
               {q.isError && <span style={{ color: 'var(--red-4)', marginLeft: 8 }}>· {q.error.message}</span>}
             </p>
           </div>
@@ -44,9 +45,9 @@ function TopologySvg() {
   return (
     <div className="topo">
       <div className="controls">
-        <button title="Zoom in">+</button>
-        <button title="Zoom out">−</button>
-        <button title="Center">◎</button>
+        <button title="Zoom in" aria-label="Zoom in" disabled>+</button>
+        <button title="Zoom out" aria-label="Zoom out" disabled>−</button>
+        <button title="Center" aria-label="Center diagram" disabled>◎</button>
       </div>
       <div className="legend">
         <span><i style={{ background: 'var(--blue-4)' }} />supervisor</span>
@@ -55,7 +56,8 @@ function TopologySvg() {
         <span><i style={{ background: 'var(--amber-4)' }} />execute</span>
         <span><i style={{ background: 'var(--fg-muted)' }} />tool</span>
       </div>
-      <svg viewBox="0 0 1200 540" width="100%" height="100%">
+      <svg viewBox="0 0 1200 540" width="100%" height="100%" role="img" aria-label="Illustrative agent topology: a central supervisor connected to researcher, analyzer, enricher, and executor agents, which in turn connect to MCP tools such as web search, CRM, memory recall, and email.">
+        <title>Illustrative agent topology diagram</title>
         <defs>
           <radialGradient id="agent-glow-blue" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="var(--blue-4)" stopOpacity="0.4" />

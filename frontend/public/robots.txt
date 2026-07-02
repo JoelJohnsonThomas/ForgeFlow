@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /$
+Allow: /docs
+Allow: /architecture
+Allow: /design-system
+Allow: /design-hub
+# The authenticated console is not useful to crawlers.
+Disallow: /console
+
+Sitemap: https://forgeflow.app/sitemap.xml

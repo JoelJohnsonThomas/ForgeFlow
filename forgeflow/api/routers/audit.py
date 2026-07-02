@@ -178,7 +178,7 @@ async def audit_stats(
                     COUNT(*) FILTER (WHERE outcome = 'error')       AS errors,
                     COUNT(DISTINCT user_id)                         AS distinct_users
                 FROM audit_log
-                WHERE timestamp > now() - ($1 || ' days')::INTERVAL
+                WHERE timestamp > now() - make_interval(days => $1)
                 """,
                 days,
             )
@@ -186,7 +186,7 @@ async def audit_stats(
                 """
                 SELECT resource, COUNT(*) AS hits
                 FROM audit_log
-                WHERE timestamp > now() - ($1 || ' days')::INTERVAL
+                WHERE timestamp > now() - make_interval(days => $1)
                 GROUP BY resource
                 ORDER BY hits DESC
                 LIMIT 10

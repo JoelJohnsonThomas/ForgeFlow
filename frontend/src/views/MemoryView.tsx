@@ -12,7 +12,7 @@ export function MemoryView() {
         <div className="row">
           <div>
             <h1>Semantic memory</h1>
-            <p className="sub">pgvector · 1.4M embeddings · 9 namespaces · ivfflat · cosine</p>
+            <p className="sub">pgvector · ivfflat · cosine · namespace-scoped · search is live from <span className="mono">/api/memory/search</span></p>
           </div>
           <div className="actions">
             <button className="btn sm" disabled title="Namespace filter — /memory/search supports it, picker UI pending">
@@ -111,6 +111,12 @@ function SearchPanel({ query, setQuery, onSubmit, results, isLoading, isError, e
         </form>
 
         <div style={{ marginTop: 14, display: 'grid', gap: 8 }}>
+          {!submitted && (
+            <p style={{ margin: '0 0 2px', fontSize: 11.5, color: 'var(--fg-muted)' }}>
+              <span className="badge amber" style={{ fontSize: 10, marginRight: 6 }}>Sample</span>
+              Example results — type a query and press Enter to search your memory live.
+            </p>
+          )}
           {!submitted && <SampleResults />}
           {isLoading && (
             <p style={{ color: 'var(--fg-muted)', textAlign: 'center', padding: 24 }}>loading…</p>
@@ -232,11 +238,12 @@ function EmbeddingScatter() {
       <div className="panel-head">
         <div className="title">Embedding space · 2D projection</div>
         <div className="actions">
-          <span>UMAP · n=8k</span>
+          <span className="badge amber" style={{ fontSize: 10 }}>Sample</span>
+          <span>UMAP</span>
         </div>
       </div>
       <div className="panel-body">
-        <svg viewBox="0 0 480 380" width="100%" height={380}>
+        <svg viewBox="0 0 480 380" width="100%" height={380} role="img" aria-label="Sample 2D projection of the embedding space, showing four namespace clusters (sales/stripe, sales/vercel, policy/global, support) with a marker for the current query.">
           <rect width="480" height="380" fill="var(--bg-inset)" rx="6" />
           <g opacity="0.16">
             <ellipse cx="140" cy="120" rx="80" ry="60" fill="var(--blue-4)" />
@@ -287,6 +294,7 @@ function RecallHeatmap() {
       <div className="panel-head">
         <div className="title">Recall heatmap · last 24h</div>
         <div className="actions">
+          <span className="badge amber" style={{ fontSize: 10 }}>Sample</span>
           <span>by namespace × hour</span>
         </div>
       </div>

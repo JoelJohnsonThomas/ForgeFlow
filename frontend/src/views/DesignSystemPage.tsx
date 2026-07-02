@@ -1,8 +1,10 @@
 import { useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import '../styles/design-system.css'
 
 export function DesignSystemPage() {
+  useDocumentTitle('Design system')
   useEffect(() => {
     document.body.classList.add('design-system')
     return () => document.body.classList.remove('design-system')

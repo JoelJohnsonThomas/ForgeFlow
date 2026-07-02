@@ -13,11 +13,15 @@ export function RbacView() {
         <div className="row">
           <div>
             <h1>RBAC &amp; secrets</h1>
-            <p className="sub">Roles · policy bundles · secret rotation · JWT auth</p>
+            <p className="sub">Role-based access control · JWT auth · scoped API tokens · sample data</p>
           </div>
           <div className="actions">
-            <button className="btn sm">Policy bundle</button>
-            <button className="btn sm primary">+ Add role</button>
+            <button className="btn sm" disabled title="Policy bundles (OPA-style) are planned, not yet implemented">
+              Policy bundle (planned)
+            </button>
+            <button className="btn sm primary" disabled title="Role management UI is planned; roles are seeded server-side today">
+              + Add role
+            </button>
           </div>
         </div>
       </div>
@@ -26,6 +30,7 @@ export function RbacView() {
           <div className="panel-head">
             <div className="title">Roles</div>
             <div className="actions">
+              <span className="badge amber" style={{ fontSize: 10 }}>Sample data</span>
               <span>{ROLES.length} defined</span>
             </div>
           </div>

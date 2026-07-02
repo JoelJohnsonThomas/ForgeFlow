@@ -1,10 +1,12 @@
 import { useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import '../styles/landing.css'
 
 const CONSOLE_HREF = '/console' as const
 
 export function LandingPage() {
+  useDocumentTitle('The operating system for production AI agents')
   // Toggle a body class so landing-only CSS scopes cleanly (no overflow-x clip on dashboard pages).
   useEffect(() => {
     document.body.classList.add('landing')
@@ -48,7 +50,7 @@ function LandingNav() {
         </div>
         <div className="right">
           <span className="nav-pill">
-            <span className="tag">v3.4</span> Checkpointed runs are now resumable across regions
+            <span className="tag">NEW</span> Checkpointed runs are now resumable across pods
             <span className="arrow">→</span>
           </span>
           <a href={CONSOLE_HREF} className="btn ghost">
@@ -70,7 +72,7 @@ function Hero() {
       <div className="wrap" style={{ position: 'relative', zIndex: 1 }}>
         <span className="release-pill">
           <span className="tag">NEW</span>
-          Air-gapped clusters with Ollama + Anthropic
+          Run fully air-gapped against a local Ollama daemon
           <span className="arrow">→</span>
         </span>
         <h1>
@@ -94,26 +96,31 @@ function Hero() {
           </a>
         </div>
 
+        {/* Truthful project facts — no fabricated operational metrics. */}
         <div className="hero-meta">
           <div>
-            <div className="k">Avg p50 routing</div>
-            <div className="v">142<span className="u">ms</span></div>
+            <div className="k">License</div>
+            <div className="v">Apache 2.0</div>
           </div>
           <div>
-            <div className="k">Workflows orchestrated</div>
-            <div className="v">14.2<span className="u">M+</span></div>
+            <div className="k">Runtime</div>
+            <div className="v">LangGraph</div>
           </div>
           <div>
-            <div className="k">Active deployments</div>
-            <div className="v">1,847</div>
+            <div className="k">Deploy</div>
+            <div className="v">Docker · K8s</div>
           </div>
           <div>
-            <div className="k">Uptime · last 90d</div>
-            <div className="v">99.992<span className="u">%</span></div>
+            <div className="k">Approvals</div>
+            <div className="v">Human-in-loop</div>
           </div>
         </div>
       </div>
 
+      <p className="sr-only">
+        Illustration: the ForgeFlow console showing a sample sales-ops workflow run — a supervisor routing to
+        researcher, analyzer, and executor agents, paused at a human approval step.
+      </p>
       <HeroStage />
     </section>
   )
@@ -468,7 +475,7 @@ function Platform() {
               </svg>
             }
             title="Enterprise RBAC + audit"
-            body="Roles, policies, immutable audit log. Air-gap deploy with Ollama. SAML, SCIM, OPA — built in, not bolted on."
+            body="Role-based access control, scoped API tokens, and an immutable audit log. OIDC SSO and TOTP MFA. Air-gap deploy with Ollama."
           />
         </div>
       </div>
@@ -655,13 +662,13 @@ async for event in wf.stream({"company": "Stripe"}):
               frontend team can actually generate clients against.
             </p>
             <div className="hero-cta" style={{ marginTop: 28 }}>
-              <a href="#docs" className="btn primary">Read the docs →</a>
-              <a href="/api/docs" target="_blank" rel="noopener noreferrer" className="btn">SDK reference</a>
+              <a href="/docs" className="btn primary">Read the docs →</a>
+              <a href="/api/docs" target="_blank" rel="noopener noreferrer" className="btn">API reference</a>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginTop: 36 }}>
               <DxFeature title="Local-first dev loop" body="Ollama + Postgres in compose. No keys to commit." />
-              <DxFeature title="Replay any run" body="Fork from any checkpoint with one CLI command." />
+              <DxFeature title="Resumable runs" body="Every node persists a Postgres checkpoint; resume from any of them." />
               <DxFeature title="Typed everything" body="Pydantic state + structured outputs end to end." />
               <DxFeature title="OTel native" body="Spans, metrics, logs. Pipe to your stack." />
             </div>
@@ -690,14 +697,21 @@ function Enterprise() {
         <div className="section-eyebrow">Enterprise</div>
         <h2>Built for the security review.</h2>
         <p className="sub">
-          SAML, SCIM, OPA-based policy, immutable audit. Run on your own VPC, your own Kubernetes, or fully
-          air-gapped against a local Ollama daemon.
+          OIDC SSO, TOTP MFA, Argon2id password hashing, role-based access control, and an immutable audit log.
+          Run on your own VPC, your own Kubernetes, or fully air-gapped against a local Ollama daemon.
         </p>
 
         <div className="trust-grid">
           <div style={{ position: 'relative', aspectRatio: '1', borderRadius: 'var(--r-5)', border: '1px solid var(--border-default)', background: 'var(--bg-canvas)', display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
             <div className="spotlight" />
-            <svg viewBox="0 0 200 200" width={180} height={180} style={{ position: 'relative', zIndex: 1 }}>
+            <svg
+              viewBox="0 0 200 200"
+              width={180}
+              height={180}
+              style={{ position: 'relative', zIndex: 1 }}
+              role="img"
+              aria-label="Security controls: role-based access control, immutable audit log, OIDC single sign-on, and TOTP multi-factor authentication."
+            >
               <g fill="none" stroke="var(--border-strong)" strokeWidth="0.6">
                 <circle cx="100" cy="100" r="40" />
                 <circle cx="100" cy="100" r="58" />
@@ -705,10 +719,10 @@ function Enterprise() {
                 <circle cx="100" cy="100" r="94" />
               </g>
               <g fontFamily="var(--font-mono)" fontSize="9" fill="var(--fg-muted)" letterSpacing="2">
-                <text x="14" y="105">SOC 2</text>
-                <text x="150" y="105">ISO</text>
-                <text x="80" y="14">HIPAA</text>
-                <text x="76" y="198">GDPR</text>
+                <text x="16" y="105">RBAC</text>
+                <text x="146" y="105">AUDIT</text>
+                <text x="82" y="14">OIDC</text>
+                <text x="84" y="198">MFA</text>
               </g>
               <polygon points="100,55 130,75 130,115 100,140 70,115 70,75" fill="oklch(0.20 0.013 250)" stroke="var(--blue-3)" strokeWidth="1.4" />
               <path d="M85 100 l10 10 l22 -22" stroke="var(--blue-4)" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -716,10 +730,10 @@ function Enterprise() {
           </div>
 
           <div className="trust-list">
-            <TrustItem title="Identity & access" body="SAML / OIDC SSO, SCIM provisioning, fine-grained RBAC, scoped API tokens with workload identity." badges={['SAML 2.0', 'SCIM 2.0', 'OIDC']} />
-            <TrustItem title="Policy & governance" body="OPA policy bundles enforced at the supervisor. Block models, tools, or data classes per tenant." badges={['OPA', 'Cedar', 'Custom rules']} />
-            <TrustItem title="Audit & retention" body="Immutable append-only log, partitioned by tenant + day. Export to S3 or SIEM. WORM-compatible." badges={['SOC 2 Type II', 'HIPAA', 'GDPR']} />
-            <TrustItem title="Air-gapped deployment" body="Run end-to-end against a local Ollama daemon. No keys, no egress, no third-party services. Offline bundle ships in 4.2 GB." badges={['Ollama', 'vLLM', 'On-prem']} />
+            <TrustItem title="Identity & access" body="OIDC single sign-on, TOTP multi-factor authentication, Argon2id password hashing, and role-based access control with scoped API tokens." badges={['OIDC', 'TOTP MFA', 'Argon2id']} />
+            <TrustItem title="Policy & governance" body="Role-based access control enforced on every API request, with scoped bearer tokens and per-namespace data isolation." badges={['RBAC', 'Scoped tokens', 'Namespace isolation']} />
+            <TrustItem title="Audit & retention" body="Immutable append-only audit log, partitioned by tenant and day. Right-to-erasure via cascading delete by trace ID." badges={['Immutable log', 'WORM-compatible', 'GDPR erasure']} />
+            <TrustItem title="Air-gapped deployment" body="Run end to end against a local Ollama daemon — no keys, no egress, no third-party services." badges={['Ollama', 'Self-host', 'No egress']} />
           </div>
         </div>
       </div>
@@ -745,11 +759,11 @@ function Docs() {
   return (
     <section id="docs">
       <div className="wrap">
-        <div className="section-eyebrow">Documentation · v3.4.1</div>
+        <div className="section-eyebrow">Documentation · v0.1.0 · pre-release</div>
         <h2>Everything to ship, operate, and extend ForgeFlow.</h2>
         <p className="sub">
-          Quickstart in three commands. Full REST + SDK reference. Production playbooks the on-call team
-          actually uses. Searchable from any page in the console.
+          Quickstart in three commands, a full interactive REST reference at <span className="mono">/api/docs</span>,
+          and the production playbooks the on-call team actually uses.
         </p>
 
         <DocSearch />
@@ -763,7 +777,11 @@ function Docs() {
 
 function DocSearch() {
   return (
-    <div
+    <a
+      href="/api/docs"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Open the interactive REST API reference in a new tab"
       style={{
         marginTop: 40,
         display: 'flex',
@@ -775,18 +793,19 @@ function DocSearch() {
         borderRadius: 'var(--r-3)',
         boxShadow: 'var(--shadow-sm)',
         maxWidth: 720,
+        textDecoration: 'none',
       }}
     >
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ color: 'var(--fg-muted)', flexShrink: 0 }}>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ color: 'var(--fg-muted)', flexShrink: 0 }} aria-hidden="true">
         <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.4" />
         <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
       </svg>
-      <span style={{ flex: 1, color: 'var(--fg-muted)', fontSize: 14 }}>
-        Search 248 docs — guides, API, SDK, recipes…
+      <span style={{ flex: 1, color: 'var(--fg-secondary)', fontSize: 14 }}>
+        Browse the interactive REST API reference
       </span>
-      <span className="badge mono" style={{ fontSize: 10 }}>powered by /api/docs</span>
-      <span className="kbd">⌘K</span>
-    </div>
+      <span className="badge mono" style={{ fontSize: 10 }}>/api/docs</span>
+      <span aria-hidden="true" style={{ color: 'var(--blue-4)' }}>→</span>
+    </a>
   )
 }
 
@@ -801,16 +820,19 @@ function QuickstartAndChangelog() {
 
 function Quickstart() {
   const code = `# 1. clone + configure
-$ git clone github.com/forgeflow/forgeflow
+$ git clone https://github.com/JoelJohnsonThomas/forgeflow
 $ cp .env.example .env  # set OPENAI_API_KEY
 
 # 2. boot the stack
 $ docker compose --profile migration run --rm migrate
 $ docker compose up -d
 
-# 3. trigger your first workflow
-$ curl -X POST http://localhost:8501/api/workflows/run \\
+# 3. get a dev token, then trigger your first workflow
+$ TOKEN=$(curl -s http://localhost:8000/auth/login \\
     -H "Content-Type: application/json" \\
+    -d '{"user_id":"rep-1","password":"change-me-locally-only"}' | jq -r .access_token)
+$ curl -X POST http://localhost:8000/workflows/run \\
+    -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \\
     -d '{"workflow_type":"sales_ops","lead_data":{"company_name":"Stripe"}}'`
 
   return (
@@ -834,8 +856,8 @@ $ curl -X POST http://localhost:8501/api/workflows/run \\
         >
           QUICKSTART · 5 MIN
         </span>
-        <span className="badge emerald" style={{ fontSize: 10 }}>
-          <span className="dot live" /> all systems normal
+        <span className="badge mono" style={{ fontSize: 10 }}>
+          self-hosted · Apache 2.0
         </span>
       </div>
       <h3 style={{ margin: '0 0 14px', fontSize: 22, fontWeight: 500, letterSpacing: 'var(--tracking-tight)' }}>
@@ -843,7 +865,7 @@ $ curl -X POST http://localhost:8501/api/workflows/run \\
       </h3>
       <pre className="code" style={{ margin: 0, fontSize: 12.5 }}>{code}</pre>
       <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-        <a href="/architecture" className="btn primary sm">
+        <a href="/docs/tutorials-first-workflow" className="btn primary sm">
           Open quickstart →
         </a>
         <a href="/api/docs" target="_blank" rel="noopener noreferrer" className="btn sm">
@@ -864,12 +886,14 @@ type ChangelogEntry = {
   title: string
 }
 
+// Mirrors the repo CHANGELOG.md (Keep a Changelog). The project is pre-1.0;
+// the top entries are unreleased work on `main`, then the 0.1.0 release.
 const CHANGELOG: ChangelogEntry[] = [
-  { version: 'v3.4.1', date: '2026-05-26', tag: 'release', title: 'React console + nginx replaces Streamlit dashboard' },
-  { version: 'v3.4.0', date: '2026-05-21', tag: 'release', title: 'Multi-region checkpoint replication · RPO 5s' },
-  { version: 'v3.3.9', date: '2026-05-12', tag: 'security', title: 'JWT auth + service-token wildcard for SPA → API' },
-  { version: 'v3.3.8', date: '2026-05-04', tag: 'fix', title: 'PII redactor: phone regex no longer eats CC digits' },
-  { version: 'v3.3.7', date: '2026-04-28', tag: 'release', title: 'Air-gapped Ollama bundle (signed, 4.2 GB)' },
+  { version: 'unreleased', date: 'main', tag: 'security', title: 'Enterprise auth — Argon2id hashing, TOTP MFA, rotating refresh tokens, OIDC exchange' },
+  { version: 'unreleased', date: 'main', tag: 'security', title: 'Object-level authorization (IDOR fix) on GET /workflows/{id} and /trace' },
+  { version: 'unreleased', date: 'main', tag: 'fix', title: 'Execution timeout on /workflows/run returns 504 instead of pinning a worker' },
+  { version: 'unreleased', date: 'main', tag: 'release', title: 'React 19 console views code-split; initial bundle ~547 kB → ~364 kB' },
+  { version: 'v0.1.0', date: '2026', tag: 'release', title: 'Initial public release — supervisor multi-agent core, MCP, A2A, pgvector memory' },
 ]
 
 function tagBadge(tag: ChangelogEntry['tag']) {
@@ -900,12 +924,12 @@ function Changelog() {
           marginBottom: 14,
         }}
       >
-        WHAT'S NEW · LAST 30 DAYS
+        WHAT'S NEW · CHANGELOG
       </div>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {CHANGELOG.map((c, i) => (
           <div
-            key={c.version}
+            key={c.title}
             style={{
               display: 'grid',
               gridTemplateColumns: '70px 1fr auto',
@@ -925,7 +949,7 @@ function Changelog() {
         ))}
       </div>
       <a
-        href="https://github.com/JoelJohnsonThomas/forgeflow/releases"
+        href="https://github.com/JoelJohnsonThomas/forgeflow/blob/main/CHANGELOG.md"
         target="_blank"
         rel="noopener noreferrer"
         style={{ marginTop: 'auto', paddingTop: 14, fontSize: 12, color: 'var(--blue-4)', textDecoration: 'none' }}
@@ -951,7 +975,7 @@ const SURFACES: Surface[] = [
     name: 'Quickstart & concepts',
     count: 12,
     icon: <PlayIcon />,
-    href: '/architecture',
+    href: '/docs/tutorials',
     articles: [
       'Five-minute install with Docker',
       'Your first workflow: sales_ops',
@@ -974,15 +998,15 @@ const SURFACES: Surface[] = [
   },
   {
     num: '03',
-    name: 'Python SDK',
+    name: 'Python package',
     count: 24,
     icon: <CodeIcon />,
     href: '/api/docs',
     articles: [
-      'pip install forgeflow',
+      'Import the forgeflow package',
       'Workflow + Supervisor + Agent classes',
       'Typed state with Pydantic',
-      'Async streaming via wf.stream()',
+      'Async streaming over server-sent events',
     ],
   },
   {
@@ -990,7 +1014,7 @@ const SURFACES: Surface[] = [
     name: 'Operations playbooks',
     count: 41,
     icon: <BookIcon />,
-    href: '/architecture',
+    href: '/docs/operations-backup-dr',
     articles: [
       'On-call runbook: stuck workflow',
       'Capacity planning: RPS to pod count',
@@ -1000,15 +1024,15 @@ const SURFACES: Surface[] = [
   },
   {
     num: '05',
-    name: 'Security & compliance',
+    name: 'Security & access',
     count: 19,
     icon: <ShieldIcon />,
-    href: '/architecture',
+    href: '/docs/auth',
     articles: [
-      'SAML + SCIM provisioning',
-      'OPA policy bundle authoring',
-      'PII redactor & prompt-injection guard',
-      'Audit log retention & SIEM export',
+      'OIDC single sign-on setup',
+      'TOTP multi-factor authentication',
+      'RBAC roles & scoped API tokens',
+      'Audit log retention & namespace isolation',
     ],
   },
   {
@@ -1078,7 +1102,7 @@ function SurfaceCard({ surface }: { surface: Surface }) {
           {surface.icon}
         </div>
         <span className="mono" style={{ fontSize: 10, color: 'var(--fg-muted)', letterSpacing: '.12em' }}>
-          {surface.num} · {surface.count} ARTICLES
+          {surface.num} · REFERENCE
         </span>
       </div>
       <h4
@@ -1124,7 +1148,7 @@ function SurfaceCard({ surface }: { surface: Surface }) {
         rel={surface.href.startsWith('/api') ? 'noopener noreferrer' : undefined}
         style={{ marginTop: 'auto', fontSize: 12, color: 'var(--blue-4)', textDecoration: 'none', fontWeight: 500 }}
       >
-        View all {surface.count} →
+        Open reference →
       </a>
     </div>
   )
@@ -1138,12 +1162,12 @@ type RefItem = {
 }
 
 const REFERENCES: RefItem[] = [
-  { label: 'CLI', sublabel: 'forgeflow --help', href: '/architecture' },
-  { label: 'Python SDK', sublabel: 'pip install forgeflow', href: '/api/docs', external: true },
+  { label: 'Python package', sublabel: 'import forgeflow', href: '/api/docs', external: true },
+  { label: 'REST API', sublabel: '/api/docs', href: '/api/docs', external: true },
   { label: 'TypeScript SDK', sublabel: '@forgeflow/sdk · planned', href: '#' },
   { label: 'OpenAPI', sublabel: '/api/openapi.json', href: '/api/openapi.json', external: true },
-  { label: 'Postman collection', sublabel: '.json export', href: '/api/openapi.json', external: true },
-  { label: 'Status page', sublabel: 'all systems normal', href: '#' },
+  { label: 'Health check', sublabel: '/api/health', href: '/api/health', external: true },
+  { label: 'Architecture', sublabel: 'reference diagrams', href: '/architecture' },
 ]
 
 function DeveloperReference() {
@@ -1179,7 +1203,7 @@ function DeveloperReference() {
           DEVELOPER REFERENCE
         </span>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-muted)' }}>
-          v3.4.1 · OpenAPI 3.1 · Apache 2.0
+          v0.1.0 · OpenAPI 3.1 · Apache 2.0
         </span>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
@@ -1260,15 +1284,15 @@ function PaintIcon() {
 
 function CallToAction() {
   const cliBlock = `# clone + boot
-$ git clone github.com/forgeflow/forgeflow
+$ git clone https://github.com/JoelJohnsonThomas/forgeflow
 $ cd forgeflow && cp .env.example .env
 
 # bring up the stack
 $ docker compose up
 → api      :8000  ready
-→ mcp      :8001  14 tools registered
+→ mcp      :8001  tools registered
 → postgres :5432  migrated · pgvector OK
-→ dash     :8501  ready`
+→ console  :8501  nginx · proxies /api → api:8000`
 
   return (
     <section>
@@ -1278,8 +1302,8 @@ $ docker compose up
             <div className="section-eyebrow">Get started</div>
             <h2>Ship the AI system. Not the plumbing.</h2>
             <p>
-              Run the open core today. Move to managed when you outgrow your laptop. Talk to us when you need
-              SSO, OPA, and a four-nines SLA.
+              Run the open core today — self-hosted, Apache 2.0. Open an issue or a discussion on GitHub if you
+              hit a wall or want to help shape the roadmap.
             </p>
             <div className="ctas">
               <a href={CONSOLE_HREF} className="btn primary">
@@ -1361,11 +1385,11 @@ function Footer() {
                 <span className="badge">Apache 2.0</span>
               </a>
               <a href={`${GITHUB_REPO}/releases`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                <span className="badge">v3.4.1</span>
+                <span className="badge">v0.1.0</span>
               </a>
-              <a href="/api/health" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                <span className="badge emerald">
-                  <span className="dot live" /> All systems normal
+              <a href="/api/health" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }} aria-label="Open the API health endpoint">
+                <span className="badge">
+                  API health · /api/health
                 </span>
               </a>
             </div>

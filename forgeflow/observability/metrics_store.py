@@ -88,7 +88,7 @@ class MetricsStore:
                         COUNT(*)                    AS run_count
                     FROM run_metrics
                     WHERE metric_name = 'cost_usd'
-                      AND recorded_at > now() - ($1 || ' days')::INTERVAL
+                      AND recorded_at > now() - make_interval(days => $1)
                     GROUP BY 1, 2
                     ORDER BY 2 DESC, 3 DESC
                     """,
@@ -116,7 +116,7 @@ class MetricsStore:
                         SUM(total_tokens)::bigint               AS total_tokens,
                         COUNT(*)                                AS run_count
                     FROM workflow_runs
-                    WHERE created_at > now() - ($1 || ' days')::INTERVAL
+                    WHERE created_at > now() - make_interval(days => $1)
                     GROUP BY 1, 2
                     ORDER BY 2 DESC, 3 DESC
                     """,
@@ -141,7 +141,7 @@ class MetricsStore:
                         total_tokens,
                         created_at
                     FROM workflow_runs
-                    WHERE created_at > now() - ($1 || ' days')::INTERVAL
+                    WHERE created_at > now() - make_interval(days => $1)
                     ORDER BY total_cost_usd DESC NULLS LAST
                     LIMIT $2
                     """,
@@ -183,7 +183,7 @@ class MetricsStore:
                         END                  AS severity
                     FROM workflow_runs
                     WHERE total_cost_usd >= $1 * 0.9
-                      AND created_at > now() - ($2 || ' days')::INTERVAL
+                      AND created_at > now() - make_interval(days => $2)
                     ORDER BY total_cost_usd DESC
                     LIMIT 50
                     """,
