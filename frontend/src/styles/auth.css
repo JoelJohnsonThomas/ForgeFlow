@@ -41,7 +41,9 @@
 .auth-dialog form { display: flex; flex-direction: column; gap: 12px; }
 .auth-dialog label { display: flex; flex-direction: column; gap: 5px; }
 .auth-dialog label span { font-size: 12px; color: var(--fg-secondary); }
-.auth-dialog input {
+.auth-dialog input,
+.auth-dialog select,
+.auth-dialog textarea {
   padding: 8px 12px;
   background: var(--bg-inset);
   border: 1px solid var(--border-default);
@@ -51,7 +53,10 @@
   font-family: var(--font-sans);
   outline: none;
 }
-.auth-dialog input:focus { border-color: var(--border-focus); }
+.auth-dialog textarea { resize: vertical; line-height: 1.5; }
+.auth-dialog input:focus,
+.auth-dialog select:focus,
+.auth-dialog textarea:focus { border-color: var(--border-focus); }
 .auth-error {
   margin: 0;
   font-size: 12.5px;

@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { RunSalesOpsDialog } from '../components/RunSalesOpsDialog'
+
 type Status = 'production' | 'scaffold'
 
 type Template = {
@@ -96,6 +99,7 @@ export function WorkflowsView() {
 
 function TemplateCard({ t }: { t: Template }) {
   const isProduction = t.status === 'production'
+  const [runOpen, setRunOpen] = useState(false)
   return (
     <div className="card" style={{ padding: 20, display: 'flex', flexDirection: 'column', minHeight: 280 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
@@ -183,14 +187,19 @@ function TemplateCard({ t }: { t: Template }) {
 
       <div style={{ marginTop: 'auto', paddingTop: 16, display: 'flex', gap: 8 }}>
         {isProduction ? (
-          <a
-            href="https://github.com/JoelJohnsonThomas/forgeflow/blob/main/docs/sales-ops-production.md#trigger-a-workflow-against-your-data-2-min"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn sm primary"
-          >
-            {t.ctaPrimary}
-          </a>
+          <>
+            <button className="btn sm primary" onClick={() => setRunOpen(true)}>
+              {t.ctaPrimary}
+            </button>
+            <a
+              href="https://github.com/JoelJohnsonThomas/forgeflow/blob/main/docs/sales-ops-production.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn sm"
+            >
+              Runbook
+            </a>
+          </>
         ) : (
           <button className="btn sm" disabled title="Template scaffold — wire a connector first">
             {t.ctaPrimary}
@@ -198,6 +207,7 @@ function TemplateCard({ t }: { t: Template }) {
         )}
         <a href="/architecture#architecture" className="btn sm">View graph</a>
       </div>
+      {isProduction && <RunSalesOpsDialog open={runOpen} onClose={() => setRunOpen(false)} />}
     </div>
   )
 }
