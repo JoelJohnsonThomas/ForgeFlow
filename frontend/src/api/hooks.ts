@@ -1,5 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from './client'
+import type { SalesLeadInput } from './client'
+
+export function useRunSalesOps() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (lead: SalesLeadInput) => api.runSalesOps(lead),
+    // A finished run changes runs, metrics, cost, and (usually) approvals.
+    onSuccess: () => qc.invalidateQueries(),
+  })
+}
 
 export function useMetricsSummary() {
   return useQuery({

@@ -245,6 +245,23 @@ type RawCostByWorkflow = {
   run_count?: number
 }
 
+// Mirrors forgeflow/workflows/sales_ops/models.py::LeadInput.
+export type SalesLeadInput = {
+  company_name: string
+  contact_name?: string
+  contact_email?: string
+  industry?: 'saas' | 'fintech' | 'healthcare' | 'enterprise' | 'ecommerce' | 'martech' | 'other'
+  known_budget_usd?: number
+  additional_context?: string
+}
+
+export type RunWorkflowResponse = {
+  run_id: string
+  thread_id: string
+  status: string
+  message?: string
+}
+
 // ---- Endpoints ------------------------------------------------------------
 
 export const api = {
@@ -297,6 +314,13 @@ export const api = {
     request<{ status: string }>(`/approvals/${token}/reject`, {
       method: 'POST',
       body: JSON.stringify({ note }),
+    }),
+  // The graph runs synchronously (researcher → analyzer → executor LLM calls),
+  // so this request routinely takes 1–2 minutes before responding.
+  runSalesOps: (lead: SalesLeadInput) =>
+    request<RunWorkflowResponse>('/workflows/run', {
+      method: 'POST',
+      body: JSON.stringify({ workflow_type: 'sales_ops', lead_data: lead }),
     }),
   agents: () => request<Agent[]>('/agents/'),
   agentsDispatch: () => request<unknown>('/agents/dispatch'),
